@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Level {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  COMPETITIVE
+}
+
+enum MatchType {
+  PRACTICE
+  OFFICIAL
+  TOURNAMENT
+}
+
+enum MatchResult {
+  WIN
+  LOSE
+  DRAW
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String?
+  googleId     String?  @unique
+  level        Level    @default(BEGINNER)
+  playStyle    String?
+  club         String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  practiceLogs PracticeLog[]
+  matchRecords MatchRecord[]
+  equipment    Equipment[]
+}
+
+model PracticeLog {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  practicedAt  DateTime
+  durationMin  Int
+  location     String?
+  content      String?
+  equipmentId  String?
+  equipment    Equipment? @relation(fields: [equipmentId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model MatchRecord {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opponentName  String
+  matchType     MatchType   @default(PRACTICE)
+  scores        Json
+  result        MatchResult
+  memo          String?
+  playedAt      DateTime
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Equipment {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blade       String
+  rubberFh    String?
+  rubberBh    String?
+  isCurrent   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  practiceLogs PracticeLog[]
+}

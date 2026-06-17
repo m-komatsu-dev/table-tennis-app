@@ -1,0 +1,17 @@
+node_modules
+.next
+dist
+build
+.env
+.env.local
+.env.*.local
+apps/web/.env.local
+packages/db/.env
+!.env.example
+!*.env.example
+!apps/web/.env.local.example
+!packages/db/.env.example
+*.log
+.DS_Store
+coverage
+.vercel

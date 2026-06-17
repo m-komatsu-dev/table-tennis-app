@@ -1,0 +1,16 @@
+{
+  "name": "table-tennis-platform",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @table-tennis/web",
+    "build": "npm run build -w @table-tennis/web",
+    "lint": "npm run lint -w @table-tennis/web",
+    "prisma:generate": "npm run prisma:generate -w @table-tennis/db",
+    "prisma:migrate": "npm run prisma:migrate -w @table-tennis/db",
+    "prisma:studio": "npm run prisma:studio -w @table-tennis/db"
+  }
+}
