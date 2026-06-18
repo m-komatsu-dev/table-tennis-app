@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "test": "node --test --import ../../node_modules/jiti/lib/jiti-register.mjs \"lib/*.test.ts\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

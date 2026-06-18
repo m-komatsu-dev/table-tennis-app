@@ -11,14 +11,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-
-export type MonthlyStats = {
-  month: string;
-  practiceMinutes: number;
-  matches: number;
-  wins: number;
-  winRate: number;
-};
+import type { MonthlyStats } from "@/lib/stats";
 
 export function DashboardCharts({ data }: { data: MonthlyStats[] }) {
   return (

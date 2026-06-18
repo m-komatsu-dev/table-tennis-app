@@ -12,11 +12,11 @@ export function PageHeader({
 }) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
+      <div className="min-w-0">
         <h1 className="text-2xl font-bold text-slate-950">{title}</h1>
         {description ? <p className="mt-1 text-sm text-slate-600">{description}</p> : null}
       </div>
-      {action}
+      {action ? <div className="sm:shrink-0">{action}</div> : null}
     </div>
   );
 }
@@ -25,7 +25,7 @@ export function PrimaryLink({ href, children }: { href: string; children: ReactN
   return (
     <Link
       href={href}
-      className="inline-flex min-h-10 items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+      className="inline-flex min-h-10 w-full items-center justify-center rounded-md bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 sm:w-auto"
     >
       {children}
     </Link>
@@ -61,6 +61,18 @@ export function ErrorMessage({ message }: { message?: string | null }) {
 
   return (
     <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+      {message}
+    </div>
+  );
+}
+
+export function SuccessMessage({ message }: { message?: string | null }) {
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
       {message}
     </div>
   );

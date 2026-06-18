@@ -17,6 +17,7 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
   const [scores, setScores] = useState<ScoreRow[]>(match?.scores.length ? match.scores : defaultScores);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   function updateScore(index: number, key: keyof ScoreRow, value: number) {
     setScores((current) =>
@@ -25,7 +26,13 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
   }
 
   function addScoreRow() {
-    setScores((current) => [...current, { set: current.length + 1, me: 0, opp: 0 }]);
+    setScores((current) => {
+      if (current.length >= 7) {
+        return current;
+      }
+
+      return [...current, { set: current.length + 1, me: 0, opp: 0 }];
+    });
   }
 
   function removeScoreRow(index: number) {
@@ -41,29 +48,34 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
     setError(null);
     setIsSubmitting(true);
 
-    const formData = new FormData(event.currentTarget);
-    const response = await fetch(match ? `/api/match/${match.id}` : "/api/match", {
-      method: match ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        playedAt: String(formData.get("playedAt") ?? ""),
-        opponentName: String(formData.get("opponentName") ?? ""),
-        matchType: String(formData.get("matchType") ?? "PRACTICE"),
-        scores,
-        result: String(formData.get("result") ?? "WIN"),
-        memo: String(formData.get("memo") ?? "")
-      })
-    });
-    const payload = (await response.json()) as ApiResponse<MatchRecordView>;
-    setIsSubmitting(false);
+    try {
+      const formData = new FormData(event.currentTarget);
+      const response = await fetch(match ? `/api/match/${match.id}` : "/api/match", {
+        method: match ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playedAt: String(formData.get("playedAt") ?? ""),
+          opponentName: String(formData.get("opponentName") ?? ""),
+          matchType: String(formData.get("matchType") ?? "PRACTICE"),
+          scores,
+          result: String(formData.get("result") ?? "WIN"),
+          memo: String(formData.get("memo") ?? "")
+        })
+      });
+      const payload = (await response.json()) as ApiResponse<MatchRecordView>;
 
-    if (!response.ok || !payload.data) {
-      setError(payload.error ?? "試合記録の保存に失敗しました");
-      return;
+      if (!response.ok || !payload.data) {
+        setError(payload.error ?? "試合記録の保存に失敗しました");
+        return;
+      }
+
+      router.push(`/match/${payload.data.id}`);
+      router.refresh();
+    } catch {
+      setError("通信に失敗しました。時間をおいて再試行してください。");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    router.push(`/match/${payload.data.id}`);
-    router.refresh();
   }
 
   async function handleDelete() {
@@ -71,16 +83,25 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
       return;
     }
 
-    const response = await fetch(`/api/match/${match.id}`, { method: "DELETE" });
-    const payload = (await response.json()) as ApiResponse<{ id: string }>;
+    setError(null);
+    setIsDeleting(true);
 
-    if (!response.ok) {
-      setError(payload.error ?? "試合記録の削除に失敗しました");
-      return;
+    try {
+      const response = await fetch(`/api/match/${match.id}`, { method: "DELETE" });
+      const payload = (await response.json()) as ApiResponse<{ id: string }>;
+
+      if (!response.ok) {
+        setError(payload.error ?? "試合記録の削除に失敗しました");
+        return;
+      }
+
+      router.push("/match");
+      router.refresh();
+    } catch {
+      setError("通信に失敗しました。時間をおいて再試行してください。");
+    } finally {
+      setIsDeleting(false);
     }
-
-    router.push("/match");
-    router.refresh();
   }
 
   return (
@@ -97,7 +118,7 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
           />
         </Field>
         <Field label="対戦相手名">
-          <input className={inputClass} defaultValue={match?.opponentName ?? ""} name="opponentName" required />
+          <input className={inputClass} defaultValue={match?.opponentName ?? ""} maxLength={120} name="opponentName" required />
         </Field>
         <Field label="試合種別">
           <select className={inputClass} defaultValue={match?.matchType ?? "PRACTICE"} name="matchType">
@@ -119,19 +140,21 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
           <span className="text-sm font-medium text-slate-700">セット別スコア</span>
           <button
             className="min-h-9 rounded-md border border-slate-300 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+            disabled={scores.length >= 7}
             onClick={addScoreRow}
             type="button"
           >
-            セット追加
+            {scores.length >= 7 ? "7セットまで" : "セット追加"}
           </button>
         </div>
         <div className="space-y-2">
           {scores.map((row, index) => (
-            <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2" key={row.set}>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]" key={index}>
               <input
                 aria-label="セット"
                 className={inputClass}
                 min={1}
+                max={7}
                 onChange={(event) => updateScore(index, "set", Number(event.target.value))}
                 type="number"
                 value={row.set}
@@ -140,6 +163,7 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
                 aria-label="自分の得点"
                 className={inputClass}
                 min={0}
+                max={99}
                 onChange={(event) => updateScore(index, "me", Number(event.target.value))}
                 type="number"
                 value={row.me}
@@ -148,12 +172,13 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
                 aria-label="相手の得点"
                 className={inputClass}
                 min={0}
+                max={99}
                 onChange={(event) => updateScore(index, "opp", Number(event.target.value))}
                 type="number"
                 value={row.opp}
               />
               <button
-                className="min-h-10 rounded-md border border-red-200 px-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-40"
+                className="col-span-3 min-h-10 rounded-md border border-red-200 px-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-40 sm:col-span-1"
                 disabled={scores.length <= 1}
                 onClick={() => removeScoreRow(index)}
                 type="button"
@@ -165,12 +190,12 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
         </div>
       </div>
       <Field label="反省・メモ">
-        <textarea className={inputClass} defaultValue={match?.memo ?? ""} name="memo" rows={7} />
+        <textarea className={inputClass} defaultValue={match?.memo ?? ""} maxLength={4000} name="memo" rows={7} />
       </Field>
       <div className="flex flex-wrap gap-2">
         <button
           className="min-h-10 rounded-md bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isDeleting}
           type="submit"
         >
           {isSubmitting ? "保存中..." : "保存"}
@@ -178,10 +203,11 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
         {match ? (
           <button
             className="min-h-10 rounded-md border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+            disabled={isSubmitting || isDeleting}
             onClick={handleDelete}
             type="button"
           >
-            削除
+            {isDeleting ? "削除中..." : "削除"}
           </button>
         ) : null}
       </div>

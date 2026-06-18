@@ -5,6 +5,18 @@ import { formatDate } from "@/lib/format";
 import { serializeMatchList } from "@/lib/serialize";
 import { getRequiredUserId } from "@/lib/server-auth";
 
+const resultLabels = {
+  WIN: "勝ち",
+  LOSE: "負け",
+  DRAW: "引分"
+} as const;
+
+const matchTypeLabels = {
+  PRACTICE: "練習試合",
+  OFFICIAL: "公式戦",
+  TOURNAMENT: "大会"
+} as const;
+
 export default async function MatchPage() {
   const userId = await getRequiredUserId();
   const records = await prisma.matchRecord.findMany({
@@ -28,19 +40,19 @@ export default async function MatchPage() {
             <Link href={`/match/${record.id}`} key={record.id}>
               <Card>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-semibold text-slate-950">
+                      <h2 className="break-words font-semibold text-slate-950">
                         {formatDate(record.playedAt)} vs {record.opponentName}
                       </h2>
-                      <Badge>{record.result}</Badge>
-                      <Badge>{record.matchType}</Badge>
+                      <Badge>{resultLabels[record.result]}</Badge>
+                      <Badge>{matchTypeLabels[record.matchType]}</Badge>
                     </div>
-                    <p className="mt-2 text-sm text-slate-600">
+                    <p className="mt-2 break-words text-sm text-slate-600">
                       {record.scores.map((score) => `${score.me}-${score.opp}`).join(", ")}
                     </p>
                   </div>
-                  <span className="text-sm font-semibold text-emerald-700">詳細</span>
+                  <span className="text-sm font-semibold text-emerald-700 sm:shrink-0">詳細</span>
                 </div>
               </Card>
             </Link>

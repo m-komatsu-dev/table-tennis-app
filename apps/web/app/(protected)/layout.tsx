@@ -1,14 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
-
-const navItems = [
-  { href: "/dashboard", label: "ダッシュボード" },
-  { href: "/practice", label: "練習" },
-  { href: "/match", label: "試合" },
-  { href: "/equipment", label: "用具" },
-  { href: "/profile", label: "プロフィール" }
-];
+import { ProtectedNav } from "@/components/protected-nav";
 
 export default async function ProtectedLayout({
   children
@@ -29,15 +22,7 @@ export default async function ProtectedLayout({
             Table Tennis Log
           </Link>
           <nav className="flex flex-wrap items-center gap-2 text-sm">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-md px-3 py-2 font-medium text-slate-700 transition hover:bg-slate-100"
-              >
-                {item.label}
-              </Link>
-            ))}
+            <ProtectedNav />
             <form
               action={async () => {
                 "use server";

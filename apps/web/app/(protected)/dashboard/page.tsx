@@ -1,40 +1,21 @@
 import Link from "next/link";
 import { prisma } from "@table-tennis/db";
-import { DashboardCharts, type MonthlyStats } from "@/components/dashboard-charts";
+import { DashboardCharts } from "@/components/dashboard-charts";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
 import { formatDate, percentage } from "@/lib/format";
 import { serializeMatchList, serializePracticeList } from "@/lib/serialize";
 import { getRequiredUserId } from "@/lib/server-auth";
+import { buildMonthlyStats, calculateWinRate, getMonthlyStatsRange, type MonthlyStats } from "@/lib/stats";
 
-function startOfMonth(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
-}
-
-function addMonths(date: Date, months: number) {
-  return new Date(date.getFullYear(), date.getMonth() + months, 1);
-}
-
-function monthKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
+const resultLabels = {
+  WIN: "勝ち",
+  LOSE: "負け",
+  DRAW: "引分"
+} as const;
 
 async function getMonthlyStats(userId: string): Promise<MonthlyStats[]> {
   const now = new Date();
-  const firstMonth = addMonths(startOfMonth(now), -5);
-  const afterLastMonth = addMonths(startOfMonth(now), 1);
-  const months = Array.from({ length: 6 }, (_, index) => addMonths(firstMonth, index));
-  const monthlyMap = new Map(
-    months.map((date) => [
-      monthKey(date),
-      {
-        month: monthKey(date),
-        practiceMinutes: 0,
-        matches: 0,
-        wins: 0,
-        winRate: 0
-      }
-    ])
-  );
+  const { firstMonth, afterLastMonth } = getMonthlyStatsRange(now);
 
   const [practiceLogs, matches] = await Promise.all([
     prisma.practiceLog.findMany({
@@ -47,27 +28,7 @@ async function getMonthlyStats(userId: string): Promise<MonthlyStats[]> {
     })
   ]);
 
-  for (const log of practiceLogs) {
-    const entry = monthlyMap.get(monthKey(log.practicedAt));
-    if (entry) {
-      entry.practiceMinutes += log.durationMin;
-    }
-  }
-
-  for (const match of matches) {
-    const entry = monthlyMap.get(monthKey(match.playedAt));
-    if (entry) {
-      entry.matches += 1;
-      if (match.result === "WIN") {
-        entry.wins += 1;
-      }
-    }
-  }
-
-  return Array.from(monthlyMap.values()).map((entry) => ({
-    ...entry,
-    winRate: entry.matches > 0 ? (entry.wins / entry.matches) * 100 : 0
-  }));
+  return buildMonthlyStats(practiceLogs, matches, now);
 }
 
 export default async function DashboardPage() {
@@ -105,7 +66,7 @@ export default async function DashboardPage() {
   ]);
 
   const totalPracticeMinutes = practiceDuration._sum.durationMin ?? 0;
-  const winRate = totalMatches > 0 ? (wins / totalMatches) * 100 : 0;
+  const winRate = calculateWinRate(wins, totalMatches);
   const practiceItems = serializePracticeList(recentPractice);
   const matchItems = serializeMatchList(recentMatches);
   const cards = [
@@ -127,20 +88,23 @@ export default async function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card) => (
           <Card key={card.label}>
-            <p className="text-sm text-slate-600">{card.label}</p>
-            <p className="mt-2 text-2xl font-bold text-slate-950">{card.value}</p>
+            <p className="text-sm font-medium text-slate-600">{card.label}</p>
+            <p className="mt-2 text-3xl font-bold text-slate-950">{card.value}</p>
           </Card>
         ))}
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <Link className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-semibold text-emerald-700 shadow-sm" href="/practice/new">
-          練習を記録
+        <Link className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50" href="/practice/new">
+          <span className="text-sm font-semibold text-emerald-700">練習を記録</span>
+          <span className="mt-1 block text-xs text-slate-600">時間、場所、用具、メモを残す</span>
         </Link>
-        <Link className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-semibold text-emerald-700 shadow-sm" href="/match/new">
-          試合を記録
+        <Link className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50" href="/match/new">
+          <span className="text-sm font-semibold text-emerald-700">試合を記録</span>
+          <span className="mt-1 block text-xs text-slate-600">勝敗とセット別スコアを登録</span>
         </Link>
-        <Link className="rounded-lg border border-slate-200 bg-white p-4 text-sm font-semibold text-emerald-700 shadow-sm" href="/equipment">
-          用具を管理
+        <Link className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50" href="/equipment">
+          <span className="text-sm font-semibold text-emerald-700">用具を管理</span>
+          <span className="mt-1 block text-xs text-slate-600">ラケットとラバーを整理</span>
         </Link>
       </div>
       <div className="mt-6">
@@ -157,7 +121,7 @@ export default async function DashboardPage() {
                 <Link href={`/practice/${log.id}`} key={log.id}>
                   <Card>
                     <div className="flex items-center justify-between gap-3">
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-semibold text-slate-950">{formatDate(log.practicedAt)}</p>
                         <p className="text-sm text-slate-600">{log.location || "場所未設定"}</p>
                       </div>
@@ -179,11 +143,11 @@ export default async function DashboardPage() {
                 <Link href={`/match/${record.id}`} key={record.id}>
                   <Card>
                     <div className="flex items-center justify-between gap-3">
-                      <div>
+                      <div className="min-w-0">
                         <p className="font-semibold text-slate-950">{record.opponentName}</p>
                         <p className="text-sm text-slate-600">{formatDate(record.playedAt)}</p>
                       </div>
-                      <Badge>{record.result}</Badge>
+                      <Badge>{resultLabels[record.result]}</Badge>
                     </div>
                   </Card>
                 </Link>

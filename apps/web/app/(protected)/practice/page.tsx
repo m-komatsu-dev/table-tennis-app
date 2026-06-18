@@ -29,15 +29,18 @@ export default async function PracticePage() {
             <Link href={`/practice/${log.id}`} key={log.id}>
               <Card>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-semibold text-slate-950">{formatDate(log.practicedAt)}</h2>
                       <Badge>{log.durationMin}分</Badge>
                     </div>
                     <p className="mt-2 text-sm text-slate-600">{log.location || "場所未設定"}</p>
                     <p className="text-sm text-slate-600">用具: {log.equipment?.blade ?? "未選択"}</p>
+                    {log.content ? (
+                      <p className="mt-2 line-clamp-2 text-sm text-slate-500">{log.content}</p>
+                    ) : null}
                   </div>
-                  <span className="text-sm font-semibold text-emerald-700">詳細</span>
+                  <span className="text-sm font-semibold text-emerald-700 sm:shrink-0">詳細</span>
                 </div>
               </Card>
             </Link>

@@ -24,6 +24,7 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
   const [form, setForm] = useState<EquipmentFormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   function startEdit(item: EquipmentView) {
     setEditingId(item.id);
@@ -46,25 +47,30 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
     setError(null);
     setIsSubmitting(true);
 
-    const response = await fetch(editingId ? `/api/equipment/${editingId}` : "/api/equipment", {
-      method: editingId ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
-    const payload = (await response.json()) as ApiResponse<EquipmentView>;
-    setIsSubmitting(false);
+    try {
+      const response = await fetch(editingId ? `/api/equipment/${editingId}` : "/api/equipment", {
+        method: editingId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+      const payload = (await response.json()) as ApiResponse<EquipmentView>;
 
-    if (!response.ok || !payload.data) {
-      setError(payload.error ?? "用具の保存に失敗しました");
-      return;
-    }
+      if (!response.ok || !payload.data) {
+        setError(payload.error ?? "用具の保存に失敗しました");
+        return;
+      }
 
-    if (editingId) {
-      setItems((current) => current.map((item) => (item.id === editingId ? payload.data as EquipmentView : item)));
-    } else {
-      setItems((current) => [payload.data as EquipmentView, ...current]);
+      if (editingId) {
+        setItems((current) => current.map((item) => (item.id === editingId ? payload.data as EquipmentView : item)));
+      } else {
+        setItems((current) => [payload.data as EquipmentView, ...current]);
+      }
+      resetForm();
+    } catch {
+      setError("通信に失敗しました。時間をおいて再試行してください。");
+    } finally {
+      setIsSubmitting(false);
     }
-    resetForm();
   }
 
   async function handleDelete(id: string) {
@@ -72,17 +78,26 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
       return;
     }
 
-    const response = await fetch(`/api/equipment/${id}`, { method: "DELETE" });
-    const payload = (await response.json()) as ApiResponse<{ id: string }>;
+    setError(null);
+    setDeletingId(id);
 
-    if (!response.ok) {
-      setError(payload.error ?? "用具の削除に失敗しました");
-      return;
-    }
+    try {
+      const response = await fetch(`/api/equipment/${id}`, { method: "DELETE" });
+      const payload = (await response.json()) as ApiResponse<{ id: string }>;
 
-    setItems((current) => current.filter((item) => item.id !== id));
-    if (editingId === id) {
-      resetForm();
+      if (!response.ok) {
+        setError(payload.error ?? "用具の削除に失敗しました");
+        return;
+      }
+
+      setItems((current) => current.filter((item) => item.id !== id));
+      if (editingId === id) {
+        resetForm();
+      }
+    } catch {
+      setError("通信に失敗しました。時間をおいて再試行してください。");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -95,6 +110,7 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
           <Field label="ラケット名">
             <input
               className={inputClass}
+              maxLength={120}
               onChange={(event) => setForm((current) => ({ ...current, blade: event.target.value }))}
               required
               value={form.blade}
@@ -103,6 +119,7 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
           <Field label="フォアラバー">
             <input
               className={inputClass}
+              maxLength={120}
               onChange={(event) => setForm((current) => ({ ...current, rubberFh: event.target.value }))}
               value={form.rubberFh}
             />
@@ -110,6 +127,7 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
           <Field label="バックラバー">
             <input
               className={inputClass}
+              maxLength={120}
               onChange={(event) => setForm((current) => ({ ...current, rubberBh: event.target.value }))}
               value={form.rubberBh}
             />
@@ -123,7 +141,7 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
             />
             現在使用中
           </label>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <button
               className="min-h-10 rounded-md bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
               disabled={isSubmitting}
@@ -134,6 +152,7 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
             {editingId ? (
               <button
                 className="min-h-10 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                disabled={isSubmitting}
                 onClick={resetForm}
                 type="button"
               >
@@ -164,9 +183,10 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
                   <p className="mt-2 text-sm text-slate-600">FH: {item.rubberFh || "未設定"}</p>
                   <p className="text-sm text-slate-600">BH: {item.rubberBh || "未設定"}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <button
                     className="min-h-9 rounded-md border border-slate-300 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                    disabled={deletingId === item.id}
                     onClick={() => startEdit(item)}
                     type="button"
                   >
@@ -174,10 +194,11 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
                   </button>
                   <button
                     className="min-h-9 rounded-md border border-red-200 px-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                    disabled={deletingId === item.id}
                     onClick={() => handleDelete(item.id)}
                     type="button"
                   >
-                    削除
+                    {deletingId === item.id ? "削除中..." : "削除"}
                   </button>
                 </div>
               </div>
