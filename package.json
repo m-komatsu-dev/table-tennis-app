@@ -9,9 +9,12 @@
     "dev": "npm run dev -w @table-tennis/web",
     "build": "npm run build -w @table-tennis/web",
     "lint": "npm run lint -w @table-tennis/web",
+    "typecheck": "npm run typecheck -w @table-tennis/web",
     "test": "npm run test -w @table-tennis/web",
+    "vercel-build": "npm run prisma:generate && npm run build",
     "prisma:generate": "npm run prisma:generate -w @table-tennis/db",
     "prisma:migrate": "npm run prisma:migrate -w @table-tennis/db",
+    "prisma:migrate:deploy": "npm run prisma:migrate:deploy -w @table-tennis/db",
     "prisma:studio": "npm run prisma:studio -w @table-tennis/db",
     "db:seed": "npm run db:seed -w @table-tennis/db"
   }

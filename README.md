@@ -70,12 +70,22 @@ http://localhost:3000/api/auth/callback/google
 Prisma schemaは `packages/db/prisma/schema.prisma` にあります。
 Prisma CLIは `packages/db/.env` の `DATABASE_URL` を参照します。
 
+開発環境では以下を実行します。
+
 ```bash
 npm run prisma:generate
 npm run prisma:migrate
 ```
 
 `npm run prisma:migrate` は `packages/db` workspaceの `prisma migrate dev --schema prisma/schema.prisma` を実行します。
+
+本番環境では `prisma migrate dev` は使わず、必ず `prisma migrate deploy` を使って既存migrationを適用します。
+
+```bash
+npm run prisma:migrate:deploy
+```
+
+`npm run prisma:migrate:deploy` は `packages/db` workspaceの `prisma migrate deploy --schema prisma/schema.prisma` を実行します。
 
 ## seedデータ作成
 
@@ -161,8 +171,59 @@ seedを使う場合は `/login` から `portfolio@example.com` / `password1234` 
 - `NEXTAUTH_SECRET` を十分に長いランダム文字列にしていること
 - `NEXTAUTH_URL` がデプロイ先URLになっていること
 - Googleログインを使う場合、OAuthのリダイレクトURIを本番URLに追加していること
-- `npm run prisma:generate`、`npm run test`、`npm run lint`、`npm run build` が通ること
-- 本番DBに対するmigration適用手順を確認していること
+- `npm run prisma:generate`、`npm run typecheck`、`npm run test`、`npm run lint`、`npm run build` が通ること
+- 本番DBには `npm run prisma:migrate:deploy` でmigrationを適用すること
+
+## Vercel + Supabase デプロイ手順
+
+### 1. Supabaseで本番DBを作成
+
+1. Supabaseでプロジェクトを作成します。
+2. Project Settings > Database からPostgreSQL接続文字列を取得します。
+3. Vercelから接続する場合は、Supabaseの接続プーラー用URIを `DATABASE_URL` に設定することを推奨します。
+4. ローカルから本番DBへmigrationを適用する場合は、`packages/db/.env` の `DATABASE_URL` を本番DBの接続文字列に一時的に変更してから以下を実行します。
+
+```bash
+npm run prisma:migrate:deploy
+```
+
+本番DBに対して `npm run prisma:migrate`、つまり `prisma migrate dev` は実行しないでください。本番では既存migrationを適用する `prisma migrate deploy` のみを使います。
+
+### 2. Vercelプロジェクトを作成
+
+1. VercelでこのリポジトリをImportします。
+2. Framework Presetは `Next.js` を選択します。
+3. monorepo構成のため、Root Directoryはリポジトリルートのままにします。
+4. Install Commandは通常どおり `npm install` を使います。
+5. Build Commandは `npm run vercel-build` を設定します。
+6. Output DirectoryはNext.jsのデフォルトのままにします。
+
+`npm run vercel-build` は `npm run prisma:generate` のあとにWebアプリの `npm run build` を実行します。Vercel上ではmigrationを自動実行せず、デプロイ前に `npm run prisma:migrate:deploy` で本番DBへ適用してください。
+
+### 3. Vercelに設定する環境変数
+
+VercelのProject Settings > Environment Variables に以下を設定します。
+
+```txt
+DATABASE_URL          Supabase PostgreSQLの接続文字列
+NEXTAUTH_SECRET       十分に長いランダム文字列
+NEXTAUTH_URL          Vercelの本番URL。例: https://your-app.vercel.app
+GOOGLE_CLIENT_ID      Googleログインを使う場合のみ設定
+GOOGLE_CLIENT_SECRET  Googleログインを使う場合のみ設定
+```
+
+Googleログインを使う場合は、Google Cloud ConsoleのOAuthクライアントで承認済みリダイレクトURIに以下を追加します。
+
+```txt
+https://your-app.vercel.app/api/auth/callback/google
+```
+
+### 4. デプロイ後確認
+
+1. Supabaseの本番DBに `npm run prisma:migrate:deploy` を適用済みであることを確認します。
+2. VercelでProduction Deploymentを実行します。
+3. `/register` でユーザー登録できることを確認します。
+4. `/login`、`/dashboard`、`/equipment`、`/practice`、`/match`、`/profile` の基本操作を確認します。
 
 ## よくあるエラーと対処法
 
@@ -194,7 +255,7 @@ seedを使う場合は `/login` から `portfolio@example.com` / `password1234` 
 ```bash
 npm run prisma:generate
 npm run test
-npm run typecheck -w @table-tennis/web
+npm run typecheck
 npm run lint
 npm run build
 ```
