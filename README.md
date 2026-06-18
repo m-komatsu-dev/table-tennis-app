@@ -34,10 +34,17 @@ cp apps/web/.env.local.example apps/web/.env.local
 cp packages/db/.env.example packages/db/.env
 ```
 
+monorepo構成では、Webアプリ用とPrisma CLI用の2つの環境変数ファイルが必要です。
+
+```txt
+apps/web/.env.local      # Next.js Webアプリ用
+packages/db/.env         # Prisma CLI用
+```
+
 `apps/web/.env.local` を編集して、Webアプリが使うPostgreSQLとAuth.jsの値を設定してください。
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/table_tennis_app?schema=public"
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/table_tennis_dev?schema=public"
 NEXTAUTH_SECRET="任意の十分に長いランダム文字列"
 NEXTAUTH_URL="http://localhost:3000"
 GOOGLE_CLIENT_ID=""
@@ -47,7 +54,7 @@ GOOGLE_CLIENT_SECRET=""
 `packages/db/.env` はPrisma CLI用です。`npm run prisma:generate` や `npm run prisma:migrate` は `packages/db` workspaceでPrisma CLIを実行するため、ここにも `DATABASE_URL` を設定してください。
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/table_tennis_app?schema=public"
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/table_tennis_dev?schema=public"
 ```
 
 通常は `apps/web/.env.local` と `packages/db/.env` の `DATABASE_URL` を同じ値にします。
