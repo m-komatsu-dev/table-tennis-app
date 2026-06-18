@@ -14,4 +14,4 @@ packages/db/.env
 *.log
 .DS_Store
 coverage
-.vercel
+.vercel*.tsbuildinfo
