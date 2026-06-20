@@ -8,6 +8,7 @@ const navItems = [
   { href: "/practice", label: "練習" },
   { href: "/match", label: "試合" },
   { href: "/calendar", label: "カレンダー" },
+  { href: "/analytics", label: "分析" },
   { href: "/profile", label: "プロフィール" }
 ];
 

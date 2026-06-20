@@ -14,6 +14,7 @@ type MatchScoreSheetProps = {
   result: MatchRecordView["result"];
   scores: ScoreRow[];
   memo: string | null;
+  equipmentName: string | null;
   compact?: boolean;
 };
 
@@ -65,6 +66,7 @@ export function MatchScoreSheet({
   result,
   scores,
   memo,
+  equipmentName,
   compact = false
 }: MatchScoreSheetProps) {
   const setCount = calculateSetCount(scores);
@@ -101,6 +103,10 @@ export function MatchScoreSheet({
             <div className="grid grid-cols-[4rem_1fr] gap-2">
               <dt className="font-semibold text-slate-500">レベル</dt>
               <dd className="font-medium">{profileLevelNames[playerLevel]}</dd>
+            </div>
+            <div className="grid grid-cols-[4rem_1fr] gap-2">
+              <dt className="font-semibold text-slate-500">使用用具</dt>
+              <dd className="wrap-break-words font-medium">{equipmentName || "未設定"}</dd>
             </div>
           </dl>
           <GameCount label="取得ゲーム数" value={setCount.me} />

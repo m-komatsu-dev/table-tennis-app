@@ -34,6 +34,7 @@ export default async function MatchPage({
   const hasFilters = hasMatchSearchFilters(filters);
   const records = await prisma.matchRecord.findMany({
     where: buildMatchWhere(userId, filters),
+    include: { equipment: true },
     orderBy: { playedAt: "desc" }
   });
   const items = serializeMatchList(records);
@@ -153,6 +154,9 @@ export default async function MatchPage({
                     </div>
                     <p className="mt-2 text-sm text-slate-600">
                       相手所属: {record.opponentTeam || "未設定"}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      使用用具: {record.equipment?.blade || "未設定"}
                     </p>
                     <div className="mt-4 flex flex-wrap items-center gap-2">
                       <span className="mr-1 rounded-xl bg-slate-950 px-3 py-2 text-lg font-black tabular-nums text-white">

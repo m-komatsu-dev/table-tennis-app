@@ -77,7 +77,22 @@ test("matchSchema accepts a valid score JSON shape", () => {
       { set: 3, me: 11, opp: 7 }
     ],
     result: "WIN",
-    memo: ""
+    memo: "",
+    equipmentId: "123e4567-e89b-12d3-a456-426614174000"
+  });
+
+  assert.equal(result.success, true);
+});
+
+test("matchSchema accepts an unselected equipment value", () => {
+  const result = matchSchema.safeParse({
+    playedAt: "2026-06-18",
+    opponentName: "佐藤",
+    matchType: "PRACTICE",
+    scores: [{ set: 1, me: 11, opp: 8 }],
+    result: "WIN",
+    memo: "",
+    equipmentId: null
   });
 
   assert.equal(result.success, true);

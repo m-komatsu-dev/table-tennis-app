@@ -71,6 +71,8 @@ model MatchRecord {
   id           String      @id @default(uuid())
   userId       String
   user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  equipmentId  String?
+  equipment    Equipment?  @relation(fields: [equipmentId], references: [id])
   opponentName String
   opponentTeam String?
   matchType    MatchType   @default(PRACTICE)
@@ -97,4 +99,5 @@ model Equipment {
   updatedAt         DateTime @updatedAt
 
   practiceLogs PracticeLog[]
+  matchRecords MatchRecord[]
 }

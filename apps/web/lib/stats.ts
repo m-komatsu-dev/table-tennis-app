@@ -1,5 +1,6 @@
 export type MonthlyStats = {
   month: string;
+  practiceCount: number;
   practiceMinutes: number;
   matches: number;
   wins: number;
@@ -54,6 +55,7 @@ export function buildMonthlyStats(
       monthKey(date),
       {
         month: monthKey(date),
+        practiceCount: 0,
         practiceMinutes: 0,
         matches: 0,
         wins: 0,
@@ -65,6 +67,7 @@ export function buildMonthlyStats(
   for (const log of practiceLogs) {
     const entry = monthlyMap.get(monthKey(log.practicedAt));
     if (entry) {
+      entry.practiceCount += 1;
       entry.practiceMinutes += log.durationMin;
     }
   }

@@ -56,6 +56,7 @@ export default async function DashboardPage() {
     }),
     prisma.matchRecord.findMany({
       where: { userId },
+      include: { equipment: true },
       orderBy: { playedAt: "desc" },
       take: 5
     }),

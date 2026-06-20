@@ -41,6 +41,7 @@ test("buildMonthlyStats aggregates practice minutes and match win rate by month"
 
   assert.equal(result.length, 6);
   assert.equal(may?.practiceMinutes, 150);
+  assert.equal(may?.practiceCount, 2);
   assert.equal(may?.matches, 2);
   assert.equal(may?.wins, 1);
   assert.equal(may?.winRate, 50);

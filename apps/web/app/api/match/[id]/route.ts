@@ -12,6 +12,19 @@ type Params = {
   params: Promise<{ id: string }>;
 };
 
+async function ensureEquipment(userId: string, equipmentId?: string | null) {
+  if (!equipmentId) {
+    return true;
+  }
+
+  const equipment = await prisma.equipment.findFirst({
+    where: { id: equipmentId, userId },
+    select: { id: true }
+  });
+
+  return Boolean(equipment);
+}
+
 export async function GET(_request: Request, { params }: Params) {
   const userId = await requireUserId();
 
@@ -21,7 +34,8 @@ export async function GET(_request: Request, { params }: Params) {
 
   const { id } = await params;
   const record = await prisma.matchRecord.findFirst({
-    where: { id, userId }
+    where: { id, userId },
+    include: { equipment: true }
   });
 
   if (!record) {
@@ -41,9 +55,15 @@ export async function PATCH(request: Request, { params }: Params) {
   try {
     const { id } = await params;
     const body = matchSchema.parse(await request.json());
+
+    if (!(await ensureEquipment(userId, body.equipmentId))) {
+      return errorResponse("指定された用具が見つかりません", 400);
+    }
+
     const result = await prisma.matchRecord.updateMany({
       where: { id, userId },
       data: {
+        ...(body.equipmentId !== undefined ? { equipmentId: body.equipmentId } : {}),
         playedAt: new Date(body.playedAt),
         opponentName: body.opponentName,
         opponentTeam: nullableText(body.opponentTeam),
@@ -59,7 +79,8 @@ export async function PATCH(request: Request, { params }: Params) {
     }
 
     const record = await prisma.matchRecord.findFirstOrThrow({
-      where: { id, userId }
+      where: { id, userId },
+      include: { equipment: true }
     });
 
     return dataResponse(record);

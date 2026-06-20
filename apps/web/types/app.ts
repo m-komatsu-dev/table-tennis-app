@@ -30,6 +30,8 @@ export type ScoreRow = {
 export type MatchRecordView = {
   id: string;
   playedAt: string;
+  equipmentId: string | null;
+  equipment: EquipmentView | null;
   opponentName: string;
   opponentTeam: string | null;
   matchType: "PRACTICE" | "OFFICIAL" | "TOURNAMENT";

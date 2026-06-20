@@ -103,7 +103,8 @@ export const matchSchema = z.object({
       }
     }),
   result: matchResultSchema,
-  memo: z.string().trim().max(4000, "反省・メモは4000文字以内で入力してください").optional().nullable()
+  memo: z.string().trim().max(4000, "反省・メモは4000文字以内で入力してください").optional().nullable(),
+  equipmentId: z.string().uuid().optional().nullable()
 });
 
 export type ScoreRowInput = z.infer<typeof scoreRowSchema>;

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button, ErrorMessage, Field, buttonStyles, inputClass } from "@/components/ui";
 import { toDateInputValue } from "@/lib/format";
 import { formatSetCount } from "@/lib/match-record";
-import type { ApiResponse, MatchRecordView, ScoreRow } from "@/types/app";
+import type { ApiResponse, EquipmentView, MatchRecordView, ScoreRow } from "@/types/app";
 
 const defaultScores: ScoreRow[] = [
   { set: 1, me: 11, opp: 0 },
@@ -14,7 +14,13 @@ const defaultScores: ScoreRow[] = [
   { set: 3, me: 11, opp: 0 }
 ];
 
-export function MatchForm({ match }: { match?: MatchRecordView }) {
+export function MatchForm({
+  match,
+  equipment
+}: {
+  match?: MatchRecordView;
+  equipment: EquipmentView[];
+}) {
   const router = useRouter();
   const [scores, setScores] = useState<ScoreRow[]>(match?.scores.length ? match.scores : defaultScores);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +68,8 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
           matchType: String(formData.get("matchType") ?? "PRACTICE"),
           scores,
           result: String(formData.get("result") ?? "WIN"),
-          memo: String(formData.get("memo") ?? "")
+          memo: String(formData.get("memo") ?? ""),
+          equipmentId: String(formData.get("equipmentId") ?? "") || null
         })
       });
       const payload = (await response.json()) as ApiResponse<MatchRecordView>;
@@ -140,6 +147,16 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
           <select className={inputClass} defaultValue={match?.result === "LOSE" ? "LOSE" : "WIN"} name="result">
             <option value="WIN">勝利</option>
             <option value="LOSE">敗北</option>
+          </select>
+        </Field>
+        <Field hint="未選択でも保存できます。" label="使用用具">
+          <select className={inputClass} defaultValue={match?.equipmentId ?? ""} name="equipmentId">
+            <option value="">未選択</option>
+            {equipment.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.blade}{item.isCurrent ? "（使用中）" : ""}
+              </option>
+            ))}
           </select>
         </Field>
       </div>

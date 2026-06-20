@@ -5,6 +5,10 @@ type PracticeWithEquipment = PracticeLog & {
   equipment: Equipment | null;
 };
 
+type MatchWithEquipment = MatchRecord & {
+  equipment: Equipment | null;
+};
+
 function serializeEquipment(equipment: Equipment): EquipmentView {
   return {
     id: equipment.id,
@@ -40,10 +44,12 @@ export function serializePracticeList(logs: PracticeWithEquipment[]) {
   return logs.map(serializePractice);
 }
 
-export function serializeMatch(record: MatchRecord): MatchRecordView {
+export function serializeMatch(record: MatchWithEquipment): MatchRecordView {
   return {
     id: record.id,
     playedAt: record.playedAt.toISOString(),
+    equipmentId: record.equipmentId,
+    equipment: record.equipment ? serializeEquipment(record.equipment) : null,
     opponentName: record.opponentName,
     opponentTeam: record.opponentTeam,
     matchType: record.matchType,
@@ -53,6 +59,6 @@ export function serializeMatch(record: MatchRecord): MatchRecordView {
   };
 }
 
-export function serializeMatchList(records: MatchRecord[]) {
+export function serializeMatchList(records: MatchWithEquipment[]) {
   return records.map(serializeMatch);
 }

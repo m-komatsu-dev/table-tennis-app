@@ -98,6 +98,7 @@ async function main() {
         userId: user.id,
         opponentName: "佐藤",
         opponentTeam: "市民卓球クラブ",
+        equipmentId: mainRacket.id,
         matchType: "PRACTICE",
         scores: [
           { set: 1, me: 11, opp: 8 },
@@ -112,6 +113,7 @@ async function main() {
         userId: user.id,
         opponentName: "鈴木",
         opponentTeam: "青葉卓球会",
+        equipmentId: controlRacket.id,
         matchType: "OFFICIAL",
         scores: [
           { set: 1, me: 7, opp: 11 },
@@ -126,6 +128,7 @@ async function main() {
         userId: user.id,
         opponentName: "田中",
         opponentTeam: null,
+        equipmentId: mainRacket.id,
         matchType: "OFFICIAL",
         scores: [
           { set: 1, me: 11, opp: 6 },
