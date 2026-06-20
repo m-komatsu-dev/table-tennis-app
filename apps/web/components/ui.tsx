@@ -67,7 +67,7 @@ export function Button({
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/[0.04] ${className}`}>
+    <div className={`rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/4 ${className}`}>
       {children}
     </div>
   );
@@ -122,7 +122,7 @@ export function SuccessMessage({ message }: { message?: string | null }) {
 
 export function EmptyState({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 px-5 py-12 text-center shadow-sm shadow-slate-900/[0.03]">
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 px-5 py-12 text-center shadow-sm shadow-slate-900/3">
       <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-emerald-50 text-xl text-emerald-700" aria-hidden="true">＋</div>
       <div className="mx-auto mt-4 max-w-md text-sm leading-6 text-slate-600">{children}</div>
       {action ? <div className="mt-5">{action}</div> : null}

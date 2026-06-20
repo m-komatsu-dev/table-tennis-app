@@ -101,7 +101,7 @@ export default async function DashboardPage() {
         />
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-900/[0.04] transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md" href="/practice/new">
+        <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-900/4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md" href="/practice/new">
           <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-slate-100 text-xl text-slate-700" aria-hidden="true">＋</span>
           <span className="min-w-0">
             <span className="block text-sm font-bold text-slate-950">練習を記録</span>
@@ -109,7 +109,7 @@ export default async function DashboardPage() {
           </span>
           <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
         </Link>
-        <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm shadow-slate-900/[0.04] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md" href="/match/new">
+        <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm shadow-slate-900/4 transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md" href="/match/new">
           <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-xl text-blue-700" aria-hidden="true">◇</span>
           <span className="min-w-0">
             <span className="block text-sm font-bold text-slate-950">試合を記録</span>
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
           </span>
           <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
         </Link>
-        <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-900/[0.04] transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md" href="/calendar">
+        <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-900/4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md" href="/calendar">
           <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-slate-100 text-xl text-slate-700" aria-hidden="true">▦</span>
           <span className="min-w-0">
             <span className="block text-sm font-bold text-slate-950">カレンダーを見る</span>
