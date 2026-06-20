@@ -1,17 +1,14 @@
 import Link from "next/link";
 import { prisma } from "@table-tennis/db";
 import { DashboardCharts } from "@/components/dashboard-charts";
+import { RecordCalendar } from "@/components/record-calendar";
+import { RecordSummary } from "@/components/record-summary";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
 import { formatDate, percentage } from "@/lib/format";
+import { matchResultLabels } from "@/lib/match-record";
 import { serializeMatchList, serializePracticeList } from "@/lib/serialize";
 import { getRequiredUserId } from "@/lib/server-auth";
 import { buildMonthlyStats, calculateWinRate, getMonthlyStatsRange, type MonthlyStats } from "@/lib/stats";
-
-const resultLabels = {
-  WIN: "勝ち",
-  LOSE: "負け",
-  DRAW: "引分"
-} as const;
 
 async function getMonthlyStats(userId: string): Promise<MonthlyStats[]> {
   const now = new Date();
@@ -40,9 +37,10 @@ export default async function DashboardPage() {
     totalMatches,
     wins,
     losses,
-    draws,
     recentPractice,
     recentMatches,
+    calendarPractice,
+    calendarMatches,
     monthlyStats
   ] = await Promise.all([
     prisma.practiceLog.count({ where: { userId } }),
@@ -50,7 +48,6 @@ export default async function DashboardPage() {
     prisma.matchRecord.count({ where: { userId } }),
     prisma.matchRecord.count({ where: { userId, result: "WIN" } }),
     prisma.matchRecord.count({ where: { userId, result: "LOSE" } }),
-    prisma.matchRecord.count({ where: { userId, result: "DRAW" } }),
     prisma.practiceLog.findMany({
       where: { userId },
       include: { equipment: true },
@@ -62,6 +59,14 @@ export default async function DashboardPage() {
       orderBy: { playedAt: "desc" },
       take: 5
     }),
+    prisma.practiceLog.findMany({
+      where: { userId },
+      select: { practicedAt: true }
+    }),
+    prisma.matchRecord.findMany({
+      where: { userId },
+      select: { playedAt: true }
+    }),
     getMonthlyStats(userId)
   ]);
 
@@ -69,15 +74,6 @@ export default async function DashboardPage() {
   const winRate = calculateWinRate(wins, totalMatches);
   const practiceItems = serializePracticeList(recentPractice);
   const matchItems = serializeMatchList(recentMatches);
-  const cards = [
-    { label: "総練習回数", value: `${practiceCount}回` },
-    { label: "総練習時間", value: `${totalPracticeMinutes}分` },
-    { label: "総試合数", value: `${totalMatches}試合` },
-    { label: "勝利数", value: `${wins}勝` },
-    { label: "敗北数", value: `${losses}敗` },
-    { label: "引き分け数", value: `${draws}分` },
-    { label: "勝率", value: percentage(winRate) }
-  ];
 
   return (
     <>
@@ -85,18 +81,29 @@ export default async function DashboardPage() {
         title="ダッシュボード"
         description="練習量と試合結果の現在地を確認できます。"
       />
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((card) => (
-          <Card key={card.label}>
-            <p className="text-sm font-medium text-slate-600">{card.label}</p>
-            <p className="mt-2 text-3xl font-bold text-slate-950">{card.value}</p>
-          </Card>
-        ))}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <RecordSummary
+          items={[
+            { label: "総練習回数", value: `${practiceCount}回` },
+            { label: "総練習時間", value: `${totalPracticeMinutes}分` }
+          ]}
+          title="練習サマリー"
+        />
+        <RecordSummary
+          items={[
+            { label: "総試合数", value: `${totalMatches}試合` },
+            { label: "勝利数", value: `${wins}勝` },
+            { label: "敗北数", value: `${losses}敗` },
+            { label: "勝率", value: percentage(winRate) }
+          ]}
+          title="試合サマリー"
+          tone="blue"
+        />
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <Link className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50" href="/practice/new">
           <span className="text-sm font-semibold text-emerald-700">練習を記録</span>
-          <span className="mt-1 block text-xs text-slate-600">時間、場所、用具、メモを残す</span>
+          <span className="mt-1 block text-xs text-slate-600">時間、場所、メモを残す</span>
         </Link>
         <Link className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50" href="/match/new">
           <span className="text-sm font-semibold text-emerald-700">試合を記録</span>
@@ -106,6 +113,12 @@ export default async function DashboardPage() {
           <span className="text-sm font-semibold text-emerald-700">用具を管理</span>
           <span className="mt-1 block text-xs text-slate-600">ラケットとラバーを整理</span>
         </Link>
+      </div>
+      <div className="mt-6">
+        <RecordCalendar
+          matchDates={calendarMatches.map((record) => record.playedAt.toISOString())}
+          practiceDates={calendarPractice.map((log) => log.practicedAt.toISOString())}
+        />
       </div>
       <div className="mt-6">
         <DashboardCharts data={monthlyStats} />
@@ -147,7 +160,7 @@ export default async function DashboardPage() {
                         <p className="font-semibold text-slate-950">{record.opponentName}</p>
                         <p className="text-sm text-slate-600">{formatDate(record.playedAt)}</p>
                       </div>
-                      <Badge>{resultLabels[record.result]}</Badge>
+                      <Badge>{matchResultLabels[record.result]}</Badge>
                     </div>
                   </Card>
                 </Link>

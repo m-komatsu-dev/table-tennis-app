@@ -7,8 +7,8 @@ export const levelSchema = z.enum([
   "COMPETITIVE"
 ]);
 
-export const matchTypeSchema = z.enum(["PRACTICE", "OFFICIAL", "TOURNAMENT"]);
-export const matchResultSchema = z.enum(["WIN", "LOSE", "DRAW"]);
+export const matchTypeSchema = z.enum(["PRACTICE", "OFFICIAL"]);
+export const matchResultSchema = z.enum(["WIN", "LOSE"]);
 
 const dateStringSchema = z
   .string({ required_error: "日付を入力してください" })
@@ -63,6 +63,7 @@ const scoreRowSchema = z.object({
 export const matchSchema = z.object({
   playedAt: dateStringSchema,
   opponentName: z.string().trim().min(1, "対戦相手名を入力してください").max(120),
+  opponentTeam: z.string().trim().max(120, "相手所属チームは120文字以内で入力してください").optional().nullable(),
   matchType: matchTypeSchema.default("PRACTICE"),
   scores: z
     .array(scoreRowSchema, { required_error: "セット別スコアを入力してください" })

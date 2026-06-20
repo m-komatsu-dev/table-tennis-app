@@ -63,6 +63,7 @@ model MatchRecord {
   userId        String
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   opponentName  String
+  opponentTeam  String?
   matchType     MatchType   @default(PRACTICE)
   scores        Json
   result        MatchResult

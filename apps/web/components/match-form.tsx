@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorMessage, Field, inputClass } from "@/components/ui";
 import { toDateInputValue } from "@/lib/format";
+import { formatSetCount } from "@/lib/match-record";
 import type { ApiResponse, MatchRecordView, ScoreRow } from "@/types/app";
 
 const defaultScores: ScoreRow[] = [
@@ -56,6 +57,7 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
         body: JSON.stringify({
           playedAt: String(formData.get("playedAt") ?? ""),
           opponentName: String(formData.get("opponentName") ?? ""),
+          opponentTeam: String(formData.get("opponentTeam") ?? ""),
           matchType: String(formData.get("matchType") ?? "PRACTICE"),
           scores,
           result: String(formData.get("result") ?? "WIN"),
@@ -120,18 +122,23 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
         <Field label="対戦相手名">
           <input className={inputClass} defaultValue={match?.opponentName ?? ""} maxLength={120} name="opponentName" required />
         </Field>
+        <Field label="相手所属チーム">
+          <input className={inputClass} defaultValue={match?.opponentTeam ?? ""} maxLength={120} name="opponentTeam" />
+        </Field>
         <Field label="試合種別">
-          <select className={inputClass} defaultValue={match?.matchType ?? "PRACTICE"} name="matchType">
-            <option value="PRACTICE">PRACTICE</option>
-            <option value="OFFICIAL">OFFICIAL</option>
-            <option value="TOURNAMENT">TOURNAMENT</option>
+          <select
+            className={inputClass}
+            defaultValue={match?.matchType === "PRACTICE" ? "PRACTICE" : "OFFICIAL"}
+            name="matchType"
+          >
+            <option value="PRACTICE">練習試合</option>
+            <option value="OFFICIAL">公式試合</option>
           </select>
         </Field>
         <Field label="勝敗">
-          <select className={inputClass} defaultValue={match?.result ?? "WIN"} name="result">
-            <option value="WIN">WIN</option>
-            <option value="LOSE">LOSE</option>
-            <option value="DRAW">DRAW</option>
+          <select className={inputClass} defaultValue={match?.result === "WIN" ? "WIN" : "LOSE"} name="result">
+            <option value="WIN">勝利</option>
+            <option value="LOSE">敗北</option>
           </select>
         </Field>
       </div>
@@ -147,46 +154,56 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
             {scores.length >= 7 ? "7セットまで" : "セット追加"}
           </button>
         </div>
-        <div className="space-y-2">
-          {scores.map((row, index) => (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]" key={index}>
-              <input
-                aria-label="セット"
-                className={inputClass}
-                min={1}
-                max={7}
-                onChange={(event) => updateScore(index, "set", Number(event.target.value))}
-                type="number"
-                value={row.set}
-              />
-              <input
-                aria-label="自分の得点"
-                className={inputClass}
-                min={0}
-                max={99}
-                onChange={(event) => updateScore(index, "me", Number(event.target.value))}
-                type="number"
-                value={row.me}
-              />
-              <input
-                aria-label="相手の得点"
-                className={inputClass}
-                min={0}
-                max={99}
-                onChange={(event) => updateScore(index, "opp", Number(event.target.value))}
-                type="number"
-                value={row.opp}
-              />
-              <button
-                className="col-span-3 min-h-10 rounded-md border border-red-200 px-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-40 sm:col-span-1"
-                disabled={scores.length <= 1}
-                onClick={() => removeScoreRow(index)}
-                type="button"
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 sm:p-4">
+          <div className="mb-2 grid grid-cols-[2rem_minmax(0,1fr)_1.25rem_minmax(0,1fr)_2.5rem] items-center gap-2 text-center text-xs font-semibold text-slate-600 sm:grid-cols-[2.5rem_7rem_1.5rem_7rem_auto]">
+            <span>SET</span>
+            <span>自分</span>
+            <span />
+            <span>相手</span>
+            <span />
+          </div>
+          <div className="space-y-2">
+            {scores.map((row, index) => (
+              <div
+                className="grid grid-cols-[2rem_minmax(0,1fr)_1.25rem_minmax(0,1fr)_2.5rem] items-center gap-2 sm:grid-cols-[2.5rem_7rem_1.5rem_7rem_auto]"
+                key={index}
               >
-                削除
-              </button>
-            </div>
-          ))}
+                <span className="text-center text-sm font-semibold tabular-nums text-slate-500">{index + 1}</span>
+                <input
+                  aria-label={`第${index + 1}セット 自分の得点`}
+                  className={`${inputClass} px-2 text-center text-lg font-bold tabular-nums`}
+                  min={0}
+                  max={99}
+                  onChange={(event) => updateScore(index, "me", Number(event.target.value))}
+                  type="number"
+                  value={row.me}
+                />
+                <span className="text-center text-lg font-bold text-slate-400">-</span>
+                <input
+                  aria-label={`第${index + 1}セット 相手の得点`}
+                  className={`${inputClass} px-2 text-center text-lg font-bold tabular-nums`}
+                  min={0}
+                  max={99}
+                  onChange={(event) => updateScore(index, "opp", Number(event.target.value))}
+                  type="number"
+                  value={row.opp}
+                />
+                <button
+                  aria-label={`第${index + 1}セットを削除`}
+                  className="grid size-10 place-items-center rounded-md border border-red-200 bg-white text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-40"
+                  disabled={scores.length <= 1}
+                  onClick={() => removeScoreRow(index)}
+                  type="button"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-baseline justify-end gap-3 border-t border-slate-200 pt-3">
+            <span className="text-sm font-medium text-slate-600">合計</span>
+            <strong className="text-2xl font-bold tabular-nums text-slate-950">{formatSetCount(scores)}</strong>
+          </div>
         </div>
       </div>
       <Field label="反省・メモ">

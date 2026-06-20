@@ -67,7 +67,7 @@ export async function PATCH(request: Request, { params }: Params) {
         durationMin: body.durationMin,
         location: nullableText(body.location),
         content: nullableText(body.content),
-        equipmentId: body.equipmentId ?? null
+        ...(body.equipmentId !== undefined ? { equipmentId: body.equipmentId } : {})
       }
     });
 

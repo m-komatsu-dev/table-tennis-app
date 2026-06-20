@@ -58,3 +58,27 @@ test("matchSchema rejects duplicate score set numbers", () => {
 
   assert.equal(result.success, false);
 });
+
+test("matchSchema only accepts the supported match type and result values", () => {
+  const legacyType = matchSchema.safeParse({
+    playedAt: "2026-06-18",
+    opponentName: "佐藤",
+    opponentTeam: "卓球クラブ",
+    matchType: "TOURNAMENT",
+    scores: [{ set: 1, me: 11, opp: 8 }],
+    result: "WIN",
+    memo: ""
+  });
+  const legacyResult = matchSchema.safeParse({
+    playedAt: "2026-06-18",
+    opponentName: "佐藤",
+    opponentTeam: "卓球クラブ",
+    matchType: "OFFICIAL",
+    scores: [{ set: 1, me: 11, opp: 8 }],
+    result: "DRAW",
+    memo: ""
+  });
+
+  assert.equal(legacyType.success, false);
+  assert.equal(legacyResult.success, false);
+});

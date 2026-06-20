@@ -28,6 +28,7 @@ export type MatchRecordView = {
   id: string;
   playedAt: string;
   opponentName: string;
+  opponentTeam: string | null;
   matchType: "PRACTICE" | "OFFICIAL" | "TOURNAMENT";
   scores: ScoreRow[];
   result: "WIN" | "LOSE" | "DRAW";

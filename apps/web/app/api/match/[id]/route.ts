@@ -46,6 +46,7 @@ export async function PATCH(request: Request, { params }: Params) {
       data: {
         playedAt: new Date(body.playedAt),
         opponentName: body.opponentName,
+        opponentTeam: nullableText(body.opponentTeam),
         matchType: body.matchType,
         scores: body.scores,
         result: body.result,

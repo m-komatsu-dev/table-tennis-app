@@ -4,15 +4,9 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ErrorMessage, Field, inputClass } from "@/components/ui";
 import { toDateInputValue } from "@/lib/format";
-import type { ApiResponse, EquipmentView, PracticeLogView } from "@/types/app";
+import type { ApiResponse, PracticeLogView } from "@/types/app";
 
-export function PracticeForm({
-  equipment,
-  practice
-}: {
-  equipment: EquipmentView[];
-  practice?: PracticeLogView;
-}) {
+export function PracticeForm({ practice }: { practice?: PracticeLogView }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,7 +19,6 @@ export function PracticeForm({
 
     try {
       const formData = new FormData(event.currentTarget);
-      const equipmentId = String(formData.get("equipmentId") ?? "");
       const response = await fetch(practice ? `/api/practice/${practice.id}` : "/api/practice", {
         method: practice ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -33,8 +26,7 @@ export function PracticeForm({
           practicedAt: String(formData.get("practicedAt") ?? ""),
           durationMin: Number(formData.get("durationMin") ?? 0),
           location: String(formData.get("location") ?? ""),
-          content: String(formData.get("content") ?? ""),
-          equipmentId: equipmentId || null
+          content: String(formData.get("content") ?? "")
         })
       });
       const payload = (await response.json()) as ApiResponse<PracticeLogView>;
@@ -104,16 +96,6 @@ export function PracticeForm({
       </Field>
       <Field label="場所">
         <input className={inputClass} defaultValue={practice?.location ?? ""} maxLength={120} name="location" />
-      </Field>
-      <Field label="使用用具">
-        <select className={inputClass} defaultValue={practice?.equipmentId ?? ""} name="equipmentId">
-          <option value="">未選択</option>
-          {equipment.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.blade}
-            </option>
-          ))}
-        </select>
       </Field>
       <Field label="練習内容メモ">
         <textarea className={inputClass} defaultValue={practice?.content ?? ""} maxLength={4000} name="content" rows={7} />

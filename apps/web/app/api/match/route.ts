@@ -37,6 +37,7 @@ export async function POST(request: Request) {
         userId,
         playedAt: new Date(body.playedAt),
         opponentName: body.opponentName,
+        opponentTeam: nullableText(body.opponentTeam),
         matchType: body.matchType,
         scores: body.scores,
         result: body.result,

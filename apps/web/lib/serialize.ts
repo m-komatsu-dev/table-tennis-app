@@ -42,6 +42,7 @@ export function serializeMatch(record: MatchRecord): MatchRecordView {
     id: record.id,
     playedAt: record.playedAt.toISOString(),
     opponentName: record.opponentName,
+    opponentTeam: record.opponentTeam,
     matchType: record.matchType,
     scores: Array.isArray(record.scores) ? (record.scores as ScoreRow[]) : [],
     result: record.result,
