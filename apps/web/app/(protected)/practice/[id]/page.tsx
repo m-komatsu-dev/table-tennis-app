@@ -22,11 +22,11 @@ export default async function PracticeDetailPage({ params }: PageProps) {
   }
 
   return (
-    <>
+    <div className="mx-auto max-w-3xl">
       <PageHeader title="練習記録の詳細" description="内容を編集できます。" />
-      <Card>
+      <Card className="p-5 sm:p-7">
         <PracticeForm practice={serializePractice(practice)} />
       </Card>
-    </>
+    </div>
   );
 }

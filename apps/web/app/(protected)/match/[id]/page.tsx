@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@table-tennis/db";
+import { MatchScoreSheet } from "@/components/match-score-sheet";
 import { Card, PageHeader } from "@/components/ui";
 import { MatchForm } from "@/components/match-form";
 import { serializeMatch } from "@/lib/serialize";
@@ -12,20 +13,43 @@ type PageProps = {
 export default async function MatchDetailPage({ params }: PageProps) {
   const userId = await getRequiredUserId();
   const { id } = await params;
-  const record = await prisma.matchRecord.findFirst({
-    where: { id, userId }
-  });
+  const [record, player] = await Promise.all([
+    prisma.matchRecord.findFirst({
+      where: { id, userId }
+    }),
+    prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { name: true, club: true, level: true }
+    })
+  ]);
 
   if (!record) {
     notFound();
   }
 
+  const match = serializeMatch(record);
+
   return (
     <>
-      <PageHeader title="試合記録の詳細" description="内容を編集できます。" />
-      <Card>
-        <MatchForm match={serializeMatch(record)} />
-      </Card>
+      <PageHeader title="試合記録の詳細" description="スコアシートと登録内容を確認できます。" />
+      <MatchScoreSheet
+        matchType={match.matchType}
+        memo={match.memo}
+        opponentName={match.opponentName}
+        opponentTeam={match.opponentTeam}
+        playedAt={match.playedAt}
+        playerClub={player.club}
+        playerLevel={player.level}
+        playerName={player.name}
+        result={match.result}
+        scores={match.scores}
+      />
+      <section className="mt-8">
+        <h2 className="mb-3 text-lg font-bold text-slate-950">記録を編集</h2>
+        <Card className="p-5 sm:p-7">
+          <MatchForm match={match} />
+        </Card>
+      </section>
     </>
   );
 }

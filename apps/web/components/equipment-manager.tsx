@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { ErrorMessage, Field, inputClass } from "@/components/ui";
+import { Button, ErrorMessage, Field, inputClass } from "@/components/ui";
 import type { ApiResponse, EquipmentView } from "@/types/app";
 
 type EquipmentFormState = {
@@ -111,9 +111,10 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
-      <form className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm" onSubmit={handleSubmit}>
-        <h2 className="text-lg font-semibold text-slate-950">{editingId ? "用具を編集" : "用具を追加"}</h2>
+    <div className="grid gap-6 lg:grid-cols-[minmax(320px,400px)_1fr]">
+      <form className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/[0.04] sm:p-6" onSubmit={handleSubmit}>
+        <h2 className="text-lg font-bold text-slate-950">{editingId ? "用具を編集" : "用具を追加"}</h2>
+        <p className="mt-1 text-sm text-slate-500">現在使用しているラケット構成を登録できます。</p>
         <div className="mt-4 space-y-4">
           <ErrorMessage message={error} />
           <Field label="ラケット名">
@@ -122,6 +123,7 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
               maxLength={120}
               onChange={(event) => setForm((current) => ({ ...current, blade: event.target.value }))}
               required
+              placeholder="例：インナーフォース レイヤー ALC"
               value={form.blade}
             />
           </Field>
@@ -186,34 +188,33 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
             現在使用中
           </label>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              className="min-h-10 rounded-md bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+            <Button
               disabled={isSubmitting}
               type="submit"
             >
               {isSubmitting ? "保存中..." : editingId ? "更新" : "追加"}
-            </button>
+            </Button>
             {editingId ? (
-              <button
-                className="min-h-10 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+              <Button
                 disabled={isSubmitting}
                 onClick={resetForm}
                 type="button"
+                variant="secondary"
               >
                 キャンセル
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>
       </form>
       <div className="space-y-3">
         {items.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-600">
-            用具はまだ登録されていません。
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-10 text-center text-sm leading-6 text-slate-600">
+            用具はまだ登録されていません。<br />左のフォームから最初の用具を追加できます。
           </div>
         ) : (
           items.map((item) => (
-            <div key={item.id} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <div key={item.id} className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/[0.04] transition hover:border-emerald-200 hover:shadow-md">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -235,22 +236,24 @@ export function EquipmentManager({ initialEquipment }: { initialEquipment: Equip
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <button
-                    className="min-h-9 rounded-md border border-slate-300 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                  <Button
+                    className="min-h-10 px-3"
                     disabled={deletingId === item.id}
                     onClick={() => startEdit(item)}
                     type="button"
+                    variant="secondary"
                   >
                     編集
-                  </button>
-                  <button
-                    className="min-h-9 rounded-md border border-red-200 px-3 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                  </Button>
+                  <Button
+                    className="min-h-10 px-3"
                     disabled={deletingId === item.id}
                     onClick={() => handleDelete(item.id)}
                     type="button"
+                    variant="danger"
                   >
                     {deletingId === item.id ? "削除中..." : "削除"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

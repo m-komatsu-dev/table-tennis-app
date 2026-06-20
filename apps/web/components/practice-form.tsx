@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ErrorMessage, Field, inputClass } from "@/components/ui";
+import { Button, ErrorMessage, Field, buttonStyles, inputClass } from "@/components/ui";
 import { toDateInputValue } from "@/lib/format";
 import type { ApiResponse, PracticeLogView } from "@/types/app";
 
@@ -72,9 +73,10 @@ export function PracticeForm({ practice }: { practice?: PracticeLogView }) {
   }
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form className="space-y-6" onSubmit={handleSubmit}>
       <ErrorMessage message={error} />
-      <Field label="練習日">
+      <div className="grid gap-5 sm:grid-cols-2">
+      <Field hint="練習した日を選択してください。" label="練習日">
         <input
           className={inputClass}
           defaultValue={practice ? toDateInputValue(practice.practicedAt) : toDateInputValue(new Date())}
@@ -83,7 +85,7 @@ export function PracticeForm({ practice }: { practice?: PracticeLogView }) {
           type="date"
         />
       </Field>
-      <Field label="練習時間（分）">
+      <Field hint="1分〜1440分の範囲で入力できます。" label="練習時間（分）">
         <input
           className={inputClass}
           defaultValue={practice?.durationMin ?? 90}
@@ -94,29 +96,34 @@ export function PracticeForm({ practice }: { practice?: PracticeLogView }) {
           type="number"
         />
       </Field>
+      </div>
       <Field label="場所">
-        <input className={inputClass} defaultValue={practice?.location ?? ""} maxLength={120} name="location" />
+        <input className={inputClass} defaultValue={practice?.location ?? ""} maxLength={120} name="location" placeholder="例：市民体育館" />
       </Field>
-      <Field label="練習内容メモ">
-        <textarea className={inputClass} defaultValue={practice?.content ?? ""} maxLength={4000} name="content" rows={7} />
+      <Field hint="練習メニュー、気づき、次回試したいことを残せます。" label="練習内容メモ">
+        <textarea className={`${inputClass} min-h-44 resize-y`} defaultValue={practice?.content ?? ""} maxLength={4000} name="content" placeholder="例：フォアドライブと3球目攻撃を重点的に練習" rows={7} />
       </Field>
-      <div className="flex flex-wrap gap-2">
-        <button
-          className="min-h-10 rounded-md bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+      <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center">
+        <Button
+          className="sm:min-w-28"
           disabled={isSubmitting || isDeleting}
           type="submit"
         >
           {isSubmitting ? "保存中..." : "保存"}
-        </button>
+        </Button>
+        <Link className={buttonStyles({ variant: "secondary" })} href="/practice">
+          一覧へ戻る
+        </Link>
         {practice ? (
-          <button
-            className="min-h-10 rounded-md border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 transition hover:bg-red-50"
+          <Button
+            className="sm:ml-auto"
             disabled={isSubmitting || isDeleting}
             onClick={handleDelete}
             type="button"
+            variant="danger"
           >
             {isDeleting ? "削除中..." : "削除"}
-          </button>
+          </Button>
         ) : null}
       </div>
     </form>

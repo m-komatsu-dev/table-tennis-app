@@ -2,21 +2,11 @@
 
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ErrorMessage, Field, SuccessMessage, inputClass } from "@/components/ui";
+import { Button, ErrorMessage, Field, SuccessMessage, inputClass } from "@/components/ui";
+import { profileLevelOptions } from "@/lib/profile";
 import type { ApiResponse, ProfileView } from "@/types/app";
 
 const MAX_AVATAR_SIZE = 1024 * 1024;
-
-const levels = [
-  { value: "BEGINNER", label: "初心者（地区・市大会レベル）" },
-  { value: "INTERMEDIATE", label: "初級者（地区・市大会ランカー〜都道府県大会レベル）" },
-  { value: "ADVANCED", label: "中級者（県大会ランカー〜地方大会（関東、関西、四国、東北、等）レベル）" },
-  {
-    value: "COMPETITIVE",
-    label: "上級者（地方大会（関東、関西、四国、東北、等）ランカー〜全国大会レベル）"
-  },
-  { value: "PRO", label: "プロ（全国大会ランカー〜）" }
-] as const;
 
 const genders = [
   { value: "MALE", label: "男性" },
@@ -102,14 +92,14 @@ export function ProfileForm({ profile }: { profile: ProfileView }) {
   }
 
   return (
-    <form className="space-y-5" onSubmit={handleSubmit}>
+    <form className="space-y-7" onSubmit={handleSubmit}>
       <ErrorMessage message={error} />
       <SuccessMessage message={message} />
 
-      <div>
-        <span className="text-sm font-medium text-slate-700">アイコン画像</span>
-        <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="grid size-24 shrink-0 place-items-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 text-2xl font-bold text-slate-500">
+      <section className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-white p-5">
+        <span className="text-sm font-bold text-slate-800">プロフィール画像</span>
+        <div className="mt-3 flex flex-col gap-5 sm:flex-row sm:items-center">
+          <div className="grid size-28 shrink-0 place-items-center overflow-hidden rounded-full border-4 border-white bg-emerald-100 text-3xl font-black text-emerald-700 shadow-md shadow-emerald-900/10">
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img alt="プロフィール画像のプレビュー" className="h-full w-full object-cover" src={avatarUrl} />
@@ -124,7 +114,7 @@ export function ProfileForm({ profile }: { profile: ProfileView }) {
               onChange={handleAvatarChange}
               type="file"
             />
-            <p className="text-xs text-slate-500">画像形式のみ・1MB以下。選択後に保存してください。</p>
+            <p className="text-xs leading-5 text-slate-500">PNG・JPEGなどの画像形式、1MB以下。選択後にプロフィールを保存してください。</p>
             {avatarUrl ? (
               <button
                 className="text-xs font-semibold text-red-700 hover:underline"
@@ -136,8 +126,11 @@ export function ProfileForm({ profile }: { profile: ProfileView }) {
             ) : null}
           </div>
         </div>
-      </div>
+      </section>
 
+      <div>
+        <h2 className="text-base font-bold text-slate-950">基本情報</h2>
+        <p className="mt-1 text-sm text-slate-500">他の記録画面で表示する選手情報です。</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="名前">
           <input className={inputClass} defaultValue={profile.name} maxLength={80} name="name" required />
@@ -145,8 +138,8 @@ export function ProfileForm({ profile }: { profile: ProfileView }) {
         <Field label="メールアドレス">
           <input className={inputClass} defaultValue={profile.email} disabled />
         </Field>
-        <Field label="所属クラブ">
-          <input className={inputClass} defaultValue={profile.club ?? ""} maxLength={120} name="club" />
+        <Field hint="所属がない場合は空欄でも構いません。" label="所属クラブ">
+          <input className={inputClass} defaultValue={profile.club ?? ""} maxLength={120} name="club" placeholder="例：〇〇卓球クラブ" />
         </Field>
         <Field label="性別">
           <select className={inputClass} defaultValue={profile.gender ?? "NO_ANSWER"} name="gender">
@@ -158,32 +151,36 @@ export function ProfileForm({ profile }: { profile: ProfileView }) {
           </select>
         </Field>
       </div>
+      </div>
 
-      <Field label="レベル">
+      <Field hint="現在の競技レベルに最も近いものを選択してください。" label="レベル">
         <select className={inputClass} defaultValue={profile.level} name="level">
-          {levels.map((level) => (
+          {profileLevelOptions.map((level) => (
             <option key={level.value} value={level.value}>
               {level.label}
             </option>
           ))}
         </select>
       </Field>
-      <Field label="プレースタイル">
+      <Field hint="戦型や得意なプレーを200文字以内で入力できます。" label="プレースタイル">
         <textarea
           className={inputClass}
           defaultValue={profile.playStyle ?? ""}
           maxLength={200}
           name="playStyle"
+          placeholder="例：右シェーク攻撃型。フォアドライブを軸に展開します。"
           rows={4}
         />
       </Field>
-      <button
-        className="min-h-10 rounded-md bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+      <div className="border-t border-slate-100 pt-5">
+      <Button
+        className="w-full sm:w-auto sm:min-w-44"
         disabled={isSubmitting}
         type="submit"
       >
         {isSubmitting ? "保存中..." : "プロフィールを保存"}
-      </button>
+      </Button>
+      </div>
     </form>
   );
 }

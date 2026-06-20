@@ -3,7 +3,7 @@ import { prisma } from "@table-tennis/db";
 import { DashboardCharts } from "@/components/dashboard-charts";
 import { RecordCalendar } from "@/components/record-calendar";
 import { RecordSummary } from "@/components/record-summary";
-import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
+import { Badge, Card, EmptyState, PageHeader, PrimaryLink } from "@/components/ui";
 import { formatDate, percentage } from "@/lib/format";
 import { matchResultLabels } from "@/lib/match-record";
 import { serializeMatchList, serializePracticeList } from "@/lib/serialize";
@@ -79,7 +79,7 @@ export default async function DashboardPage() {
     <>
       <PageHeader
         title="ダッシュボード"
-        description="練習量と試合結果の現在地を確認できます。"
+        description="練習量と試合結果を振り返り、次の一歩を記録しましょう。"
       />
       <div className="grid gap-4 lg:grid-cols-2">
         <RecordSummary
@@ -101,17 +101,29 @@ export default async function DashboardPage() {
         />
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <Link className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50" href="/practice/new">
-          <span className="text-sm font-semibold text-emerald-700">練習を記録</span>
-          <span className="mt-1 block text-xs text-slate-600">時間、場所、メモを残す</span>
+        <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-900/[0.04] transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md" href="/practice/new">
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-slate-100 text-xl text-slate-700" aria-hidden="true">＋</span>
+          <span className="min-w-0">
+            <span className="block text-sm font-bold text-slate-950">練習を記録</span>
+            <span className="mt-1 block text-xs text-slate-500">時間、場所、メモを残す</span>
+          </span>
+          <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
         </Link>
-        <Link className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50" href="/match/new">
-          <span className="text-sm font-semibold text-emerald-700">試合を記録</span>
-          <span className="mt-1 block text-xs text-slate-600">勝敗とセット別スコアを登録</span>
+        <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-blue-100 bg-white p-5 shadow-sm shadow-slate-900/[0.04] transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md" href="/match/new">
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-xl text-blue-700" aria-hidden="true">◇</span>
+          <span className="min-w-0">
+            <span className="block text-sm font-bold text-slate-950">試合を記録</span>
+            <span className="mt-1 block text-xs text-slate-500">勝敗とセット別スコアを登録</span>
+          </span>
+          <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
         </Link>
-        <Link className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50" href="/calendar">
-          <span className="text-sm font-semibold text-emerald-700">カレンダーを見る</span>
-          <span className="mt-1 block text-xs text-slate-600">練習と試合を月ごとに確認</span>
+        <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-900/[0.04] transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md" href="/calendar">
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-slate-100 text-xl text-slate-700" aria-hidden="true">▦</span>
+          <span className="min-w-0">
+            <span className="block text-sm font-bold text-slate-950">カレンダーを見る</span>
+            <span className="mt-1 block text-xs text-slate-500">練習と試合を月ごとに確認</span>
+          </span>
+          <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
         </Link>
       </div>
       <div className="mt-6">
@@ -129,22 +141,27 @@ export default async function DashboardPage() {
       <div className="mt-6">
         <DashboardCharts data={monthlyStats} />
       </div>
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section>
-          <h2 className="mb-3 text-lg font-semibold text-slate-950">最近の練習記録</h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-950">最近の練習記録</h2>
+            <Link className="text-sm font-semibold text-emerald-700 hover:underline" href="/practice">すべて見る</Link>
+          </div>
           {practiceItems.length === 0 ? (
-            <EmptyState>練習記録はまだありません。</EmptyState>
+            <EmptyState action={<PrimaryLink href="/practice/new">最初の練習を記録</PrimaryLink>}>
+              まだ練習記録がありません。今日の練習から残してみましょう。
+            </EmptyState>
           ) : (
             <div className="space-y-3">
               {practiceItems.map((log) => (
                 <Link href={`/practice/${log.id}`} key={log.id}>
-                  <Card>
+                  <Card className="transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md">
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <p className="font-semibold text-slate-950">{formatDate(log.practicedAt)}</p>
                         <p className="text-sm text-slate-600">{log.location || "場所未設定"}</p>
                       </div>
-                      <Badge>{log.durationMin}分</Badge>
+                      <Badge tone="emerald">{log.durationMin}分</Badge>
                     </div>
                   </Card>
                 </Link>
@@ -153,20 +170,27 @@ export default async function DashboardPage() {
           )}
         </section>
         <section>
-          <h2 className="mb-3 text-lg font-semibold text-slate-950">最近の試合記録</h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-950">最近の試合記録</h2>
+            <Link className="text-sm font-semibold text-emerald-700 hover:underline" href="/match">すべて見る</Link>
+          </div>
           {matchItems.length === 0 ? (
-            <EmptyState>試合記録はまだありません。</EmptyState>
+            <EmptyState action={<PrimaryLink href="/match/new">最初の試合を記録</PrimaryLink>}>
+              まだ試合記録がありません。セットスコアを記録してみましょう。
+            </EmptyState>
           ) : (
             <div className="space-y-3">
               {matchItems.map((record) => (
                 <Link href={`/match/${record.id}`} key={record.id}>
-                  <Card>
+                  <Card className="transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <p className="font-semibold text-slate-950">{record.opponentName}</p>
                         <p className="text-sm text-slate-600">{formatDate(record.playedAt)}</p>
                       </div>
-                      <Badge>{matchResultLabels[record.result]}</Badge>
+                      <Badge tone={record.result === "WIN" ? "emerald" : record.result === "LOSE" ? "red" : "slate"}>
+                        {matchResultLabels[record.result]}
+                      </Badge>
                     </div>
                   </Card>
                 </Link>

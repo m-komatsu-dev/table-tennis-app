@@ -14,3 +14,13 @@ test("set count is calculated from each set score", () => {
   assert.deepEqual(calculateSetCount(scores), { me: 3, opp: 2 });
   assert.equal(formatSetCount(scores), "3 - 2");
 });
+
+test("tied set scores are not added to either game count", () => {
+  const scores = [
+    { set: 1, me: 11, opp: 8 },
+    { set: 2, me: 9, opp: 9 },
+    { set: 3, me: 7, opp: 11 }
+  ];
+
+  assert.deepEqual(calculateSetCount(scores), { me: 1, opp: 1 });
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 
 export default function ProtectedError({
   error,
@@ -10,8 +10,8 @@ export default function ProtectedError({
   reset: () => void;
 }) {
   return (
-    <Card>
-      <div className="space-y-4">
+    <Card className="mx-auto max-w-2xl border-red-100 p-6 sm:p-8">
+      <div className="space-y-5">
         <div>
           <h1 className="text-xl font-bold text-slate-950">画面の読み込みに失敗しました</h1>
           <p className="mt-2 text-sm text-slate-600">
@@ -19,13 +19,9 @@ export default function ProtectedError({
           </p>
           {error.digest ? <p className="mt-2 text-xs text-slate-500">Error ID: {error.digest}</p> : null}
         </div>
-        <button
-          className="min-h-10 rounded-md bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700"
-          onClick={reset}
-          type="button"
-        >
+        <Button onClick={reset} type="button">
           再読み込み
-        </button>
+        </Button>
       </div>
     </Card>
   );

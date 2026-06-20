@@ -30,11 +30,12 @@ export default async function ProfilePage() {
   return (
     <>
       <PageHeader title="プロフィール" description="プレイヤー情報を編集できます。" />
-      <Card>
+      <Card className="p-5 sm:p-7">
         <ProfileForm profile={profile satisfies ProfileView} />
       </Card>
       <section className="mt-8">
-        <h2 className="text-xl font-bold text-slate-950">使用用具</h2>
+        <div className="mb-2 h-1 w-10 rounded-full bg-emerald-500" />
+        <h2 className="text-xl font-bold tracking-tight text-slate-950">使用用具</h2>
         <p className="mt-1 text-sm text-slate-600">ラケット、グリップ、ラバーと厚さを登録できます。</p>
         <div className="mt-4">
           <EquipmentManager initialEquipment={serializeEquipmentList(equipment)} />
