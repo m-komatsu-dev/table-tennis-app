@@ -36,7 +36,7 @@ export function PracticeForm({ practice }: { practice?: PracticeLogView }) {
         return;
       }
 
-      router.push(`/practice/${payload.data.id}`);
+      router.push(practice ? `/practice/${payload.data.id}` : "/practice");
       router.refresh();
     } catch {
       setError("通信に失敗しました。時間をおいて再試行してください。");

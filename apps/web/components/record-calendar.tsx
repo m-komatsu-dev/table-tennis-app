@@ -1,8 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
-type CalendarFocus = "all" | "practice" | "match";
+export type PracticeCalendarRecord = {
+  id: string;
+  practicedAt: string;
+  durationMin: number;
+};
+
+export type MatchCalendarRecord = {
+  id: string;
+  playedAt: string;
+  opponentName: string;
+};
 
 function dateKey(value: string | Date) {
   const date = new Date(value);
@@ -17,18 +28,35 @@ function moveMonth(date: Date, amount: number) {
   return new Date(date.getFullYear(), date.getMonth() + amount, 1);
 }
 
+function groupByDate<T>(records: T[], getDate: (record: T) => string) {
+  const grouped = new Map<string, T[]>();
+
+  for (const record of records) {
+    const key = dateKey(getDate(record));
+    grouped.set(key, [...(grouped.get(key) ?? []), record]);
+  }
+
+  return grouped;
+}
+
 export function RecordCalendar({
-  practiceDates = [],
-  matchDates = [],
-  focus = "all"
+  practiceRecords = [],
+  matchRecords = [],
+  variant = "compact"
 }: {
-  practiceDates?: string[];
-  matchDates?: string[];
-  focus?: CalendarFocus;
+  practiceRecords?: PracticeCalendarRecord[];
+  matchRecords?: MatchCalendarRecord[];
+  variant?: "compact" | "detailed";
 }) {
   const [displayMonth, setDisplayMonth] = useState(() => monthStart(new Date()));
-  const practiceDays = useMemo(() => new Set(practiceDates.map(dateKey)), [practiceDates]);
-  const matchDays = useMemo(() => new Set(matchDates.map(dateKey)), [matchDates]);
+  const practiceByDay = useMemo(
+    () => groupByDate(practiceRecords, (record) => record.practicedAt),
+    [practiceRecords]
+  );
+  const matchByDay = useMemo(
+    () => groupByDate(matchRecords, (record) => record.playedAt),
+    [matchRecords]
+  );
   const calendarStart = new Date(
     displayMonth.getFullYear(),
     displayMonth.getMonth(),
@@ -40,10 +68,11 @@ export function RecordCalendar({
     return date;
   });
   const todayKey = dateKey(new Date());
+  const isDetailed = variant === "detailed";
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
-      <div className="flex items-center justify-between gap-3">
+    <section className={`rounded-xl border border-slate-200 bg-white shadow-sm ${isDetailed ? "p-2 sm:p-5" : "p-3 sm:p-5"}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-base font-semibold text-slate-950">月間カレンダー</h2>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
@@ -55,7 +84,7 @@ export function RecordCalendar({
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-end gap-1">
           <button
             aria-label="前月を表示"
             className="grid size-9 place-items-center rounded-md border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-50"
@@ -88,13 +117,16 @@ export function RecordCalendar({
       <div className="mt-1 grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200">
         {days.map((date) => {
           const key = dateKey(date);
-          const isCurrentMonth = date.getMonth() === displayMonth.getMonth();
-          const hasPractice = practiceDays.has(key);
-          const hasMatch = matchDays.has(key);
+          const isCurrentMonth =
+            date.getFullYear() === displayMonth.getFullYear() && date.getMonth() === displayMonth.getMonth();
+          const practices = practiceByDay.get(key) ?? [];
+          const matches = matchByDay.get(key) ?? [];
 
           return (
             <div
-              className={`min-h-16 bg-white p-1 sm:min-h-20 sm:p-1.5 ${isCurrentMonth ? "" : "bg-slate-50 text-slate-400"}`}
+              className={`min-w-0 bg-white p-1 sm:p-1.5 ${
+                isDetailed ? "min-h-24 sm:min-h-36 lg:min-h-40" : "min-h-16 sm:min-h-20"
+              } ${isCurrentMonth ? "" : "bg-slate-50 text-slate-400"}`}
               key={key}
             >
               <div
@@ -104,28 +136,32 @@ export function RecordCalendar({
               >
                 {date.getDate()}
               </div>
-              {isCurrentMonth && (hasPractice || hasMatch) ? (
-                <div className="mt-1 flex flex-col gap-1">
-                  {hasPractice ? (
-                    <span
-                      className={`flex items-center justify-center gap-1 rounded-sm bg-emerald-100 px-0.5 py-0.5 text-[9px] font-semibold text-emerald-800 sm:text-[10px] ${
-                        focus === "practice" ? "ring-1 ring-emerald-500" : ""
-                      }`}
+              {isCurrentMonth && (practices.length > 0 || matches.length > 0) ? (
+                <div className="mt-1 flex min-w-0 flex-col gap-1">
+                  {practices.map((record) => (
+                    <Link
+                      aria-label={`${date.getMonth() + 1}月${date.getDate()}日の練習 ${record.durationMin}分を開く`}
+                      className="flex min-w-0 items-center gap-1 rounded bg-emerald-100 px-1 py-1 text-[9px] font-semibold text-emerald-800 transition hover:bg-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 sm:text-[10px]"
+                      href={`/practice/${record.id}`}
+                      key={record.id}
+                      title={`練習 ${record.durationMin}分`}
                     >
                       <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" />
-                      <span className="hidden sm:inline">練習</span>
-                    </span>
-                  ) : null}
-                  {hasMatch ? (
-                    <span
-                      className={`flex items-center justify-center gap-1 rounded-sm bg-blue-100 px-0.5 py-0.5 text-[9px] font-semibold text-blue-800 sm:text-[10px] ${
-                        focus === "match" ? "ring-1 ring-blue-500" : ""
-                      }`}
+                      <span className="min-w-0 truncate">{isDetailed ? `練習 ${record.durationMin}分` : "練習"}</span>
+                    </Link>
+                  ))}
+                  {matches.map((record) => (
+                    <Link
+                      aria-label={`${date.getMonth() + 1}月${date.getDate()}日の${record.opponentName}との試合を開く`}
+                      className="flex min-w-0 items-center gap-1 rounded bg-blue-100 px-1 py-1 text-[9px] font-semibold text-blue-800 transition hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-[10px]"
+                      href={`/match/${record.id}`}
+                      key={record.id}
+                      title={`試合 vs ${record.opponentName}`}
                     >
                       <span className="size-1.5 shrink-0 rounded-full bg-blue-500" />
-                      <span className="hidden sm:inline">試合</span>
-                    </span>
-                  ) : null}
+                      <span className="min-w-0 truncate">{isDetailed ? `試合 vs ${record.opponentName}` : "試合"}</span>
+                    </Link>
+                  ))}
                 </div>
               ) : null}
             </div>

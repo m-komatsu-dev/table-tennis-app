@@ -24,7 +24,8 @@ export async function GET() {
       level: true,
       playStyle: true,
       club: true,
-      avatarUrl: true
+      avatarUrl: true,
+      gender: true
     }
   });
 
@@ -49,6 +50,7 @@ export async function PATCH(request: Request) {
       data: {
         name: body.name,
         level: body.level,
+        gender: body.gender,
         club: nullableText(body.club),
         playStyle: nullableText(body.playStyle),
         avatarUrl: nullableText(body.avatarUrl)
@@ -60,7 +62,8 @@ export async function PATCH(request: Request) {
         level: true,
         playStyle: true,
         club: true,
-        avatarUrl: true
+        avatarUrl: true,
+        gender: true
       }
     });
 

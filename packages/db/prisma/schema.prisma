@@ -12,6 +12,14 @@ enum Level {
   INTERMEDIATE
   ADVANCED
   COMPETITIVE
+  PRO
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  NO_ANSWER
 }
 
 enum MatchType {
@@ -36,6 +44,7 @@ model User {
   playStyle    String?
   club         String?
   avatarUrl    String?
+  gender       Gender?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -45,44 +54,47 @@ model User {
 }
 
 model PracticeLog {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  practicedAt  DateTime
-  durationMin  Int
-  location     String?
-  content      String?
-  equipmentId  String?
-  equipment    Equipment? @relation(fields: [equipmentId], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  practicedAt DateTime
+  durationMin Int
+  location    String?
+  content     String?
+  equipmentId String?
+  equipment   Equipment? @relation(fields: [equipmentId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model MatchRecord {
-  id            String      @id @default(uuid())
-  userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  opponentName  String
-  opponentTeam  String?
-  matchType     MatchType   @default(PRACTICE)
-  scores        Json
-  result        MatchResult
-  memo          String?
-  playedAt      DateTime
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id           String      @id @default(uuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  opponentName String
+  opponentTeam String?
+  matchType    MatchType   @default(PRACTICE)
+  scores       Json
+  result       MatchResult
+  memo         String?
+  playedAt     DateTime
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 }
 
 model Equipment {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  blade       String
-  rubberFh    String?
-  rubberBh    String?
-  isCurrent   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blade             String
+  rubberFh          String?
+  rubberFhThickness String?
+  rubberBh          String?
+  rubberBhThickness String?
+  gripType          String?
+  isCurrent         Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   practiceLogs PracticeLog[]
 }

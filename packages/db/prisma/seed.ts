@@ -19,6 +19,7 @@ async function main() {
       name: testUser.name,
       passwordHash,
       level: "INTERMEDIATE",
+      gender: "MALE",
       club: "Table Tennis Club",
       playStyle: "右シェーク攻撃型。フォアドライブから展開する練習中。"
     },
@@ -26,6 +27,7 @@ async function main() {
       name: testUser.name,
       passwordHash,
       level: "INTERMEDIATE",
+      gender: "MALE",
       club: "Table Tennis Club",
       playStyle: "右シェーク攻撃型。フォアドライブから展開する練習中。"
     }
@@ -39,8 +41,11 @@ async function main() {
     data: {
       userId: user.id,
       blade: "インナーフォース レイヤー ALC",
+      gripType: "フレア",
       rubberFh: "テナジー05",
+      rubberFhThickness: "特厚",
       rubberBh: "ディグニクス05",
+      rubberBhThickness: "特厚",
       isCurrent: true
     }
   });
@@ -49,8 +54,11 @@ async function main() {
     data: {
       userId: user.id,
       blade: "スワット",
+      gripType: "ストレート",
       rubberFh: "ロゼナ",
+      rubberFhThickness: "厚",
       rubberBh: "ファスターク C-1",
+      rubberBhThickness: "厚",
       isCurrent: false
     }
   });

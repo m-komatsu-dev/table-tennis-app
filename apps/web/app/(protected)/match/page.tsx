@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { prisma } from "@table-tennis/db";
-import { RecordCalendar } from "@/components/record-calendar";
 import { RecordSummary } from "@/components/record-summary";
 import { Badge, Card, EmptyState, PageHeader, PrimaryLink } from "@/components/ui";
 import { formatDate, percentage } from "@/lib/format";
@@ -11,16 +10,10 @@ import { calculateWinRate } from "@/lib/stats";
 
 export default async function MatchPage() {
   const userId = await getRequiredUserId();
-  const [records, practiceDates] = await Promise.all([
-    prisma.matchRecord.findMany({
-      where: { userId },
-      orderBy: { playedAt: "desc" }
-    }),
-    prisma.practiceLog.findMany({
-      where: { userId },
-      select: { practicedAt: true }
-    })
-  ]);
+  const records = await prisma.matchRecord.findMany({
+    where: { userId },
+    orderBy: { playedAt: "desc" }
+  });
   const items = serializeMatchList(records);
   const wins = items.filter((record) => record.result === "WIN").length;
   const losses = items.filter((record) => record.result === "LOSE").length;
@@ -43,13 +36,6 @@ export default async function MatchPage() {
         title="試合サマリー"
         tone="blue"
       />
-      <div className="mt-6">
-        <RecordCalendar
-          focus="match"
-          matchDates={items.map((record) => record.playedAt)}
-          practiceDates={practiceDates.map((log) => log.practicedAt.toISOString())}
-        />
-      </div>
       <h2 className="mb-3 mt-8 text-lg font-semibold text-slate-950">試合記録一覧</h2>
       {items.length === 0 ? (
         <EmptyState>試合記録はまだありません。</EmptyState>

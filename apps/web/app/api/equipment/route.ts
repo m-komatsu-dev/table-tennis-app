@@ -37,7 +37,10 @@ export async function POST(request: Request) {
         userId,
         blade: body.blade,
         rubberFh: nullableText(body.rubberFh),
+        rubberFhThickness: nullableText(body.rubberFhThickness),
         rubberBh: nullableText(body.rubberBh),
+        rubberBhThickness: nullableText(body.rubberBhThickness),
+        gripType: nullableText(body.gripType),
         isCurrent: body.isCurrent
       }
     });

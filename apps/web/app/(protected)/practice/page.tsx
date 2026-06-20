@@ -1,25 +1,18 @@
 import Link from "next/link";
 import { prisma } from "@table-tennis/db";
-import { RecordCalendar } from "@/components/record-calendar";
 import { RecordSummary } from "@/components/record-summary";
-import { Badge, Card, EmptyState, PageHeader, PrimaryLink } from "@/components/ui";
+import { Badge, EmptyState, PageHeader, PrimaryLink } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { serializePracticeList } from "@/lib/serialize";
 import { getRequiredUserId } from "@/lib/server-auth";
 
 export default async function PracticePage() {
   const userId = await getRequiredUserId();
-  const [logs, matchDates] = await Promise.all([
-    prisma.practiceLog.findMany({
-      where: { userId },
-      include: { equipment: true },
-      orderBy: { practicedAt: "desc" }
-    }),
-    prisma.matchRecord.findMany({
-      where: { userId },
-      select: { playedAt: true }
-    })
-  ]);
+  const logs = await prisma.practiceLog.findMany({
+    where: { userId },
+    include: { equipment: true },
+    orderBy: { practicedAt: "desc" }
+  });
   const items = serializePracticeList(logs);
   const totalMinutes = items.reduce((total, log) => total + log.durationMin, 0);
 
@@ -37,41 +30,31 @@ export default async function PracticePage() {
         ]}
         title="練習サマリー"
       />
-      <div className="mt-6">
-        <RecordCalendar
-          focus="practice"
-          matchDates={matchDates.map((record) => record.playedAt.toISOString())}
-          practiceDates={items.map((log) => log.practicedAt)}
-        />
-      </div>
       <h2 className="mb-3 mt-8 text-lg font-semibold text-slate-950">練習記録一覧</h2>
       {items.length === 0 ? (
         <EmptyState>練習記録はまだありません。</EmptyState>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {items.map((log) => (
             <Link
               aria-label={`${formatDate(log.practicedAt)}の練習記録の詳細を見る`}
+              className="group flex aspect-[4/3] min-h-64 flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md"
               href={`/practice/${log.id}`}
               key={log.id}
             >
-              <Card>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-semibold text-slate-950">{formatDate(log.practicedAt)}</h2>
-                      <Badge>{log.durationMin}分</Badge>
-                    </div>
-                    <p className="mt-2 text-sm text-slate-600">{log.location || "場所未設定"}</p>
-                    {log.content ? (
-                      <p className="mt-2 line-clamp-2 text-sm text-slate-500">{log.content}</p>
-                    ) : (
-                      <p className="mt-2 text-sm text-slate-400">練習内容メモはありません</p>
-                    )}
-                  </div>
-                  <span className="text-sm font-semibold text-emerald-700 sm:shrink-0">詳細・編集</span>
-                </div>
-              </Card>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-semibold text-slate-950">{formatDate(log.practicedAt)}</h2>
+                <Badge>{log.durationMin}分</Badge>
+              </div>
+              <p className="mt-4 text-sm font-medium text-slate-700">{log.location || "場所未設定"}</p>
+              {log.content ? (
+                <p className="mt-3 line-clamp-4 text-sm leading-6 text-slate-500">{log.content}</p>
+              ) : (
+                <p className="mt-3 text-sm text-slate-400">練習内容メモはありません</p>
+              )}
+              <span className="mt-auto border-t border-slate-100 pt-4 text-sm font-semibold text-emerald-700 group-hover:text-emerald-800">
+                詳細・編集を見る →
+              </span>
             </Link>
           ))}
         </div>

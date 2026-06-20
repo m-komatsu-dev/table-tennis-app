@@ -46,7 +46,10 @@ export async function PATCH(request: Request, { params }: Params) {
       data: {
         blade: body.blade,
         rubberFh: nullableText(body.rubberFh),
+        rubberFhThickness: nullableText(body.rubberFhThickness),
         rubberBh: nullableText(body.rubberBh),
+        rubberBhThickness: nullableText(body.rubberBhThickness),
+        gripType: nullableText(body.gripType),
         isCurrent: body.isCurrent
       }
     });

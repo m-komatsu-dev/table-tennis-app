@@ -2,7 +2,10 @@ export type EquipmentView = {
   id: string;
   blade: string;
   rubberFh: string | null;
+  rubberFhThickness: string | null;
   rubberBh: string | null;
+  rubberBhThickness: string | null;
+  gripType: string | null;
   isCurrent: boolean;
   createdAt: string;
   updatedAt: string;
@@ -39,7 +42,8 @@ export type ProfileView = {
   name: string;
   email: string;
   club: string | null;
-  level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "COMPETITIVE";
+  level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "COMPETITIVE" | "PRO";
+  gender: "MALE" | "FEMALE" | "OTHER" | "NO_ANSWER" | null;
   playStyle: string | null;
   avatarUrl: string | null;
 };

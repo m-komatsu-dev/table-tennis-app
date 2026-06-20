@@ -10,7 +10,10 @@ function serializeEquipment(equipment: Equipment): EquipmentView {
     id: equipment.id,
     blade: equipment.blade,
     rubberFh: equipment.rubberFh,
+    rubberFhThickness: equipment.rubberFhThickness,
     rubberBh: equipment.rubberBh,
+    rubberBhThickness: equipment.rubberBhThickness,
+    gripType: equipment.gripType,
     isCurrent: equipment.isCurrent,
     createdAt: equipment.createdAt.toISOString(),
     updatedAt: equipment.updatedAt.toISOString()

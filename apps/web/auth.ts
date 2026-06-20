@@ -47,7 +47,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
-          image: user.avatarUrl
+          image: user.avatarUrl?.startsWith("data:") ? null : user.avatarUrl
         };
       }
     })
@@ -105,7 +105,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (dbUser) {
           token.id = dbUser.id;
           token.name = dbUser.name;
-          token.picture = dbUser.avatarUrl;
+          token.picture = dbUser.avatarUrl?.startsWith("data:") ? null : dbUser.avatarUrl;
         }
       }
 

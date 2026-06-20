@@ -61,11 +61,11 @@ export default async function DashboardPage() {
     }),
     prisma.practiceLog.findMany({
       where: { userId },
-      select: { practicedAt: true }
+      select: { id: true, practicedAt: true, durationMin: true }
     }),
     prisma.matchRecord.findMany({
       where: { userId },
-      select: { playedAt: true }
+      select: { id: true, playedAt: true, opponentName: true }
     }),
     getMonthlyStats(userId)
   ]);
@@ -109,15 +109,21 @@ export default async function DashboardPage() {
           <span className="text-sm font-semibold text-emerald-700">試合を記録</span>
           <span className="mt-1 block text-xs text-slate-600">勝敗とセット別スコアを登録</span>
         </Link>
-        <Link className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50" href="/equipment">
-          <span className="text-sm font-semibold text-emerald-700">用具を管理</span>
-          <span className="mt-1 block text-xs text-slate-600">ラケットとラバーを整理</span>
+        <Link className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50" href="/calendar">
+          <span className="text-sm font-semibold text-emerald-700">カレンダーを見る</span>
+          <span className="mt-1 block text-xs text-slate-600">練習と試合を月ごとに確認</span>
         </Link>
       </div>
       <div className="mt-6">
         <RecordCalendar
-          matchDates={calendarMatches.map((record) => record.playedAt.toISOString())}
-          practiceDates={calendarPractice.map((log) => log.practicedAt.toISOString())}
+          matchRecords={calendarMatches.map((record) => ({
+            ...record,
+            playedAt: record.playedAt.toISOString()
+          }))}
+          practiceRecords={calendarPractice.map((log) => ({
+            ...log,
+            practicedAt: log.practicedAt.toISOString()
+          }))}
         />
       </div>
       <div className="mt-6">

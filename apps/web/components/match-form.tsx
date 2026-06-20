@@ -71,7 +71,7 @@ export function MatchForm({ match }: { match?: MatchRecordView }) {
         return;
       }
 
-      router.push(`/match/${payload.data.id}`);
+      router.push(match ? `/match/${payload.data.id}` : "/match");
       router.refresh();
     } catch {
       setError("通信に失敗しました。時間をおいて再試行してください。");

@@ -4,8 +4,11 @@ export const levelSchema = z.enum([
   "BEGINNER",
   "INTERMEDIATE",
   "ADVANCED",
-  "COMPETITIVE"
+  "COMPETITIVE",
+  "PRO"
 ]);
+
+export const genderSchema = z.enum(["MALE", "FEMALE", "OTHER", "NO_ANSWER"]);
 
 export const matchTypeSchema = z.enum(["PRACTICE", "OFFICIAL"]);
 export const matchResultSchema = z.enum(["WIN", "LOSE"]);
@@ -31,14 +34,30 @@ export const profileSchema = z.object({
   name: z.string().trim().min(1, "名前を入力してください").max(80, "名前は80文字以内で入力してください"),
   club: z.string().trim().max(120, "所属クラブは120文字以内で入力してください").optional().nullable(),
   level: levelSchema,
+  gender: genderSchema.optional().nullable(),
   playStyle: z.string().trim().max(200, "プレースタイルは200文字以内で入力してください").optional().nullable(),
-  avatarUrl: z.string().trim().url("URL形式で入力してください").optional().or(z.literal("")).nullable()
+  avatarUrl: z
+    .string()
+    .trim()
+    .max(1_400_000, "画像データが大きすぎます")
+    .refine(
+      (value) =>
+        value === "" ||
+        /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(value) ||
+        /^https?:\/\//.test(value),
+      "画像データの形式が正しくありません"
+    )
+    .optional()
+    .nullable()
 });
 
 export const equipmentSchema = z.object({
   blade: z.string().trim().min(1, "ラケット名を入力してください").max(120, "ラケット名は120文字以内で入力してください"),
   rubberFh: z.string().trim().max(120, "フォアラバーは120文字以内で入力してください").optional().nullable(),
+  rubberFhThickness: z.string().trim().max(40, "フォアラバーの厚さは40文字以内で入力してください").optional().nullable(),
   rubberBh: z.string().trim().max(120, "バックラバーは120文字以内で入力してください").optional().nullable(),
+  rubberBhThickness: z.string().trim().max(40, "バックラバーの厚さは40文字以内で入力してください").optional().nullable(),
+  gripType: z.string().trim().max(80, "グリップ形状は80文字以内で入力してください").optional().nullable(),
   isCurrent: z.boolean().default(true)
 });
 
