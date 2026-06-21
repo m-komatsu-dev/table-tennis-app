@@ -45,3 +45,10 @@ test("user-owned data API routes include userId in database queries", () => {
     assert.match(content, /where:\s*{[\s\S]*userId/, relative(appApiDir, file));
   }
 });
+
+test("practice menu detail API scopes reads, updates and deletes to the logged-in user", () => {
+  const route = readFileSync(join(appApiDir, "practice-menus/[id]/route.ts"), "utf8");
+
+  assert.match(route, /findFirst\(\{[\s\S]*where:\s*\{ id, userId \}/);
+  assert.match(route, /deleteMany\(\{[\s\S]*where:\s*\{ id, userId \}/);
+});

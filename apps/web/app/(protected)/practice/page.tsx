@@ -32,7 +32,7 @@ export default async function PracticePage({
   const hasFilters = hasPracticeSearchFilters(filters);
   const logs = await prisma.practiceLog.findMany({
     where: buildPracticeWhere(userId, filters),
-    include: { equipment: true },
+    include: { equipment: true, practiceMenu: { select: { id: true, title: true } } },
     orderBy: { practicedAt: "desc" }
   });
   const items = serializePracticeList(logs);
@@ -114,10 +114,8 @@ export default async function PracticePage({
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {items.map((log) => (
-            <Link
-              aria-label={`${formatDate(log.practicedAt)}の練習記録の詳細を見る`}
+            <article
               className="group flex aspect-[4/3] min-h-64 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/[0.04] transition duration-200 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-900/[0.06]"
-              href={`/practice/${log.id}`}
               key={log.id}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -133,10 +131,15 @@ export default async function PracticePage({
               ) : (
                 <p className="mt-3 text-sm text-slate-400">練習内容メモはありません</p>
               )}
-              <span className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4 text-sm font-semibold text-emerald-700 group-hover:text-emerald-800">
+              {log.practiceMenu ? (
+                <p className="mt-3 truncate text-sm text-slate-600">
+                  使用メニュー：<Link className="font-semibold text-emerald-700 underline decoration-emerald-200 underline-offset-4 hover:text-emerald-900" href={`/practice-menus/${log.practiceMenu.id}`}>{log.practiceMenu.title}</Link>
+                </p>
+              ) : null}
+              <Link aria-label={`${formatDate(log.practicedAt)}の練習記録の詳細を見る`} className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4 text-sm font-semibold text-emerald-700 group-hover:text-emerald-800" href={`/practice/${log.id}`}>
                 詳細・編集を見る →
-              </span>
-            </Link>
+              </Link>
+            </article>
           ))}
         </div>
       )}

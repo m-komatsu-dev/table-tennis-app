@@ -19,6 +19,45 @@ export type PracticeLogView = {
   content: string | null;
   equipmentId: string | null;
   equipment: EquipmentView | null;
+  practiceMenuId: string | null;
+  practiceMenu: PracticeMenuSummaryView | null;
+};
+
+export type PracticeMenuCategory =
+  | "SERVE"
+  | "RECEIVE"
+  | "FOREHAND"
+  | "BACKHAND"
+  | "FOOTWORK"
+  | "DRIVE"
+  | "BLOCK"
+  | "GAME"
+  | "PHYSICAL"
+  | "MENTAL"
+  | "OTHER";
+
+export type PracticeMenuSummaryView = {
+  id: string;
+  title: string;
+};
+
+export type PracticeMenuItemView = {
+  id: string;
+  title: string;
+  description: string | null;
+  category: PracticeMenuCategory;
+  durationMin: number | null;
+  order: number;
+};
+
+export type PracticeMenuView = PracticeMenuSummaryView & {
+  description: string | null;
+  goal: string | null;
+  totalMinutes: number | null;
+  isTemplate: boolean;
+  items: PracticeMenuItemView[];
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ScoreRow = {

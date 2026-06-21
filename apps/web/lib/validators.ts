@@ -13,6 +13,20 @@ export const genderSchema = z.enum(["MALE", "FEMALE", "OTHER", "NO_ANSWER"]);
 export const matchTypeSchema = z.enum(["PRACTICE", "OFFICIAL"]);
 export const matchResultSchema = z.enum(["WIN", "LOSE"]);
 
+export const practiceMenuCategorySchema = z.enum([
+  "SERVE",
+  "RECEIVE",
+  "FOREHAND",
+  "BACKHAND",
+  "FOOTWORK",
+  "DRIVE",
+  "BLOCK",
+  "GAME",
+  "PHYSICAL",
+  "MENTAL",
+  "OTHER"
+]);
+
 const dateStringSchema = z
   .string({ required_error: "日付を入力してください" })
   .trim()
@@ -70,7 +84,36 @@ export const practiceSchema = z.object({
     .max(1440, "練習時間は1440分以内で入力してください"),
   location: z.string().trim().max(120, "場所は120文字以内で入力してください").optional().nullable(),
   content: z.string().trim().max(4000, "練習内容メモは4000文字以内で入力してください").optional().nullable(),
-  equipmentId: z.string().uuid().optional().nullable()
+  equipmentId: z.string().uuid().optional().nullable(),
+  practiceMenuId: z.string().uuid("練習メニューの指定が正しくありません").optional().nullable()
+});
+
+export const practiceMenuItemSchema = z.object({
+  title: z.string().trim().min(1, "項目名を入力してください").max(100, "項目名は100文字以内で入力してください"),
+  description: z.string().trim().max(500, "項目の説明は500文字以内で入力してください").optional().nullable(),
+  category: practiceMenuCategorySchema,
+  durationMin: z.coerce
+    .number({ invalid_type_error: "項目の時間は数値で入力してください" })
+    .int("項目の時間は整数で入力してください")
+    .min(1, "項目の時間は1分以上で入力してください")
+    .max(300, "項目の時間は300分以内で入力してください")
+    .optional()
+    .nullable(),
+  order: z.coerce.number().int("並び順は整数で入力してください").min(0, "並び順は0以上で入力してください")
+});
+
+export const practiceMenuSchema = z.object({
+  title: z.string().trim().min(1, "メニュー名を入力してください").max(100, "メニュー名は100文字以内で入力してください"),
+  description: z.string().trim().max(1000, "説明は1000文字以内で入力してください").optional().nullable(),
+  goal: z.string().trim().max(500, "目的は500文字以内で入力してください").optional().nullable(),
+  totalMinutes: z.coerce
+    .number({ invalid_type_error: "合計時間は数値で入力してください" })
+    .int("合計時間は整数で入力してください")
+    .min(1, "合計時間は1分以上で入力してください")
+    .max(600, "合計時間は600分以内で入力してください")
+    .optional()
+    .nullable(),
+  items: z.array(practiceMenuItemSchema).min(1, "メニュー項目を1件以上追加してください")
 });
 
 const scoreRowSchema = z.object({

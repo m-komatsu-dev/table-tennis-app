@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { equipmentSchema, matchSchema, practiceSchema, profileSchema } from "./validators";
+import {
+  equipmentSchema,
+  matchSchema,
+  practiceMenuItemSchema,
+  practiceMenuSchema,
+  practiceSchema,
+  profileSchema
+} from "./validators";
 
 test("practiceSchema rejects missing date and out-of-range duration", () => {
   const result = practiceSchema.safeParse({
@@ -136,4 +143,44 @@ test("matchSchema only accepts the supported match type and result values", () =
 
   assert.equal(legacyType.success, false);
   assert.equal(legacyResult.success, false);
+});
+
+const validMenuItem = {
+  title: "ショートサーブ",
+  description: "下回転を短く出す",
+  category: "SERVE",
+  durationMin: 15,
+  order: 0
+};
+
+test("practiceMenuSchema accepts a valid menu with one or more items", () => {
+  const result = practiceMenuSchema.safeParse({
+    title: "サーブ練習",
+    description: "基本メニュー",
+    goal: "回転量を増やす",
+    totalMinutes: 60,
+    items: [validMenuItem]
+  });
+
+  assert.equal(result.success, true);
+});
+
+test("practiceMenuSchema requires at least one item", () => {
+  const result = practiceMenuSchema.safeParse({ title: "空のメニュー", items: [] });
+  assert.equal(result.success, false);
+});
+
+test("practiceMenuItemSchema rejects an unsupported category", () => {
+  const result = practiceMenuItemSchema.safeParse({ ...validMenuItem, category: "SMASH" });
+  assert.equal(result.success, false);
+});
+
+test("practiceMenuSchema checks totalMinutes range", () => {
+  assert.equal(practiceMenuSchema.safeParse({ title: "短すぎる", totalMinutes: 0, items: [validMenuItem] }).success, false);
+  assert.equal(practiceMenuSchema.safeParse({ title: "長すぎる", totalMinutes: 601, items: [validMenuItem] }).success, false);
+});
+
+test("practiceMenuItemSchema checks durationMin range", () => {
+  assert.equal(practiceMenuItemSchema.safeParse({ ...validMenuItem, durationMin: 0 }).success, false);
+  assert.equal(practiceMenuItemSchema.safeParse({ ...validMenuItem, durationMin: 301 }).success, false);
 });

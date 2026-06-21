@@ -1,8 +1,21 @@
-import type { Equipment, MatchRecord, PracticeLog } from "@table-tennis/db";
-import type { EquipmentView, MatchRecordView, PracticeLogView, ScoreRow } from "@/types/app";
+import type {
+  Equipment,
+  MatchRecord,
+  PracticeLog,
+  PracticeMenu,
+  PracticeMenuItem
+} from "@table-tennis/db";
+import type {
+  EquipmentView,
+  MatchRecordView,
+  PracticeLogView,
+  PracticeMenuView,
+  ScoreRow
+} from "@/types/app";
 
 type PracticeWithEquipment = PracticeLog & {
   equipment: Equipment | null;
+  practiceMenu: Pick<PracticeMenu, "id" | "title"> | null;
 };
 
 type MatchWithEquipment = MatchRecord & {
@@ -36,7 +49,32 @@ export function serializePractice(log: PracticeWithEquipment): PracticeLogView {
     location: log.location,
     content: log.content,
     equipmentId: log.equipmentId,
-    equipment: log.equipment ? serializeEquipment(log.equipment) : null
+    equipment: log.equipment ? serializeEquipment(log.equipment) : null,
+    practiceMenuId: log.practiceMenuId,
+    practiceMenu: log.practiceMenu ? { id: log.practiceMenu.id, title: log.practiceMenu.title } : null
+  };
+}
+
+export function serializePracticeMenu(
+  menu: PracticeMenu & { items: PracticeMenuItem[] }
+): PracticeMenuView {
+  return {
+    id: menu.id,
+    title: menu.title,
+    description: menu.description,
+    goal: menu.goal,
+    totalMinutes: menu.totalMinutes,
+    isTemplate: menu.isTemplate,
+    items: menu.items.map((item) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      category: item.category,
+      durationMin: item.durationMin,
+      order: item.order
+    })),
+    createdAt: menu.createdAt.toISOString(),
+    updatedAt: menu.updatedAt.toISOString()
   };
 }
 

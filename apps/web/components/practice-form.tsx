@@ -5,9 +5,17 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, ErrorMessage, Field, buttonStyles, inputClass } from "@/components/ui";
 import { toDateInputValue } from "@/lib/format";
-import type { ApiResponse, PracticeLogView } from "@/types/app";
+import type { ApiResponse, PracticeLogView, PracticeMenuSummaryView } from "@/types/app";
 
-export function PracticeForm({ practice }: { practice?: PracticeLogView }) {
+export function PracticeForm({
+  practice,
+  practiceMenus,
+  initialPracticeMenuId
+}: {
+  practice?: PracticeLogView;
+  practiceMenus: PracticeMenuSummaryView[];
+  initialPracticeMenuId?: string;
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,7 +35,8 @@ export function PracticeForm({ practice }: { practice?: PracticeLogView }) {
           practicedAt: String(formData.get("practicedAt") ?? ""),
           durationMin: Number(formData.get("durationMin") ?? 0),
           location: String(formData.get("location") ?? ""),
-          content: String(formData.get("content") ?? "")
+          content: String(formData.get("content") ?? ""),
+          practiceMenuId: String(formData.get("practiceMenuId") ?? "") || null
         })
       });
       const payload = (await response.json()) as ApiResponse<PracticeLogView>;
@@ -99,6 +108,16 @@ export function PracticeForm({ practice }: { practice?: PracticeLogView }) {
       </div>
       <Field label="場所">
         <input className={inputClass} defaultValue={practice?.location ?? ""} maxLength={120} name="location" placeholder="例：市民体育館" />
+      </Field>
+      <Field hint="未選択でも保存できます。" label="使用した練習メニュー">
+        <select
+          className={inputClass}
+          defaultValue={practice?.practiceMenuId ?? initialPracticeMenuId ?? ""}
+          name="practiceMenuId"
+        >
+          <option value="">選択しない</option>
+          {practiceMenus.map((menu) => <option key={menu.id} value={menu.id}>{menu.title}</option>)}
+        </select>
       </Field>
       <Field hint="練習メニュー、気づき、次回試したいことを残せます。" label="練習内容メモ">
         <textarea className={`${inputClass} min-h-44 resize-y`} defaultValue={practice?.content ?? ""} maxLength={4000} name="content" placeholder="例：フォアドライブと3球目攻撃を重点的に練習" rows={7} />

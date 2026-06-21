@@ -25,6 +25,14 @@ async function ensureEquipment(userId: string, equipmentId?: string | null) {
   return Boolean(equipment);
 }
 
+async function ensurePracticeMenu(userId: string, practiceMenuId?: string | null) {
+  if (!practiceMenuId) return true;
+  return Boolean(await prisma.practiceMenu.findFirst({
+    where: { id: practiceMenuId, userId },
+    select: { id: true }
+  }));
+}
+
 export async function GET(_request: Request, { params }: Params) {
   const userId = await requireUserId();
 
@@ -35,7 +43,7 @@ export async function GET(_request: Request, { params }: Params) {
   const { id } = await params;
   const log = await prisma.practiceLog.findFirst({
     where: { id, userId },
-    include: { equipment: true }
+    include: { equipment: true, practiceMenu: { select: { id: true, title: true } } }
   });
 
   if (!log) {
@@ -60,6 +68,10 @@ export async function PATCH(request: Request, { params }: Params) {
       return errorResponse("指定された用具が見つかりません", 400);
     }
 
+    if (!(await ensurePracticeMenu(userId, body.practiceMenuId))) {
+      return errorResponse("指定された練習メニューが見つかりません", 400);
+    }
+
     const result = await prisma.practiceLog.updateMany({
       where: { id, userId },
       data: {
@@ -67,7 +79,8 @@ export async function PATCH(request: Request, { params }: Params) {
         durationMin: body.durationMin,
         location: nullableText(body.location),
         content: nullableText(body.content),
-        ...(body.equipmentId !== undefined ? { equipmentId: body.equipmentId } : {})
+        ...(body.equipmentId !== undefined ? { equipmentId: body.equipmentId } : {}),
+        ...(body.practiceMenuId !== undefined ? { practiceMenuId: body.practiceMenuId } : {})
       }
     });
 
@@ -77,7 +90,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
     const log = await prisma.practiceLog.findFirstOrThrow({
       where: { id, userId },
-      include: { equipment: true }
+      include: { equipment: true, practiceMenu: { select: { id: true, title: true } } }
     });
 
     return dataResponse(log);

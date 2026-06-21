@@ -35,6 +35,7 @@ async function main() {
 
   await prisma.practiceLog.deleteMany({ where: { userId: user.id } });
   await prisma.matchRecord.deleteMany({ where: { userId: user.id } });
+  await prisma.practiceMenu.deleteMany({ where: { userId: user.id } });
   await prisma.equipment.deleteMany({ where: { userId: user.id } });
 
   const mainRacket = await prisma.equipment.create({
@@ -63,6 +64,60 @@ async function main() {
     }
   });
 
+  const serveMenu = await prisma.practiceMenu.create({
+    data: {
+      userId: user.id,
+      title: "サーブ・3球目攻撃メニュー",
+      description: "サーブの質を高め、狙った3球目攻撃につなげる定番メニュー。",
+      goal: "回転量とコースを安定させ、3球目で先手を取る",
+      totalMinutes: 75,
+      items: {
+        create: [
+          { title: "ショートサーブの回転確認", description: "下回転と横下回転を交互に出す", category: "SERVE", durationMin: 15, order: 0 },
+          { title: "ロングサーブからの展開", description: "相手バック側へのロングを中心に組み立てる", category: "SERVE", durationMin: 15, order: 1 },
+          { title: "3球目フォアドライブ", description: "サーブ後の戻りと打球点を意識する", category: "DRIVE", durationMin: 30, order: 2 },
+          { title: "ゲーム形式", description: "サーブから始める条件付きゲーム", category: "GAME", durationMin: 15, order: 3 }
+        ]
+      }
+    }
+  });
+
+  const receiveMenu = await prisma.practiceMenu.create({
+    data: {
+      userId: user.id,
+      title: "レシーブ安定メニュー",
+      description: "回転を判断し、短いレシーブと攻撃的なレシーブを使い分ける。",
+      goal: "レシーブミスを減らして4球目まで安定してつなぐ",
+      totalMinutes: 60,
+      items: {
+        create: [
+          { title: "回転判断", description: "相手のラケット角度と打球音を見る", category: "RECEIVE", durationMin: 10, order: 0 },
+          { title: "ストップとツッツキ", description: "同じ構えから長短を打ち分ける", category: "RECEIVE", durationMin: 20, order: 1 },
+          { title: "フリックレシーブ", description: "甘いショートサーブを先手で攻める", category: "FOREHAND", durationMin: 15, order: 2 },
+          { title: "レシーブから4球目", description: "コースを限定したゲーム形式", category: "GAME", durationMin: 15, order: 3 }
+        ]
+      }
+    }
+  });
+
+  const footworkMenu = await prisma.practiceMenu.create({
+    data: {
+      userId: user.id,
+      title: "フットワーク強化メニュー",
+      description: "姿勢を崩さず連続して動くための基礎と実戦練習。",
+      goal: "フォア・バックの切り替えと戻りを速くする",
+      totalMinutes: 70,
+      items: {
+        create: [
+          { title: "動的ウォームアップ", description: "股関節と足首を中心に動かす", category: "PHYSICAL", durationMin: 10, order: 0 },
+          { title: "フォア2点フットワーク", description: "打球後に必ずニュートラルへ戻る", category: "FOOTWORK", durationMin: 20, order: 1 },
+          { title: "フォア・バック切り替え", description: "一定ピッチから徐々に速度を上げる", category: "FOOTWORK", durationMin: 20, order: 2 },
+          { title: "オール対フォア", description: "コース予測と戻りを実戦速度で確認する", category: "GAME", durationMin: 20, order: 3 }
+        ]
+      }
+    }
+  });
+
   await prisma.practiceLog.createMany({
     data: [
       {
@@ -71,7 +126,8 @@ async function main() {
         durationMin: 120,
         location: "市民体育館",
         content: "フォア対フォア、3球目攻撃、バックブロックを重点練習。",
-        equipmentId: mainRacket.id
+        equipmentId: mainRacket.id,
+        practiceMenuId: serveMenu.id
       },
       {
         userId: user.id,
@@ -79,7 +135,8 @@ async function main() {
         durationMin: 90,
         location: "クラブ練習場",
         content: "サーブの回転量確認とレシーブからの展開。",
-        equipmentId: mainRacket.id
+        equipmentId: mainRacket.id,
+        practiceMenuId: receiveMenu.id
       },
       {
         userId: user.id,
@@ -87,7 +144,8 @@ async function main() {
         durationMin: 75,
         location: "学校体育館",
         content: "バックハンドの安定性確認。台上処理でミスを減らす。",
-        equipmentId: controlRacket.id
+        equipmentId: controlRacket.id,
+        practiceMenuId: footworkMenu.id
       }
     ]
   });

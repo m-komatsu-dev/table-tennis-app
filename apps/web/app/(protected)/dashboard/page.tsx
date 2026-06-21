@@ -50,7 +50,7 @@ export default async function DashboardPage() {
     prisma.matchRecord.count({ where: { userId, result: "LOSE" } }),
     prisma.practiceLog.findMany({
       where: { userId },
-      include: { equipment: true },
+      include: { equipment: true, practiceMenu: { select: { id: true, title: true } } },
       orderBy: { practicedAt: "desc" },
       take: 5
     }),

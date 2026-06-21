@@ -34,6 +34,20 @@ enum MatchResult {
   DRAW
 }
 
+enum PracticeMenuCategory {
+  SERVE
+  RECEIVE
+  FOREHAND
+  BACKHAND
+  FOOTWORK
+  DRIVE
+  BLOCK
+  GAME
+  PHYSICAL
+  MENTAL
+  OTHER
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -48,23 +62,54 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  practiceLogs PracticeLog[]
-  matchRecords MatchRecord[]
-  equipment    Equipment[]
+  practiceLogs  PracticeLog[]
+  practiceMenus PracticeMenu[]
+  matchRecords  MatchRecord[]
+  equipment     Equipment[]
 }
 
 model PracticeLog {
-  id          String     @id @default(uuid())
-  userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  practicedAt DateTime
-  durationMin Int
-  location    String?
-  content     String?
-  equipmentId String?
-  equipment   Equipment? @relation(fields: [equipmentId], references: [id])
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  practicedAt    DateTime
+  durationMin    Int
+  location       String?
+  content        String?
+  equipmentId    String?
+  equipment      Equipment?    @relation(fields: [equipmentId], references: [id])
+  practiceMenuId String?
+  practiceMenu   PracticeMenu? @relation(fields: [practiceMenuId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model PracticeMenu {
+  id           String             @id @default(uuid())
+  userId       String
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  goal         String?
+  totalMinutes Int?
+  isTemplate   Boolean            @default(true)
+  items        PracticeMenuItem[]
+  practiceLogs PracticeLog[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model PracticeMenuItem {
+  id             String               @id @default(uuid())
+  practiceMenuId String
+  practiceMenu   PracticeMenu         @relation(fields: [practiceMenuId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  category       PracticeMenuCategory
+  durationMin    Int?
+  order          Int
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 }
 
 model MatchRecord {
