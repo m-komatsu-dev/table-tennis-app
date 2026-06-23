@@ -1,6 +1,6 @@
 # 卓球特化プラットフォーム Web版 Phase 1
 
-卓球プレイヤー向けに、練習記録・試合記録・用具・プロフィール・統計を管理できるWebアプリです。今回はWeb版 Phase 1のみを実装しており、モバイルアプリ、通知、SNS、チャット、マッチング、大会情報は含みません。
+卓球プレイヤー向けに、練習記録・試合記録・用具・プロフィール・統計を管理できるWebアプリです。記録データから課題を分析し、次回の練習メニューを提案するGemini AIコーチも利用できます。モバイルアプリ、通知、SNS、チャット、マッチング、大会情報は含みません。
 
 ## 技術スタック
 
@@ -12,6 +12,7 @@
 - Zod
 - bcryptjs
 - Recharts
+- Google Gen AI SDK（サーバー側のみ）
 - npm workspaces
 
 ## ディレクトリ構成
@@ -49,7 +50,15 @@ NEXTAUTH_SECRET="任意の十分に長いランダム文字列"
 NEXTAUTH_URL="http://localhost:3000"
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
+GEMINI_API_KEY="Google AI Studioで発行したAPIキー"
+GEMINI_MODEL="gemini-2.5-flash"
 ```
+
+### Gemini AIコーチの設定
+
+[Google AI Studio](https://aistudio.google.com/app/apikey)でGemini APIキーを発行し、`apps/web/.env.local` の `GEMINI_API_KEY` に設定してください。`GEMINI_MODEL` は任意で、未設定時は `gemini-2.5-flash` を使用します。
+
+AIコーチは `/ai-coach` で、ログインユーザー自身の直近の練習・試合と集約済みの分析データから、課題分析と練習メニュー案を生成します。提案メニューは既存の練習メニューとして保存できます。Gemini APIはRoute Handlerからのみ呼び出し、APIキーをクライアントコードや `NEXT_PUBLIC_` 環境変数へ設定しないでください。
 
 `packages/db/.env` はPrisma CLI用です。`npm run prisma:generate` や `npm run prisma:migrate` は `packages/db` workspaceでPrisma CLIを実行するため、ここにも `DATABASE_URL` を設定してください。
 
@@ -137,7 +146,9 @@ seedを使う場合は `/login` から `portfolio@example.com` / `password1234` 
 7. `/practice` で練習記録の作成、詳細表示、編集、削除を確認します。
 8. `/match` で試合記録の作成、セット追加、入力上限、編集、削除を確認します。
 9. `/profile` でプロフィール更新とバリデーションエラー表示を確認します。
-10. ログアウト後に `/dashboard` へ直接アクセスし、ログイン画面へ戻されることを確認します。
+10. `GEMINI_API_KEY` を設定して `/ai-coach` で課題分析、メニュー提案、保存後の詳細画面遷移を確認します。
+11. `GEMINI_API_KEY` を一時的に外し、AIコーチに設定不足のエラーが表示されることを確認します。
+12. ログアウト後に `/dashboard` へ直接アクセスし、ログイン画面へ戻されることを確認します。
 
 ## 実装済み機能
 
@@ -159,6 +170,8 @@ seedを使う場合は `/login` から `portfolio@example.com` / `password1234` 
 - Zodによるリクエストボディ検証
 - `bcryptjs` saltRounds 12 によるパスワードハッシュ化
 - 全ユーザーデータ操作で `userId` 条件を含めたアクセス制御
+- Geminiによる課題分析と練習メニュー提案・保存
+- AI出力のJSON parse・Zod検証とユーザー単位の簡易レート制限
 - 開発確認用seed
 - 統計ロジックと入力バリデーションのテスト
 - ローディング・エラー・空状態・削除確認を含む基本UI状態
@@ -210,7 +223,11 @@ NEXTAUTH_SECRET       十分に長いランダム文字列
 NEXTAUTH_URL          Vercelの本番URL。例: https://your-app.vercel.app
 GOOGLE_CLIENT_ID      Googleログインを使う場合のみ設定
 GOOGLE_CLIENT_SECRET  Googleログインを使う場合のみ設定
+GEMINI_API_KEY        AIコーチで使うGemini APIキー
+GEMINI_MODEL          任意。未設定時はgemini-2.5-flash
 ```
+
+`GEMINI_API_KEY` はProduction / PreviewなどAIコーチを使う各環境にサーバー環境変数として設定してください。`NEXT_PUBLIC_GEMINI_API_KEY` のようなクライアント公開変数にはしないでください。
 
 Googleログインを使う場合は、Google Cloud ConsoleのOAuthクライアントで承認済みリダイレクトURIに以下を追加します。
 
@@ -223,7 +240,7 @@ https://your-app.vercel.app/api/auth/callback/google
 1. Supabaseの本番DBに `npm run prisma:migrate:deploy` を適用済みであることを確認します。
 2. VercelでProduction Deploymentを実行します。
 3. `/register` でユーザー登録できることを確認します。
-4. `/login`、`/dashboard`、`/equipment`、`/practice`、`/match`、`/profile` の基本操作を確認します。
+4. `/login`、`/dashboard`、`/equipment`、`/practice`、`/match`、`/ai-coach`、`/profile` の基本操作を確認します。
 
 ## よくあるエラーと対処法
 
@@ -239,6 +256,9 @@ https://your-app.vercel.app/api/auth/callback/google
   - `packages/db/.env` の `DATABASE_URL` が、Webアプリで使っているDBと同じか確認してください。
 - Googleログイン後に戻れない
   - Google Cloud Consoleの承認済みリダイレクトURIに `/api/auth/callback/google` を含むURLを追加してください。
+
+- AIコーチにGemini APIキー未設定のエラーが表示される
+  - `apps/web/.env.local` またはVercelのEnvironment Variablesに `GEMINI_API_KEY` を設定し、アプリを再起動・再デプロイしてください。
 
 ## 今後の拡張予定
 

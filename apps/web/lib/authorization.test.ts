@@ -36,7 +36,10 @@ test("protected API routes require a logged-in user and return 401", () => {
 });
 
 test("user-owned data API routes include userId in database queries", () => {
-  const userOwnedRoutes = protectedRoutes.filter((file) => !relative(appApiDir, file).startsWith("profile/"));
+  const userOwnedRoutes = protectedRoutes.filter((file) => {
+    const routePath = relative(appApiDir, file);
+    return !routePath.startsWith("profile/") && !routePath.startsWith("ai/");
+  });
 
   for (const file of userOwnedRoutes) {
     const content = readFileSync(file, "utf8");
@@ -44,6 +47,18 @@ test("user-owned data API routes include userId in database queries", () => {
     assert.match(content, /userId/, relative(appApiDir, file));
     assert.match(content, /where:\s*{[\s\S]*userId/, relative(appApiDir, file));
   }
+});
+
+test("AI routes scope context and saved menus to the logged-in user", () => {
+  const context = readFileSync(join(appApiDir, "../../lib/ai/context.ts"), "utf8");
+  const analyze = readFileSync(join(appApiDir, "ai/analyze/route.ts"), "utf8");
+  const suggestion = readFileSync(join(appApiDir, "ai/practice-menu/route.ts"), "utf8");
+  const save = readFileSync(join(appApiDir, "ai/practice-menu/save/route.ts"), "utf8");
+
+  assert.match(analyze, /buildAiCoachContext\(userId\)/);
+  assert.match(suggestion, /buildAiCoachContext\(userId\)/);
+  assert.ok((context.match(/where:\s*{ userId }/g) ?? []).length >= 5);
+  assert.match(save, /toPracticeMenuCreateData\(userId, suggestion\)/);
 });
 
 test("practice menu detail API scopes reads, updates and deletes to the logged-in user", () => {

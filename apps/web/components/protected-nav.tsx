@@ -10,6 +10,7 @@ const navItems = [
   { href: "/calendar", label: "カレンダー" },
   { href: "/analytics", label: "分析" },
   { href: "/practice-menus", label: "練習メニュー" },
+  { href: "/ai-coach", label: "AIコーチ" },
   { href: "/profile", label: "プロフィール" }
 ];
 
