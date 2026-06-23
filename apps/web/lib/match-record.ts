@@ -12,9 +12,21 @@ export const matchResultLabels = {
   DRAW: "引き分け"
 } as const;
 
-export function calculateSetCount(scores: ScoreRow[]) {
-  return scores.reduce(
+type SafeScoreRow = Partial<ScoreRow> | null | undefined;
+
+export function calculateSetCount(scores: readonly SafeScoreRow[]) {
+  return scores.reduce<{ me: number; opp: number }>(
     (count, score) => {
+      if (
+        !score ||
+        typeof score.me !== "number" ||
+        typeof score.opp !== "number" ||
+        !Number.isFinite(score.me) ||
+        !Number.isFinite(score.opp)
+      ) {
+        return count;
+      }
+
       if (score.me > score.opp) {
         count.me += 1;
       } else if (score.me < score.opp) {
@@ -27,7 +39,7 @@ export function calculateSetCount(scores: ScoreRow[]) {
   );
 }
 
-export function formatSetCount(scores: ScoreRow[]) {
+export function formatSetCount(scores: readonly SafeScoreRow[]) {
   const count = calculateSetCount(scores);
   return `${count.me} - ${count.opp}`;
 }

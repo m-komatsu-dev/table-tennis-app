@@ -14,6 +14,7 @@
 - Recharts
 - Google Gen AI SDK（サーバー側のみ）
 - npm workspaces
+- Vitest
 
 ## ディレクトリ構成
 
@@ -124,6 +125,31 @@ npm run dev
 ```txt
 http://localhost:3000
 ```
+
+## テスト
+
+リポジトリルートからWebアプリのVitestテストを実行します。
+
+```bash
+npm run test
+npm run test:watch
+```
+
+主なテスト対象は、試合のセットカウントと勝率、用具別・対戦相手別・月別・直近10試合などの分析ロジック、検索クエリの安全な解釈、練習メニューとAI出力のZodバリデーション、AI提案メニューの保存用データ変換、APIの認証・`userId` によるデータ分離です。
+
+AI関連テストではGoogle Gen AI SDKをモックしており、Gemini APIを実際には呼び出しません。テスト実行に `GEMINI_API_KEY` は不要で、料金・レート制限・ネットワーク状態にも依存しません。
+
+CIでは依存関係をインストールした後、少なくとも次を実行してください。DB接続を使う統合テストは現時点では含まれませんが、Prisma Clientを使う型検査とビルドの前に `prisma:generate` が必要です。
+
+```bash
+npm run test
+npm run prisma:generate
+npm run typecheck -w @table-tennis/web
+npm run lint
+npm run build
+```
+
+テストはタイムゾーンに依存しない固定日時を中心にしています。CI上でもGemini用の実APIキーをテスト環境へ設定しないでください。
 
 ## テスト用ユーザー作成
 

@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import test from "node:test";
+import { describe, expect, test } from "vitest";
 import {
   calculateDifficultOpponents,
   calculateEquipmentStats,
@@ -23,15 +22,24 @@ function match(
   };
 }
 
-test("calculateWinRate handles empty and populated totals", () => {
-  assert.equal(calculateWinRate(0, 0), 0);
-  assert.equal(calculateWinRate(2, 3), (2 / 3) * 100);
+test("calculateWinRate handles empty, populated and draw-inclusive totals", () => {
+  expect(calculateWinRate(0, 0)).toBe(0);
+  expect(calculateWinRate(2, 3)).toBeCloseTo(66.7, 1);
+  expect(calculateWinRate(1, 3)).toBeCloseTo(33.3, 1);
 });
 
-test("calculateEquipmentStats groups only matches with equipment", () => {
+describe("calculateEquipmentStats", () => {
+test("groups by equipment and excludes matches without equipment", () => {
   const result = calculateEquipmentStats([
     match({ id: "1", playedAt: new Date("2026-06-01T00:00:00Z"), result: "WIN" }),
     match({ id: "2", playedAt: new Date("2026-06-02T00:00:00Z"), result: "LOSE" }),
+    match({
+      id: "equipment-2-match",
+      playedAt: new Date("2026-06-02T12:00:00Z"),
+      result: "WIN",
+      equipmentId: "equipment-2",
+      equipment: { id: "equipment-2", blade: "7枚合板" }
+    }),
     match({
       id: "3",
       playedAt: new Date("2026-06-03T00:00:00Z"),
@@ -41,8 +49,8 @@ test("calculateEquipmentStats groups only matches with equipment", () => {
     })
   ]);
 
-  assert.equal(result.length, 1);
-  assert.deepEqual(result[0], {
+  expect(result).toHaveLength(2);
+  expect(result[0]).toEqual({
     equipmentId: "equipment-1",
     equipmentName: "ALC",
     totalMatches: 2,
@@ -50,9 +58,23 @@ test("calculateEquipmentStats groups only matches with equipment", () => {
     losses: 1,
     winRate: 50
   });
+  expect(result[1]).toEqual({
+    equipmentId: "equipment-2",
+    equipmentName: "7枚合板",
+    totalMatches: 1,
+    wins: 1,
+    losses: 0,
+    winRate: 100
+  });
 });
 
-test("calculateOpponentStats separates the same name by team and keeps the latest match", () => {
+test("returns an empty array when there are no matches", () => {
+  expect(calculateEquipmentStats([])).toEqual([]);
+});
+});
+
+describe("calculateOpponentStats", () => {
+test("separates the same name by team and keeps the latest match", () => {
   const result = calculateOpponentStats([
     match({ id: "1", playedAt: new Date("2026-05-01T00:00:00Z"), result: "LOSE", memo: "旧メモ" }),
     match({ id: "2", playedAt: new Date("2026-06-01T00:00:00Z"), result: "WIN", memo: "最新メモ" }),
@@ -64,17 +86,32 @@ test("calculateOpponentStats separates the same name by team and keeps the lates
     })
   ]);
 
-  assert.equal(result.length, 2);
+  expect(result).toHaveLength(2);
   const cityClub = result.find((entry) => entry.opponentTeam === "市民クラブ");
-  assert.equal(cityClub?.totalMatches, 2);
-  assert.equal(cityClub?.wins, 1);
-  assert.equal(cityClub?.losses, 1);
-  assert.equal(cityClub?.winRate, 50);
-  assert.equal(cityClub?.lastMatchId, "2");
-  assert.equal(cityClub?.latestMemo, "最新メモ");
+  expect(cityClub).toMatchObject({
+    totalMatches: 2,
+    wins: 1,
+    losses: 1,
+    winRate: 50,
+    lastPlayedAt: "2026-06-01T00:00:00.000Z",
+    lastMatchId: "2",
+    latestMemo: "最新メモ"
+  });
 });
 
-test("calculateRecentWinRateTrend uses the latest ten matches in chronological order", () => {
+test("groups case and surrounding-space variants of an opponent name", () => {
+  const result = calculateOpponentStats([
+    match({ id: "1", playedAt: new Date("2026-06-01T00:00:00Z"), result: "WIN", opponentName: " Alice " }),
+    match({ id: "2", playedAt: new Date("2026-06-02T00:00:00Z"), result: "LOSE", opponentName: "alice" })
+  ]);
+
+  expect(result).toHaveLength(1);
+  expect(result[0]).toMatchObject({ totalMatches: 2, wins: 1, losses: 1, winRate: 50 });
+});
+});
+
+describe("calculateRecentWinRateTrend", () => {
+test("uses the latest ten matches in chronological order", () => {
   const matches = Array.from({ length: 12 }, (_, index) =>
     match({
       id: String(index + 1),
@@ -84,29 +121,52 @@ test("calculateRecentWinRateTrend uses the latest ten matches in chronological o
   );
   const result = calculateRecentWinRateTrend(matches);
 
-  assert.equal(result.length, 10);
-  assert.equal(result[0]?.playedAt, "2026-06-03T00:00:00.000Z");
-  assert.equal(result[9]?.playedAt, "2026-06-12T00:00:00.000Z");
-  assert.equal(result[0]?.cumulativeWinRate, 100);
-  assert.equal(result[1]?.cumulativeWinRate, 50);
+  expect(result).toHaveLength(10);
+  expect(result[0]?.playedAt).toBe("2026-06-03T00:00:00.000Z");
+  expect(result[9]?.playedAt).toBe("2026-06-12T00:00:00.000Z");
+  expect(result[0]?.cumulativeWinRate).toBe(100);
+  expect(result[1]?.cumulativeWinRate).toBe(50);
 });
 
-test("calculateDifficultOpponents selects opponents with two matches and below 50 percent", () => {
+test("works with fewer than ten and zero matches", () => {
+  const twoMatches = [
+    match({ id: "2", playedAt: new Date("2026-06-02T00:00:00Z"), result: "LOSE" }),
+    match({ id: "1", playedAt: new Date("2026-06-01T00:00:00Z"), result: "WIN" })
+  ];
+
+  expect(calculateRecentWinRateTrend(twoMatches).map((point) => point.cumulativeWinRate)).toEqual([100, 50]);
+  expect(calculateRecentWinRateTrend([])).toEqual([]);
+});
+});
+
+describe("calculateDifficultOpponents", () => {
+test("selects opponents with at least two matches and below 50 percent, lowest first", () => {
   const opponents = calculateOpponentStats([
     match({ id: "1", playedAt: new Date("2026-06-01T00:00:00Z"), result: "LOSE" }),
-    match({ id: "2", playedAt: new Date("2026-06-02T00:00:00Z"), result: "LOSE" }),
+    match({ id: "2", playedAt: new Date("2026-06-02T00:00:00Z"), result: "WIN" }),
     match({
       id: "3",
       playedAt: new Date("2026-06-03T00:00:00Z"),
       result: "LOSE",
       opponentName: "田中",
       opponentTeam: null
-    })
+    }),
+    match({ id: "4", playedAt: new Date("2026-06-04T00:00:00Z"), result: "LOSE", opponentName: "田中", opponentTeam: null }),
+    match({ id: "5", playedAt: new Date("2026-06-05T00:00:00Z"), result: "LOSE", opponentName: "鈴木", opponentTeam: null }),
+    match({ id: "6", playedAt: new Date("2026-06-06T00:00:00Z"), result: "WIN", opponentName: "鈴木", opponentTeam: null }),
+    match({ id: "7", playedAt: new Date("2026-06-07T00:00:00Z"), result: "WIN", opponentName: "鈴木", opponentTeam: null }),
+    match({ id: "8", playedAt: new Date("2026-06-08T00:00:00Z"), result: "LOSE", opponentName: "伊藤", opponentTeam: null }),
+    match({ id: "9", playedAt: new Date("2026-06-09T00:00:00Z"), result: "LOSE", opponentName: "伊藤", opponentTeam: null }),
+    match({ id: "10", playedAt: new Date("2026-06-10T00:00:00Z"), result: "WIN", opponentName: "伊藤", opponentTeam: null })
   ]);
   const result = calculateDifficultOpponents(opponents);
 
-  assert.equal(result.length, 1);
-  assert.equal(result[0]?.opponentName, "佐藤");
+  expect(result.map((entry) => entry.opponentName)).toEqual(["田中", "伊藤"]);
+});
+
+test("returns an empty array when nobody qualifies", () => {
+  expect(calculateDifficultOpponents([])).toEqual([]);
+});
 });
 
 test("calculateMonthlyPracticeStats aggregates counts and minutes for six months", () => {
@@ -119,10 +179,15 @@ test("calculateMonthlyPracticeStats aggregates counts and minutes for six months
     new Date("2026-06-18T00:00:00Z")
   );
 
-  assert.equal(result.length, 6);
-  assert.deepEqual(result.find((entry) => entry.month === "2026-05"), {
+  expect(result).toHaveLength(6);
+  expect(result.find((entry) => entry.month === "2026-05")).toEqual({
     month: "2026-05",
     practiceCount: 2,
     totalMinutes: 150
+  });
+  expect(result.find((entry) => entry.month === "2026-04")).toEqual({
+    month: "2026-04",
+    practiceCount: 0,
+    totalMinutes: 0
   });
 });

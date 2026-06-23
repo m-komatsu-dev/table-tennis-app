@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import test from "node:test";
+import { describe, expect, test } from "vitest";
 import {
   equipmentSchema,
   matchSchema,
@@ -18,7 +17,7 @@ test("practiceSchema rejects missing date and out-of-range duration", () => {
     equipmentId: null
   });
 
-  assert.equal(result.success, false);
+  expect(result.success).toBe(false);
 });
 
 test("profileSchema rejects invalid enum values", () => {
@@ -30,7 +29,7 @@ test("profileSchema rejects invalid enum values", () => {
     avatarUrl: ""
   });
 
-  assert.equal(result.success, false);
+  expect(result.success).toBe(false);
 });
 
 test("profileSchema accepts the fifth level, gender and image data URL", () => {
@@ -43,7 +42,7 @@ test("profileSchema accepts the fifth level, gender and image data URL", () => {
     avatarUrl: "data:image/png;base64,aGVsbG8="
   });
 
-  assert.equal(result.success, true);
+  expect(result.success).toBe(true);
 });
 
 test("profileSchema rejects non-image data URLs", () => {
@@ -56,7 +55,7 @@ test("profileSchema rejects non-image data URLs", () => {
     avatarUrl: "data:text/plain;base64,aGVsbG8="
   });
 
-  assert.equal(result.success, false);
+  expect(result.success).toBe(false);
 });
 
 test("equipmentSchema accepts rubber thickness and grip details", () => {
@@ -70,7 +69,7 @@ test("equipmentSchema accepts rubber thickness and grip details", () => {
     isCurrent: true
   });
 
-  assert.equal(result.success, true);
+  expect(result.success).toBe(true);
 });
 
 test("matchSchema accepts a valid score JSON shape", () => {
@@ -88,7 +87,7 @@ test("matchSchema accepts a valid score JSON shape", () => {
     equipmentId: "123e4567-e89b-12d3-a456-426614174000"
   });
 
-  assert.equal(result.success, true);
+  expect(result.success).toBe(true);
 });
 
 test("matchSchema accepts an unselected equipment value", () => {
@@ -102,7 +101,7 @@ test("matchSchema accepts an unselected equipment value", () => {
     equipmentId: null
   });
 
-  assert.equal(result.success, true);
+  expect(result.success).toBe(true);
 });
 
 test("matchSchema rejects duplicate score set numbers", () => {
@@ -118,7 +117,7 @@ test("matchSchema rejects duplicate score set numbers", () => {
     memo: ""
   });
 
-  assert.equal(result.success, false);
+  expect(result.success).toBe(false);
 });
 
 test("matchSchema only accepts the supported match type and result values", () => {
@@ -141,8 +140,8 @@ test("matchSchema only accepts the supported match type and result values", () =
     memo: ""
   });
 
-  assert.equal(legacyType.success, false);
-  assert.equal(legacyResult.success, false);
+  expect(legacyType.success).toBe(false);
+  expect(legacyResult.success).toBe(false);
 });
 
 const validMenuItem = {
@@ -153,7 +152,8 @@ const validMenuItem = {
   order: 0
 };
 
-test("practiceMenuSchema accepts a valid menu with one or more items", () => {
+describe("practice menu validation", () => {
+test("accepts a valid menu with one or more items", () => {
   const result = practiceMenuSchema.safeParse({
     title: "サーブ練習",
     description: "基本メニュー",
@@ -162,25 +162,31 @@ test("practiceMenuSchema accepts a valid menu with one or more items", () => {
     items: [validMenuItem]
   });
 
-  assert.equal(result.success, true);
+  expect(result.success).toBe(true);
 });
 
-test("practiceMenuSchema requires at least one item", () => {
+test("rejects an empty or overly long title", () => {
+  expect(practiceMenuSchema.safeParse({ title: "", items: [validMenuItem] }).success).toBe(false);
+  expect(practiceMenuSchema.safeParse({ title: "a".repeat(101), items: [validMenuItem] }).success).toBe(false);
+});
+
+test("requires at least one item", () => {
   const result = practiceMenuSchema.safeParse({ title: "空のメニュー", items: [] });
-  assert.equal(result.success, false);
+  expect(result.success).toBe(false);
 });
 
-test("practiceMenuItemSchema rejects an unsupported category", () => {
+test("rejects an unsupported category", () => {
   const result = practiceMenuItemSchema.safeParse({ ...validMenuItem, category: "SMASH" });
-  assert.equal(result.success, false);
+  expect(result.success).toBe(false);
 });
 
-test("practiceMenuSchema checks totalMinutes range", () => {
-  assert.equal(practiceMenuSchema.safeParse({ title: "短すぎる", totalMinutes: 0, items: [validMenuItem] }).success, false);
-  assert.equal(practiceMenuSchema.safeParse({ title: "長すぎる", totalMinutes: 601, items: [validMenuItem] }).success, false);
+test("checks totalMinutes range", () => {
+  expect(practiceMenuSchema.safeParse({ title: "短すぎる", totalMinutes: 0, items: [validMenuItem] }).success).toBe(false);
+  expect(practiceMenuSchema.safeParse({ title: "長すぎる", totalMinutes: 601, items: [validMenuItem] }).success).toBe(false);
 });
 
-test("practiceMenuItemSchema checks durationMin range", () => {
-  assert.equal(practiceMenuItemSchema.safeParse({ ...validMenuItem, durationMin: 0 }).success, false);
-  assert.equal(practiceMenuItemSchema.safeParse({ ...validMenuItem, durationMin: 301 }).success, false);
+test("checks durationMin range", () => {
+  expect(practiceMenuItemSchema.safeParse({ ...validMenuItem, durationMin: 0 }).success).toBe(false);
+  expect(practiceMenuItemSchema.safeParse({ ...validMenuItem, durationMin: 301 }).success).toBe(false);
+});
 });

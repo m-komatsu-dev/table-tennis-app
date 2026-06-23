@@ -11,6 +11,7 @@
     "lint": "npm run lint -w @table-tennis/web",
     "typecheck": "npm run typecheck -w @table-tennis/web",
     "test": "npm run test -w @table-tennis/web",
+    "test:watch": "npm run test:watch -w @table-tennis/web",
     "vercel-build": "npm run prisma:generate && npm run build",
     "prisma:generate": "npm run prisma:generate -w @table-tennis/db",
     "prisma:migrate": "npm run prisma:migrate -w @table-tennis/db",
