@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Test, lint, and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: true
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/table_tennis_ci?schema=public
+      NEXTAUTH_SECRET: ci-only-dummy-secret-not-used-outside-github-actions
+      NEXTAUTH_URL: http://localhost:3000
+      GOOGLE_CLIENT_ID: ci-dummy-google-client-id
+      GOOGLE_CLIENT_SECRET: ci-dummy-google-client-secret
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+
+      - name: Run unit tests
+        run: npm run test
+
+      - name: Run typecheck
+        run: npm run typecheck -w @table-tennis/web
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build web app
+        run: npm run build
