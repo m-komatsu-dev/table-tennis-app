@@ -2,7 +2,7 @@
   "name": "table-tennis-platform",
   "private": true,
   "workspaces": [
-    "apps/*",
+    "apps/web",
     "packages/*"
   ],
   "scripts": {
@@ -12,15 +12,17 @@
     "typecheck": "npm run typecheck -w @table-tennis/web",
     "test": "npm run test -w @table-tennis/web",
     "test:watch": "npm run test:watch -w @table-tennis/web",
-    "vercel-build": "npm run prisma:generate && npm run build",
+    "vercel-build": "npm run prisma:generate && npm run build -w @table-tennis/web",
     "prisma:generate": "npm run prisma:generate -w @table-tennis/db",
     "prisma:migrate": "npm run prisma:migrate -w @table-tennis/db",
     "prisma:migrate:deploy": "npm run prisma:migrate:deploy -w @table-tennis/db",
     "prisma:studio": "npm run prisma:studio -w @table-tennis/db",
     "db:seed": "npm run db:seed -w @table-tennis/db"
   },
-  "overrides": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+  "devDependencies": {
+    "@types/react": "19.1.8",
+    "@types/react-dom": "19.1.6",
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
   }
 }

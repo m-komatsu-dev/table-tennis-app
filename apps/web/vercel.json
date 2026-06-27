@@ -1,0 +1,3 @@
+{
+  "buildCommand": "cd ../.. && npm run prisma:generate && npm run build -w @table-tennis/web"
+}
