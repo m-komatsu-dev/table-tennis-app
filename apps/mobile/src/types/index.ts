@@ -11,6 +11,18 @@ export type User = {
 
 export type Level = "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "COMPETITIVE" | "PRO";
 export type Gender = "MALE" | "FEMALE" | "OTHER" | "NO_ANSWER";
+export type PracticeMenuCategory =
+  | "SERVE"
+  | "RECEIVE"
+  | "FOREHAND"
+  | "BACKHAND"
+  | "FOOTWORK"
+  | "DRIVE"
+  | "BLOCK"
+  | "GAME"
+  | "PHYSICAL"
+  | "MENTAL"
+  | "OTHER";
 
 export type PracticeLog = {
   id: string;
@@ -46,12 +58,15 @@ export type PracticeMenu = {
   description: string | null;
   goal: string | null;
   totalMinutes: number | null;
+  isTemplate?: boolean;
   items: {
     id: string;
     title: string;
     description: string | null;
-    category: string;
+    category: PracticeMenuCategory;
     durationMin: number | null;
     order: number;
   }[];
+  createdAt?: string;
+  updatedAt?: string;
 };

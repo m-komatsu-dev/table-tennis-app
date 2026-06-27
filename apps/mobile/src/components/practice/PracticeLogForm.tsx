@@ -11,19 +11,20 @@ import type { PracticeLog, PracticeMenu } from "@/types";
 
 type PracticeLogFormProps = {
   initialLog?: PracticeLog;
+  initialPracticeMenuId?: string | null;
   submitLabel: string;
   savingLabel: string;
   onSubmit: (input: PracticeInput) => Promise<void>;
 };
 
-export function PracticeLogForm({ initialLog, onSubmit, savingLabel, submitLabel }: PracticeLogFormProps) {
+export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, savingLabel, submitLabel }: PracticeLogFormProps) {
   const { dismissKeyboard, scrollToEndOnFocus } = useFormScreen();
   const [practicedAt, setPracticedAt] = useState(toInputDate(initialLog?.practicedAt) ?? todayInputValue());
   const [durationMin, setDurationMin] = useState(initialLog ? String(initialLog.durationMin) : "");
   const [location, setLocation] = useState(initialLog?.location ?? "");
   const [content, setContent] = useState(initialLog?.content ?? "");
   const [memo, setMemo] = useState(initialLog?.memo ?? "");
-  const [practiceMenuId, setPracticeMenuId] = useState<string | null>(initialLog?.practiceMenuId ?? null);
+  const [practiceMenuId, setPracticeMenuId] = useState<string | null>(initialLog?.practiceMenuId ?? initialPracticeMenuId ?? null);
   const [menus, setMenus] = useState<PracticeMenu[]>([]);
   const [loadingMenus, setLoadingMenus] = useState(true);
   const [saving, setSaving] = useState(false);

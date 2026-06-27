@@ -10,10 +10,21 @@ const mockPrisma = vi.hoisted(() => ({
     findMany: vi.fn(),
     create: vi.fn()
   },
+  practiceMenu: {
+    findMany: vi.fn(),
+    findFirst: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    deleteMany: vi.fn()
+  },
+  practiceMenuItem: {
+    deleteMany: vi.fn()
+  },
   matchRecord: {
     findMany: vi.fn(),
     create: vi.fn()
-  }
+  },
+  $transaction: vi.fn()
 }));
 
 const mockBcrypt = vi.hoisted(() => ({
@@ -33,6 +44,12 @@ import { POST as login } from "@/app/api/mobile/auth/login/route";
 import { POST as register } from "@/app/api/mobile/auth/register/route";
 import { GET as getProfile, PUT as updateProfile } from "@/app/api/mobile/profile/route";
 import { GET as getPractice, POST as createPractice } from "@/app/api/mobile/practice/route";
+import { GET as getPracticeMenus, POST as createPracticeMenu } from "@/app/api/mobile/practice-menus/route";
+import {
+  DELETE as deletePracticeMenu,
+  GET as getPracticeMenu,
+  PUT as updatePracticeMenu
+} from "@/app/api/mobile/practice-menus/[id]/route";
 import { GET as getMatch, POST as createMatch } from "@/app/api/mobile/match/route";
 import { createMobileAccessToken } from "./mobile-auth";
 import { combineMobilePracticeContent, splitMobilePracticeContent } from "./mobile-api";
@@ -63,6 +80,17 @@ function putJsonRequest(path: string, body: unknown, token?: string) {
     },
     body: JSON.stringify(body)
   });
+}
+
+function deleteRequest(path: string, token?: string) {
+  return new Request(`http://localhost${path}`, {
+    method: "DELETE",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined
+  });
+}
+
+function params(id: string) {
+  return { params: Promise.resolve({ id }) };
 }
 
 describe("mobile login API", () => {
@@ -479,6 +507,144 @@ describe("mobile practice content parser", () => {
       content: null,
       memo: "YGショート"
     });
+  });
+});
+
+describe("mobile practice menu API", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.MOBILE_AUTH_SECRET = "test-mobile-secret-that-is-long-enough-12345";
+    mockPrisma.$transaction.mockImplementation((callback) => callback(mockPrisma));
+  });
+
+  const menuRecord = {
+    id: "menu-1",
+    userId: "user-1",
+    title: "サーブ強化",
+    description: "短い下回転サーブ",
+    goal: "3球目につなげる",
+    totalMinutes: 30,
+    isTemplate: false,
+    createdAt: new Date("2026-06-20T00:00:00.000Z"),
+    updatedAt: new Date("2026-06-20T00:00:00.000Z"),
+    items: [
+      {
+        id: "item-1",
+        practiceMenuId: "menu-1",
+        title: "ショートサーブ",
+        description: null,
+        category: "SERVE",
+        durationMin: 10,
+        order: 0
+      }
+    ]
+  };
+
+  const input = {
+    title: "サーブ強化",
+    description: "短い下回転サーブ",
+    goal: "3球目につなげる",
+    totalMinutes: 30,
+    items: [
+      {
+        title: "ショートサーブ",
+        description: "",
+        category: "SERVE",
+        durationMin: 10,
+        order: 0
+      }
+    ]
+  };
+
+  test("ログインユーザーの練習メニュー一覧を返す", async () => {
+    mockPrisma.practiceMenu.findMany.mockResolvedValue([menuRecord]);
+
+    const response = await getPracticeMenus(authRequest("/api/mobile/practice-menus", "user-1"));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.practiceMenu.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { userId: "user-1" }
+    }));
+    expect(body.practiceMenus[0]).toMatchObject({
+      id: "menu-1",
+      title: "サーブ強化",
+      items: [{ id: "item-1", title: "ショートサーブ" }]
+    });
+  });
+
+  test("練習メニューを作成できる", async () => {
+    mockPrisma.practiceMenu.create.mockResolvedValue(menuRecord);
+
+    const response = await createPracticeMenu(jsonRequest(
+      "/api/mobile/practice-menus",
+      input,
+      createMobileAccessToken("user-1")
+    ));
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(mockPrisma.practiceMenu.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        userId: "user-1",
+        title: "サーブ強化",
+        items: {
+          create: [expect.objectContaining({
+            title: "ショートサーブ",
+            description: null,
+            category: "SERVE",
+            order: 0
+          })]
+        }
+      })
+    }));
+    expect(body.practiceMenu.title).toBe("サーブ強化");
+  });
+
+  test("練習メニュー詳細は所有者で絞り込む", async () => {
+    mockPrisma.practiceMenu.findFirst.mockResolvedValue(menuRecord);
+
+    const response = await getPracticeMenu(authRequest("/api/mobile/practice-menus/menu-1", "user-1"), params("menu-1"));
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.practiceMenu.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "menu-1", userId: "user-1" }
+    }));
+  });
+
+  test("練習メニューを更新できる", async () => {
+    mockPrisma.practiceMenu.findFirst.mockResolvedValue({ id: "menu-1" });
+    mockPrisma.practiceMenu.update.mockResolvedValue({ ...menuRecord, title: "サーブ更新" });
+
+    const response = await updatePracticeMenu(
+      putJsonRequest("/api/mobile/practice-menus/menu-1", { ...input, title: "サーブ更新" }, createMobileAccessToken("user-1")),
+      params("menu-1")
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.practiceMenuItem.deleteMany).toHaveBeenCalledWith({ where: { practiceMenuId: "menu-1" } });
+    expect(mockPrisma.practiceMenu.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "menu-1" },
+      data: expect.objectContaining({ title: "サーブ更新" })
+    }));
+    expect(body.practiceMenu.title).toBe("サーブ更新");
+  });
+
+  test("練習メニューを削除できる", async () => {
+    mockPrisma.practiceMenu.deleteMany.mockResolvedValue({ count: 1 });
+
+    const response = await deletePracticeMenu(
+      deleteRequest("/api/mobile/practice-menus/menu-1", createMobileAccessToken("user-1")),
+      params("menu-1")
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.practiceMenu.deleteMany).toHaveBeenCalledWith({
+      where: { id: "menu-1", userId: "user-1" }
+    });
+    expect(body).toEqual({ ok: true });
   });
 });
 

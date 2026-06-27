@@ -83,6 +83,10 @@ function apiErrorMessage(status: number) {
     return "ログインし直してください";
   }
 
+  if (status === 405) {
+    return "練習メニュー登録APIが未対応です";
+  }
+
   if (status === 404) {
     return "APIが見つかりません";
   }
