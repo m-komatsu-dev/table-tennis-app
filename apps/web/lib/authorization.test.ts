@@ -4,7 +4,11 @@ import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 
 const appApiDir = join(dirname(fileURLToPath(import.meta.url)), "../app/api");
-const publicRoutes = new Set(["auth/register/route.ts", "auth/[...nextauth]/route.ts"]);
+const publicRoutes = new Set([
+  "auth/register/route.ts",
+  "auth/[...nextauth]/route.ts",
+  "debug-auth/route.ts"
+]);
 
 function routeFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -34,11 +38,21 @@ test("protected API routes require a logged-in user and return 401", () => {
   }
 });
 
-test("middleware reads Auth.js v5 secret names and keeps auth API routes public", () => {
+test("middleware does not perform auth redirects and keeps API routes public", () => {
   const middleware = readFileSync(join(appApiDir, "../../middleware.ts"), "utf8");
 
-  expect(middleware).toMatch(/process\.env\.AUTH_SECRET\s*\?\?\s*process\.env\.NEXTAUTH_SECRET/);
+  expect(middleware).not.toMatch(/getToken/);
+  expect(middleware).not.toMatch(/NextResponse\.redirect/);
   expect(middleware).toMatch(/matcher:\s*\["\/\(\(\?!api\|_next\/static\|_next\/image\|favicon\.ico\)\.\*\)"\]/);
+});
+
+test("debug auth route only exposes auth state booleans", () => {
+  const route = readFileSync(join(appApiDir, "debug-auth/route.ts"), "utf8");
+
+  expect(route).toMatch(/hasSession/);
+  expect(route).toMatch(/hasUser/);
+  expect(route).toMatch(/hasUserId/);
+  expect(route).not.toMatch(/passwordHash|token|cookie|secret|email/i);
 });
 
 test("user-owned data API routes include userId in database queries", () => {

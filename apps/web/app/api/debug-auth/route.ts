@@ -1,14 +1,13 @@
-import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { resolveSessionUserId } from "@/lib/session-user";
 
-export async function getRequiredUserId() {
+export async function GET() {
   const session = await auth();
   const userId = await resolveSessionUserId(session);
 
-  if (!userId) {
-    redirect("/login");
-  }
-
-  return userId;
+  return Response.json({
+    hasSession: Boolean(session),
+    hasUser: Boolean(session?.user),
+    hasUserId: Boolean(userId)
+  });
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { auth } from "@/auth";
+import { resolveSessionUserId } from "@/lib/session-user";
 
 export function dataResponse<T>(data: T, init?: ResponseInit) {
   return NextResponse.json({ data }, init);
@@ -12,12 +13,7 @@ export function errorResponse(error: string, status = 400) {
 
 export async function requireUserId() {
   const session = await auth();
-
-  if (!session?.user?.id) {
-    return null;
-  }
-
-  return session.user.id;
+  return resolveSessionUserId(session);
 }
 
 export function validationErrorResponse(error: unknown) {

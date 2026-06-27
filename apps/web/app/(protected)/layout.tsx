@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@table-tennis/db";
 import { auth, signOut } from "@/auth";
 import { ProtectedNav } from "@/components/protected-nav";
+import { resolveSessionUserId } from "@/lib/session-user";
 
 export default async function ProtectedLayout({
   children
@@ -10,16 +11,17 @@ export default async function ProtectedLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  const userId = await resolveSessionUserId(session);
 
-  if (!session?.user?.id) {
+  if (!userId) {
     redirect("/login");
   }
 
   const headerUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: userId },
     select: { name: true, avatarUrl: true }
   });
-  const userName = headerUser?.name ?? session.user.name ?? "ユーザー";
+  const userName = headerUser?.name ?? session?.user?.name ?? "ユーザー";
 
   return (
     <div className="min-h-screen">
@@ -33,7 +35,7 @@ export default async function ProtectedLayout({
             </span>
           </Link>
 
-          <div className="order-3 w-full lg:order-none lg:w-auto lg:flex-1">
+          <div className="order-3 w-full lg:order-0 lg:w-auto lg:flex-1">
             <ProtectedNav />
           </div>
 
