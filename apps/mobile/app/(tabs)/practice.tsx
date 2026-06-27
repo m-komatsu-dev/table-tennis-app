@@ -3,7 +3,7 @@ import { Link, router, useFocusEffect } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchPracticeLogs } from "@/api/practice";
 import { formatDate } from "@/components/format";
-import { Button, Card, EmptyState, ErrorMessage, Header, LoadingState, Row, Screen, colors, styles } from "@/components/ui";
+import { Button, Card, EmptyState, ErrorMessage, Header, LoadingState, MetaPill, Row, Screen, colors, styles } from "@/components/ui";
 import type { PracticeLog } from "@/types";
 
 export default function PracticeListScreen() {
@@ -12,6 +12,7 @@ export default function PracticeListScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
     setError(null);
     try {
       const result = await fetchPracticeLogs();
@@ -42,27 +43,33 @@ export default function PracticeListScreen() {
         subtitle={`${items.length}件`}
         title="練習記録"
       />
-      <ErrorMessage message={error} />
+      <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
-      {!loading && items.length === 0 ? <EmptyState>まだ練習記録がありません。</EmptyState> : null}
-      {items.map((item) => (
-        <Card key={item.id}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 10 }}>
-            <Text style={{ color: colors.text, flex: 1, fontSize: 17, fontWeight: "800" }}>
-              {formatDate(item.practicedAt)}
-            </Text>
-            <Text style={{ color: colors.primary, fontSize: 15, fontWeight: "800" }}>
-              {item.durationMin}分
-            </Text>
-          </View>
-          <Row label="場所" value={item.location} />
-          <Row label="内容" value={item.content} />
-          <Row label="練習メニュー" value={item.practiceMenu?.title} />
-        </Card>
-      ))}
+      {!loading && !error && items.length === 0 ? <EmptyState>まだ練習記録がありません。</EmptyState> : null}
+      {!loading && items.map((item) => <PracticeLogCard key={item.id} item={item} />)}
       <Button variant="secondary" onPress={() => router.push("/(tabs)/home")}>
         ホームへ戻る
       </Button>
     </Screen>
+  );
+}
+
+function PracticeLogCard({ item }: { item: PracticeLog }) {
+  return (
+    <Card>
+      <View style={{ flexDirection: "row", gap: 10, justifyContent: "space-between" }}>
+        <View style={{ flex: 1, gap: 8 }}>
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: "900", lineHeight: 24 }}>
+            {formatDate(item.practicedAt)}
+          </Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            <MetaPill label={`${item.durationMin}分`} tone="green" />
+            <MetaPill label={item.location || "場所未設定"} />
+          </View>
+        </View>
+      </View>
+      <Row label="練習メニュー" value={item.practiceMenu?.title} />
+      <Row label="内容" value={item.content} />
+    </Card>
   );
 }

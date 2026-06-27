@@ -5,7 +5,7 @@ import { fetchMe } from "@/api/auth";
 import { fetchMatchRecords } from "@/api/match";
 import { fetchPracticeLogs } from "@/api/practice";
 import { formatDate, formatScores, formatSetCount, resultLabels } from "@/components/format";
-import { Button, Card, EmptyState, ErrorMessage, Header, LoadingState, Row, Screen, SectionTitle, colors, styles } from "@/components/ui";
+import { Button, Card, EmptyState, ErrorMessage, Header, LoadingState, MetaPill, Row, Screen, SectionTitle, colors, styles } from "@/components/ui";
 import type { MatchRecord, PracticeLog, User } from "@/types";
 
 export default function AppHomeScreen() {
@@ -16,6 +16,7 @@ export default function AppHomeScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
     setError(null);
     try {
       const [me, practiceResult, matchResult] = await Promise.all([
@@ -62,7 +63,7 @@ export default function AppHomeScreen() {
         title={`こんにちは、${user?.name || user?.email || "プレイヤー"}さん`}
         subtitle="今日の記録を積み重ねて、成長を見える化しましょう。"
       />
-      <ErrorMessage message={error} />
+      <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
         {[
@@ -105,15 +106,7 @@ export default function AppHomeScreen() {
 
       <Card>
         <SectionTitle title="直近の練習記録" />
-        {latestPractice ? (
-          <>
-            <Row label="日付" value={formatDate(latestPractice.practicedAt)} />
-            <Row label="時間" value={`${latestPractice.durationMin}分`} />
-            <Row label="場所" value={latestPractice.location} />
-            <Row label="内容" value={latestPractice.content} />
-            <Row label="メニュー" value={latestPractice.practiceMenu?.title} />
-          </>
-        ) : (
+        {latestPractice ? <LatestPractice item={latestPractice} /> : (
           <EmptyState>まだ練習記録がありません。</EmptyState>
         )}
         <Link asChild href="/practice">
@@ -125,15 +118,7 @@ export default function AppHomeScreen() {
 
       <Card>
         <SectionTitle title="直近の試合記録" />
-        {latestMatch ? (
-          <>
-            <Row label="日付" value={formatDate(latestMatch.playedAt)} />
-            <Row label="対戦相手" value={latestMatch.opponentName} />
-            <Row label="勝敗" value={resultLabels[latestMatch.result]} />
-            <Row label="セットカウント" value={formatSetCount(latestMatch.scores)} />
-            <Row label="スコア" value={formatScores(latestMatch.scores)} />
-          </>
-        ) : (
+        {latestMatch ? <LatestMatch item={latestMatch} /> : (
           <EmptyState>まだ試合記録がありません。</EmptyState>
         )}
         <Link asChild href="/match">
@@ -153,5 +138,41 @@ export default function AppHomeScreen() {
         </Button>
       </Card>
     </Screen>
+  );
+}
+
+function LatestPractice({ item }: { item: PracticeLog }) {
+  return (
+    <View style={{ gap: 12 }}>
+      <View style={{ gap: 8 }}>
+        <Text style={{ color: colors.text, fontSize: 18, fontWeight: "900", lineHeight: 24 }}>
+          {formatDate(item.practicedAt)}
+        </Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          <MetaPill label={`${item.durationMin}分`} tone="green" />
+          <MetaPill label={item.location || "場所未設定"} />
+        </View>
+      </View>
+      <Row label="練習メニュー" value={item.practiceMenu?.title} />
+      <Row label="内容" value={item.content} />
+    </View>
+  );
+}
+
+function LatestMatch({ item }: { item: MatchRecord }) {
+  return (
+    <View style={{ gap: 12 }}>
+      <View style={{ gap: 8 }}>
+        <Text style={{ color: colors.text, fontSize: 18, fontWeight: "900", lineHeight: 24 }}>
+          {formatDate(item.playedAt)} vs {item.opponentName}
+        </Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          <MetaPill label={resultLabels[item.result]} tone={item.result === "WIN" ? "green" : "red"} />
+          <MetaPill label={formatSetCount(item.scores)} tone="green" />
+        </View>
+      </View>
+      <Row label="所属チーム" value={item.opponentTeam} />
+      <Row label="スコア概要" value={formatScores(item.scores)} />
+    </View>
   );
 }

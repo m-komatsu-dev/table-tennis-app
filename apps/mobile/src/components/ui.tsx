@@ -168,12 +168,29 @@ export function InlineField({
   );
 }
 
-export function ErrorMessage({ message }: { message?: string | null }) {
+export function ErrorMessage({
+  message,
+  actionLabel,
+  onAction
+}: {
+  message?: string | null;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   if (!message) {
     return null;
   }
 
-  return <Text style={styles.error}>{message}</Text>;
+  return (
+    <View style={styles.error}>
+      <Text style={styles.errorTitle}>{message}</Text>
+      {onAction ? (
+        <Pressable onPress={onAction} style={styles.errorAction}>
+          <Text style={styles.errorActionText}>{actionLabel ?? "再読み込み"}</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
 }
 
 export function LoadingState() {
@@ -189,6 +206,36 @@ export function EmptyState({ children }: { children: ReactNode }) {
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyText}>{children}</Text>
+    </View>
+  );
+}
+
+export function MetaPill({
+  label,
+  tone = "neutral"
+}: {
+  label: string;
+  tone?: "neutral" | "green" | "red" | "blue";
+}) {
+  return (
+    <View
+      style={[
+        styles.metaPill,
+        tone === "green" && styles.metaPillGreen,
+        tone === "red" && styles.metaPillRed,
+        tone === "blue" && styles.metaPillBlue
+      ]}
+    >
+      <Text
+        style={[
+          styles.metaPillText,
+          tone === "green" && styles.metaPillTextGreen,
+          tone === "red" && styles.metaPillTextRed,
+          tone === "blue" && styles.metaPillTextBlue
+        ]}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
@@ -370,11 +417,29 @@ export const styles = StyleSheet.create({
     borderColor: "#fecaca",
     borderRadius: 8,
     borderWidth: 1,
+    gap: 10,
+    padding: 12
+  },
+  errorTitle: {
     color: colors.danger,
     fontSize: 13,
-    fontWeight: "600",
-    lineHeight: 19,
-    padding: 12
+    fontWeight: "700",
+    lineHeight: 19
+  },
+  errorAction: {
+    alignSelf: "flex-start",
+    backgroundColor: "#ffffff",
+    borderColor: "#fecaca",
+    borderRadius: 8,
+    borderWidth: 1,
+    minHeight: 38,
+    justifyContent: "center",
+    paddingHorizontal: 12
+  },
+  errorActionText: {
+    color: colors.danger,
+    fontSize: 13,
+    fontWeight: "800"
   },
   center: {
     alignItems: "center",
@@ -386,14 +451,51 @@ export const styles = StyleSheet.create({
     fontSize: 14
   },
   empty: {
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#f8fafc",
+    borderColor: colors.border,
     borderRadius: 8,
+    borderWidth: 1,
     padding: 16
   },
   emptyText: {
     color: colors.muted,
     fontSize: 14,
     lineHeight: 20
+  },
+  metaPill: {
+    alignSelf: "flex-start",
+    backgroundColor: "#f8fafc",
+    borderColor: colors.border,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 5
+  },
+  metaPillGreen: {
+    backgroundColor: "#ecfdf5",
+    borderColor: "#a7f3d0"
+  },
+  metaPillRed: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca"
+  },
+  metaPillBlue: {
+    backgroundColor: "#eff6ff",
+    borderColor: "#bfdbfe"
+  },
+  metaPillText: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  metaPillTextGreen: {
+    color: colors.primaryDark
+  },
+  metaPillTextRed: {
+    color: colors.danger
+  },
+  metaPillTextBlue: {
+    color: colors.blue
   },
   row: {
     gap: 3
