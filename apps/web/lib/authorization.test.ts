@@ -34,6 +34,13 @@ test("protected API routes require a logged-in user and return 401", () => {
   }
 });
 
+test("middleware reads Auth.js v5 secret names and keeps auth API routes public", () => {
+  const middleware = readFileSync(join(appApiDir, "../../middleware.ts"), "utf8");
+
+  expect(middleware).toMatch(/process\.env\.AUTH_SECRET\s*\?\?\s*process\.env\.NEXTAUTH_SECRET/);
+  expect(middleware).toMatch(/matcher:\s*\["\/\(\(\?!api\|_next\/static\|_next\/image\|favicon\.ico\)\.\*\)"\]/);
+});
+
 test("user-owned data API routes include userId in database queries", () => {
   const userOwnedRoutes = protectedRoutes.filter((file) => {
     const routePath = relative(appApiDir, file);
