@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 const mockPrisma = vi.hoisted(() => ({
   user: {
     findUnique: vi.fn(),
-    create: vi.fn()
+    create: vi.fn(),
+    update: vi.fn()
   },
   practiceLog: {
     findMany: vi.fn(),
@@ -30,6 +31,7 @@ vi.mock("bcryptjs", () => ({
 
 import { POST as login } from "@/app/api/mobile/auth/login/route";
 import { POST as register } from "@/app/api/mobile/auth/register/route";
+import { GET as getProfile, PUT as updateProfile } from "@/app/api/mobile/profile/route";
 import { GET as getPractice, POST as createPractice } from "@/app/api/mobile/practice/route";
 import { GET as getMatch, POST as createMatch } from "@/app/api/mobile/match/route";
 import { createMobileAccessToken } from "./mobile-auth";
@@ -49,6 +51,17 @@ function jsonRequest(path: string, body: unknown, token?: string) {
 function authRequest(path: string, userId: string) {
   return new Request(`http://localhost${path}`, {
     headers: { Authorization: `Bearer ${createMobileAccessToken(userId)}` }
+  });
+}
+
+function putJsonRequest(path: string, body: unknown, token?: string) {
+  return new Request(`http://localhost${path}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify(body)
   });
 }
 
@@ -227,6 +240,139 @@ describe("mobile register API", () => {
     }));
     expect(mockPrisma.user.create.mock.calls[0]?.[0].data).not.toHaveProperty("password");
     expect(mockPrisma.user.create.mock.calls[0]?.[0].data.passwordHash).not.toBe("password123");
+  });
+});
+
+describe("mobile profile API", () => {
+  const token = () => createMobileAccessToken("user-1");
+  const validInput = {
+    name: "鈴木 太郎",
+    level: "BEGINNER",
+    gender: "MALE"
+  };
+  const updatedUser = {
+    id: "user-1",
+    name: "鈴木 太郎",
+    email: "user@example.com",
+    level: "BEGINNER",
+    gender: "MALE",
+    club: null,
+    playStyle: null,
+    avatarUrl: null
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.MOBILE_AUTH_SECRET = "test-mobile-secret-that-is-long-enough-12345";
+  });
+
+  test("tokenなしで401を返す", async () => {
+    const response = await updateProfile(putJsonRequest("/api/mobile/profile", validInput));
+
+    expect(response.status).toBe(401);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  test("不正tokenで401を返す", async () => {
+    const response = await updateProfile(putJsonRequest("/api/mobile/profile", validInput, "invalid-token"));
+
+    expect(response.status).toBe(401);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  test("正常tokenでプロフィール更新できる", async () => {
+    mockPrisma.user.update.mockResolvedValue(updatedUser);
+
+    const response = await updateProfile(putJsonRequest("/api/mobile/profile", validInput, token()));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.user).toEqual(updatedUser);
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "user-1" },
+      data: {
+        name: "鈴木 太郎",
+        level: "BEGINNER",
+        gender: "MALE"
+      }
+    }));
+  });
+
+  test("nameが空なら400を返す", async () => {
+    const response = await updateProfile(putJsonRequest("/api/mobile/profile", {
+      ...validInput,
+      name: ""
+    }, token()));
+
+    expect(response.status).toBe(400);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  test("levelが不正なら400を返す", async () => {
+    const response = await updateProfile(putJsonRequest("/api/mobile/profile", {
+      ...validInput,
+      level: "ELEMENTARY"
+    }, token()));
+
+    expect(response.status).toBe(400);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  test("genderが不正なら400を返す", async () => {
+    const response = await updateProfile(putJsonRequest("/api/mobile/profile", {
+      ...validInput,
+      gender: "UNSPECIFIED"
+    }, token()));
+
+    expect(response.status).toBe(400);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  test("更新後にGET /api/mobile/profileで反映される", async () => {
+    mockPrisma.user.update.mockResolvedValue(updatedUser);
+    mockPrisma.user.findUnique.mockResolvedValue(updatedUser);
+
+    const putResponse = await updateProfile(putJsonRequest("/api/mobile/profile", validInput, token()));
+    const getResponse = await getProfile(authRequest("/api/mobile/profile", "user-1"));
+    const body = await getResponse.json();
+
+    expect(putResponse.status).toBe(200);
+    expect(getResponse.status).toBe(200);
+    expect(body.user).toEqual(updatedUser);
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "user-1" }
+    }));
+  });
+
+  test("他ユーザーを更新できない", async () => {
+    mockPrisma.user.update.mockResolvedValue(updatedUser);
+
+    const response = await updateProfile(putJsonRequest("/api/mobile/profile", {
+      ...validInput,
+      userId: "user-2"
+    }, token()));
+
+    expect(response.status).toBe(200);
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "user-1" }
+    }));
+    expect(mockPrisma.user.update.mock.calls[0]?.[0].data).not.toHaveProperty("userId");
+  });
+
+  test("更新対象なしなら404を返す", async () => {
+    mockPrisma.user.update.mockRejectedValueOnce({ code: "P2025" });
+
+    const response = await updateProfile(putJsonRequest("/api/mobile/profile", validInput, token()));
+
+    expect(response.status).toBe(404);
+  });
+
+  test("更新時の予期しないエラーは500を返す", async () => {
+    mockPrisma.user.update.mockRejectedValueOnce(new Error("database unavailable"));
+
+    const response = await updateProfile(putJsonRequest("/api/mobile/profile", validInput, token()));
+
+    expect(response.status).toBe(500);
   });
 });
 

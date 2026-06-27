@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
+import type { Href } from "expo-router";
 import { fetchProfile } from "@/api/profile";
 import { genderLabels, levelLabels } from "@/components/format";
 import { Button, Card, ErrorMessage, Header, LoadingState, Row, Screen } from "@/components/ui";
@@ -47,6 +48,9 @@ export default function ProfileScreen() {
           <Row label="性別" value={user.gender ? genderLabels[user.gender] : null} />
           <Row label="所属" value={user.club} />
           <Row label="プレースタイル" value={user.playStyle} />
+          <Button variant="secondary" onPress={() => router.push("/profile/edit" as Href)}>
+            編集
+          </Button>
         </Card>
       ) : null}
       <Button variant="danger" onPress={handleLogout}>

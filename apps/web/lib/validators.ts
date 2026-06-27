@@ -77,6 +77,12 @@ export const profileSchema = z.object({
     .nullable()
 });
 
+export const mobileProfileSchema = z.object({
+  name: z.string().trim().min(1, "名前を入力してください").max(50, "名前は50文字以内で入力してください"),
+  level: levelSchema,
+  gender: genderSchema.nullable()
+});
+
 export const equipmentSchema = z.object({
   blade: z.string().trim().min(1, "ラケット名を入力してください").max(120, "ラケット名は120文字以内で入力してください"),
   rubberFh: z.string().trim().max(120, "フォアラバーは120文字以内で入力してください").optional().nullable(),
