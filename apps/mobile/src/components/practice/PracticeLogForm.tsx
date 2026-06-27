@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchPracticeMenus } from "@/api/practice-menus";
 import type { PracticeInput } from "@/api/practice";
+import { useFormScreen } from "@/components/FormScreen";
 import { todayInputValue } from "@/components/format";
 import { Button, Card, EmptyState, ErrorMessage, InlineField, LoadingState, SectionTitle, TextField, colors } from "@/components/ui";
 import { getAccessToken } from "@/storage/token";
@@ -16,6 +17,7 @@ type PracticeLogFormProps = {
 };
 
 export function PracticeLogForm({ initialLog, onSubmit, savingLabel, submitLabel }: PracticeLogFormProps) {
+  const { dismissKeyboard, scrollToEndOnFocus } = useFormScreen();
   const [practicedAt, setPracticedAt] = useState(toInputDate(initialLog?.practicedAt) ?? todayInputValue());
   const [durationMin, setDurationMin] = useState(initialLog ? String(initialLog.durationMin) : "");
   const [location, setLocation] = useState(initialLog?.location ?? "");
@@ -136,6 +138,7 @@ export function PracticeLogForm({ initialLog, onSubmit, savingLabel, submitLabel
           label="練習内容"
           multiline
           onChangeText={setContent}
+          onFocus={scrollToEndOnFocus}
           placeholder="サーブ練習、3球目攻撃、フットワークなど"
           value={content}
         />
@@ -143,6 +146,7 @@ export function PracticeLogForm({ initialLog, onSubmit, savingLabel, submitLabel
           label="メモ"
           multiline
           onChangeText={setMemo}
+          onFocus={scrollToEndOnFocus}
           placeholder="今日はバックハンドの安定感が課題だった"
           value={memo}
         />

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Link, router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchPracticeLogs } from "@/api/practice";
 import { formatDate } from "@/components/format";
@@ -30,15 +30,17 @@ export default function PracticeListScreen() {
     }, [load])
   );
 
+  const goToNewPractice = useCallback(() => {
+    router.push("/practice/new");
+  }, []);
+
   return (
     <Screen>
       <Header
         action={
-          <Link asChild href="/practice/new">
-            <Pressable style={[styles.button, { minHeight: 42 }]}>
-              <Text style={styles.buttonText}>追加</Text>
-            </Pressable>
-          </Link>
+          <Pressable onPress={goToNewPractice} style={styles.listAddButton}>
+            <Text style={styles.buttonText}>追加</Text>
+          </Pressable>
         }
         subtitle={`${items.length}件`}
         title="練習記録"
@@ -46,7 +48,7 @@ export default function PracticeListScreen() {
       <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
       {!loading && !error && items.length === 0 ? (
-        <EmptyState actionLabel="最初の記録を追加" onAction={() => router.push("/practice/new")}>
+        <EmptyState actionLabel="練習記録を追加" onAction={goToNewPractice}>
           まだ練習記録がありません。
         </EmptyState>
       ) : null}

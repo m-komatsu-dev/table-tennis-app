@@ -371,6 +371,16 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12
   },
+  listAddButton: {
+    alignItems: "center",
+    backgroundColor: colors.primaryDark,
+    borderRadius: 8,
+    minHeight: 48,
+    minWidth: 78,
+    justifyContent: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 12
+  },
   secondaryButton: {
     backgroundColor: "#ecfdf5",
     borderColor: "#a7f3d0",

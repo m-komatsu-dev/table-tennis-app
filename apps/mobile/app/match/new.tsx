@@ -1,11 +1,12 @@
 import { router } from "expo-router";
 import { createMatchRecord } from "@/api/match";
+import { FormScreen } from "@/components/FormScreen";
 import { MatchRecordForm } from "@/components/match/MatchRecordForm";
-import { Header, Screen } from "@/components/ui";
+import { Header } from "@/components/ui";
 
 export default function NewMatchScreen() {
   return (
-    <Screen keyboardAware>
+    <FormScreen>
       <Header backLabel="戻る" onBack={() => router.back()} title="試合記録を追加" />
       <MatchRecordForm
         onSubmit={async (input) => {
@@ -15,6 +16,6 @@ export default function NewMatchScreen() {
         savingLabel="保存中..."
         submitLabel="保存する"
       />
-    </Screen>
+    </FormScreen>
   );
 }

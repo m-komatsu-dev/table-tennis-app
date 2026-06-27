@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { fetchMatchRecord, updateMatchRecord } from "@/api/match";
+import { FormScreen } from "@/components/FormScreen";
 import { MatchRecordForm } from "@/components/match/MatchRecordForm";
-import { ErrorMessage, Header, LoadingState, Screen } from "@/components/ui";
+import { ErrorMessage, Header, LoadingState } from "@/components/ui";
 import type { MatchRecord } from "@/types";
 
 export default function MatchEditScreen() {
@@ -37,7 +38,7 @@ export default function MatchEditScreen() {
   }, [matchId]);
 
   return (
-    <Screen keyboardAware>
+    <FormScreen>
       <Header backLabel="詳細へ戻る" onBack={() => router.back()} title="試合記録を編集" />
       <ErrorMessage message={error} />
       {loading ? <LoadingState /> : null}
@@ -52,6 +53,6 @@ export default function MatchEditScreen() {
           submitLabel="更新する"
         />
       ) : null}
-    </Screen>
+    </FormScreen>
   );
 }

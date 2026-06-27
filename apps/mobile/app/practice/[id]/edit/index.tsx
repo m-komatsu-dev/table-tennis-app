@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { fetchPracticeLog, updatePracticeLog } from "@/api/practice";
+import { FormScreen } from "@/components/FormScreen";
 import { PracticeLogForm } from "@/components/practice/PracticeLogForm";
-import { ErrorMessage, Header, LoadingState, Screen } from "@/components/ui";
+import { ErrorMessage, Header, LoadingState } from "@/components/ui";
 import type { PracticeLog } from "@/types";
 
 export default function PracticeEditScreen() {
@@ -37,7 +38,7 @@ export default function PracticeEditScreen() {
   }, [practiceId]);
 
   return (
-    <Screen keyboardAware>
+    <FormScreen>
       <Header backLabel="詳細へ戻る" onBack={() => router.back()} title="練習記録を編集" />
       <ErrorMessage message={error} />
       {loading ? <LoadingState /> : null}
@@ -52,6 +53,6 @@ export default function PracticeEditScreen() {
           submitLabel="更新する"
         />
       ) : null}
-    </Screen>
+    </FormScreen>
   );
 }

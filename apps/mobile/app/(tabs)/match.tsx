@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Link, router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchMatchRecords } from "@/api/match";
 import { formatDate, formatScores, formatSetCount, matchTypeLabels, resultLabels } from "@/components/format";
@@ -30,15 +30,17 @@ export default function MatchListScreen() {
     }, [load])
   );
 
+  const goToNewMatch = useCallback(() => {
+    router.push("/match/new");
+  }, []);
+
   return (
     <Screen>
       <Header
         action={
-          <Link asChild href="/match/new">
-            <Pressable style={[styles.button, { backgroundColor: colors.blue, minHeight: 42 }]}>
-              <Text style={styles.buttonText}>追加</Text>
-            </Pressable>
-          </Link>
+          <Pressable onPress={goToNewMatch} style={styles.listAddButton}>
+            <Text style={styles.buttonText}>追加</Text>
+          </Pressable>
         }
         subtitle={`${items.length}件`}
         title="試合記録"
@@ -46,7 +48,7 @@ export default function MatchListScreen() {
       <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
       {!loading && !error && items.length === 0 ? (
-        <EmptyState actionLabel="最初の記録を追加" onAction={() => router.push("/match/new")}>
+        <EmptyState actionLabel="試合記録を追加" onAction={goToNewMatch}>
           まだ試合記録がありません。
         </EmptyState>
       ) : null}

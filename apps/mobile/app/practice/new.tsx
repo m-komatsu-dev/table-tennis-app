@@ -1,11 +1,12 @@
 import { router } from "expo-router";
 import { createPracticeLog } from "@/api/practice";
+import { FormScreen } from "@/components/FormScreen";
 import { PracticeLogForm } from "@/components/practice/PracticeLogForm";
-import { Header, Screen } from "@/components/ui";
+import { Header } from "@/components/ui";
 
 export default function NewPracticeScreen() {
   return (
-    <Screen keyboardAware>
+    <FormScreen>
       <Header backLabel="戻る" onBack={() => router.back()} title="練習記録を追加" />
       <PracticeLogForm
         onSubmit={async (input) => {
@@ -15,6 +16,6 @@ export default function NewPracticeScreen() {
         savingLabel="保存中..."
         submitLabel="保存する"
       />
-    </Screen>
+    </FormScreen>
   );
 }
