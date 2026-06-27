@@ -16,13 +16,10 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="login" options={{ title: "ログイン", headerShown: false }} />
-        <Stack.Screen name="index" options={{ title: "ホーム" }} />
-        <Stack.Screen name="practice/index" options={{ title: "練習記録" }} />
+        <Stack.Screen name="index" options={{ title: "卓球記録", headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="practice/new" options={{ title: "練習を記録" }} />
-        <Stack.Screen name="match/index" options={{ title: "試合記録" }} />
         <Stack.Screen name="match/new" options={{ title: "試合を記録" }} />
-        <Stack.Screen name="practice-menus/index" options={{ title: "練習メニュー" }} />
-        <Stack.Screen name="profile" options={{ title: "プロフィール" }} />
       </Stack>
     </SafeAreaProvider>
   );

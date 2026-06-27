@@ -70,7 +70,7 @@ export default function PracticeMenusScreen() {
           </View>
         </Card>
       ))}
-      <Button variant="secondary" onPress={() => router.push("/")}>
+      <Button variant="secondary" onPress={() => router.push("/(tabs)/home")}>
         ホームへ戻る
       </Button>
     </Screen>

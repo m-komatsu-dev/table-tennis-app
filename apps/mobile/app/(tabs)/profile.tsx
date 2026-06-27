@@ -31,7 +31,7 @@ export default function ProfileScreen() {
 
   async function handleLogout() {
     await clearAccessToken();
-    router.replace("/login");
+    router.replace("/");
   }
 
   return (

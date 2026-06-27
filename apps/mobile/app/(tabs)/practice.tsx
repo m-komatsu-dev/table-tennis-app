@@ -60,7 +60,7 @@ export default function PracticeListScreen() {
           <Row label="練習メニュー" value={item.practiceMenu?.title} />
         </Card>
       ))}
-      <Button variant="secondary" onPress={() => router.push("/")}>
+      <Button variant="secondary" onPress={() => router.push("/(tabs)/home")}>
         ホームへ戻る
       </Button>
     </Screen>

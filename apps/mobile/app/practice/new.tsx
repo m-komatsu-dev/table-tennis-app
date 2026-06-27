@@ -5,6 +5,7 @@ import { fetchPracticeMenus } from "@/api/practice-menus";
 import { createPracticeLog } from "@/api/practice";
 import { todayInputValue } from "@/components/format";
 import { Button, Card, ErrorMessage, Header, LoadingState, Screen, SectionTitle, TextField, colors } from "@/components/ui";
+import { getAccessToken } from "@/storage/token";
 import type { PracticeMenu } from "@/types";
 
 export default function NewPracticeScreen() {
@@ -21,6 +22,13 @@ export default function NewPracticeScreen() {
 
   useEffect(() => {
     async function loadMenus() {
+      const token = await getAccessToken();
+
+      if (!token) {
+        router.replace("/login");
+        return;
+      }
+
       try {
         const result = await fetchPracticeMenus();
         setMenus(result.practiceMenus);

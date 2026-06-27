@@ -1,9 +1,29 @@
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { fetchMe, login } from "@/api/auth";
+import { ApiError, apiStatus } from "@/api/client";
 import { Button, Card, ErrorMessage, Screen, TextField, colors, styles } from "@/components/ui";
 import { getAccessToken, saveAccessToken } from "@/storage/token";
+
+function getLoginErrorMessage(caught: unknown) {
+  if (caught instanceof ApiError) {
+    if (caught.status === apiStatus.missingUrl) {
+      return "API URLが設定されていません";
+    }
+    if (caught.status === apiStatus.network) {
+      return "サーバーに接続できません。通信環境またはAPI URLを確認してください";
+    }
+    if (caught.status === 401) {
+      return "メールアドレスまたはパスワードが違います";
+    }
+    if (caught.status >= 500) {
+      return "サーバー側でエラーが発生しました";
+    }
+  }
+
+  return "ログインに失敗しました";
+}
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -23,7 +43,7 @@ export default function LoginScreen() {
       try {
         await fetchMe();
         if (mounted) {
-          router.replace("/");
+          router.replace("/(tabs)/home");
         }
       } catch {
         // apiRequest clears invalid tokens on 401.
@@ -43,9 +63,9 @@ export default function LoginScreen() {
     try {
       const result = await login(email, password);
       await saveAccessToken(result.accessToken);
-      router.replace("/");
+      router.replace("/(tabs)/home");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "ログインに失敗しました");
+      setError(getLoginErrorMessage(caught));
     } finally {
       setLoading(false);
     }
@@ -53,6 +73,10 @@ export default function LoginScreen() {
 
   return (
     <Screen>
+      <Pressable onPress={() => router.push("/")} style={{ alignSelf: "flex-start", paddingVertical: 4 }}>
+        <Text style={{ color: colors.primary, fontSize: 14, fontWeight: "800" }}>← ホームへ戻る</Text>
+      </Pressable>
+
       <View style={{ gap: 8, marginTop: 36 }}>
         <Text style={[styles.title, { fontSize: 30 }]}>卓球記録</Text>
         <Text style={{ color: colors.muted, fontSize: 15, lineHeight: 22 }}>

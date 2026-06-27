@@ -62,7 +62,7 @@ export default function MatchListScreen() {
           <Row label="メモ" value={item.memo} />
         </Card>
       ))}
-      <Button variant="secondary" onPress={() => router.push("/")}>
+      <Button variant="secondary" onPress={() => router.push("/(tabs)/home")}>
         ホームへ戻る
       </Button>
     </Screen>

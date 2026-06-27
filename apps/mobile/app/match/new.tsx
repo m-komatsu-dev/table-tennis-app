@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { router } from "expo-router";
 import { Text, View } from "react-native";
 import { createMatchRecord } from "@/api/match";
 import { todayInputValue } from "@/components/format";
 import { Button, Card, ErrorMessage, Header, Screen, SectionTitle, Segment, TextField, colors } from "@/components/ui";
+import { getAccessToken } from "@/storage/token";
 import type { ScoreRow } from "@/types";
 
 type MatchTypeInput = "PRACTICE" | "OFFICIAL";
@@ -23,6 +24,18 @@ export default function NewMatchScreen() {
   ]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function checkSession() {
+      const token = await getAccessToken();
+
+      if (!token) {
+        router.replace("/login");
+      }
+    }
+
+    checkSession();
+  }, []);
 
   function updateScore(index: number, key: "me" | "opp", value: string) {
     const next = scores.map((score, scoreIndex) =>
