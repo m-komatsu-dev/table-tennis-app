@@ -1,4 +1,4 @@
 {
-  "installCommand": "cd ../.. && npm ci",
+  "installCommand": "cd ../.. && npm ci --include=optional",
   "buildCommand": "cd ../.. && npm run prisma:generate && npm run build -w @table-tennis/web"
 }
