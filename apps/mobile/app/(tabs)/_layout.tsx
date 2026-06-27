@@ -76,6 +76,8 @@ export default function TabsLayout() {
       <Tabs.Screen name="home" options={{ title: "ホーム" }} />
       <Tabs.Screen name="practice" options={{ title: "練習" }} />
       <Tabs.Screen name="match" options={{ title: "試合" }} />
+      <Tabs.Screen name="analytics" options={{ title: "分析" }} />
+      <Tabs.Screen name="calendar" options={{ title: "カレンダー" }} />
       <Tabs.Screen name="practice-menus" options={{ title: "メニュー" }} />
       <Tabs.Screen name="profile" options={{ title: "プロフィール" }} />
     </Tabs>

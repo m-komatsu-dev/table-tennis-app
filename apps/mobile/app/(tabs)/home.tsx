@@ -130,6 +130,12 @@ export default function AppHomeScreen() {
 
       <Card>
         <SectionTitle title="次にできること" />
+        <Button variant="secondary" onPress={() => router.push("/analytics")}>
+          分析を見る
+        </Button>
+        <Button variant="secondary" onPress={() => router.push("/calendar")}>
+          カレンダーを見る
+        </Button>
         <Button variant="secondary" onPress={() => router.push("/practice-menus")}>
           練習メニューを見る
         </Button>
