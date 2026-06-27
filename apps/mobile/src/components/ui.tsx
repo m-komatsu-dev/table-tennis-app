@@ -28,7 +28,7 @@ export const colors = {
   blue: "#2563eb"
 };
 
-export function Screen({ children }: { children: ReactNode }) {
+export function Screen({ children, keyboardAware = false }: { children: ReactNode; keyboardAware?: boolean }) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
@@ -36,7 +36,11 @@ export function Screen({ children }: { children: ReactNode }) {
         keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
         style={styles.keyboardAvoiding}
       >
-        <ScrollView contentContainerStyle={styles.screen} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={[styles.screen, keyboardAware && styles.keyboardAwareScreen]}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+        >
           {children}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -301,6 +305,9 @@ export const styles = StyleSheet.create({
     gap: 16,
     padding: 20,
     paddingBottom: 36
+  },
+  keyboardAwareScreen: {
+    paddingBottom: 180
   },
   header: {
     alignItems: "flex-start",

@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { prisma } from "@table-tennis/db";
+import type { Equipment, PracticeLog, PracticeMenu } from "@table-tennis/db";
 import { requireMobileUserId } from "@/lib/mobile-auth";
+import { serializePractice } from "@/lib/serialize";
+
+type PracticeWithEquipment = PracticeLog & {
+  equipment: Equipment | null;
+  practiceMenu: Pick<PracticeMenu, "id" | "title"> | null;
+};
+
+const mobilePracticeMemoMarker = "\n\nメモ\n";
+const mobilePracticeMemoHeading = "メモ\n";
 
 export function mobileJson<T>(body: T, init?: ResponseInit) {
   return NextResponse.json(body, init);
@@ -49,4 +59,60 @@ export async function ensureMobilePracticeMenu(userId: string, practiceMenuId?: 
   });
 
   return Boolean(menu);
+}
+
+export function combineMobilePracticeContent(content: string | null | undefined, memo: string | null | undefined) {
+  const cleanContent = nullableMobileText(content);
+  const cleanMemo = nullableMobileText(memo);
+
+  if (cleanContent && cleanMemo) {
+    return `${cleanContent}${mobilePracticeMemoMarker}${cleanMemo}`;
+  }
+
+  if (cleanMemo) {
+    return `${mobilePracticeMemoHeading}${cleanMemo}`;
+  }
+
+  return cleanContent;
+}
+
+export function splitMobilePracticeContent(value: string | null | undefined) {
+  const text = nullableMobileText(value);
+
+  if (!text) {
+    return { content: null, memo: null };
+  }
+
+  const markerIndex = text.indexOf(mobilePracticeMemoMarker);
+
+  if (markerIndex >= 0) {
+    return {
+      content: nullableMobileText(text.slice(0, markerIndex)),
+      memo: nullableMobileText(text.slice(markerIndex + mobilePracticeMemoMarker.length))
+    };
+  }
+
+  if (text.startsWith(mobilePracticeMemoHeading)) {
+    return {
+      content: null,
+      memo: nullableMobileText(text.slice(mobilePracticeMemoHeading.length))
+    };
+  }
+
+  return { content: text, memo: null };
+}
+
+export function serializeMobilePractice(log: PracticeWithEquipment) {
+  const practice = serializePractice(log);
+  const split = splitMobilePracticeContent(practice.content);
+
+  return {
+    ...practice,
+    content: split.content,
+    memo: split.memo
+  };
+}
+
+export function serializeMobilePracticeList(logs: PracticeWithEquipment[]) {
+  return logs.map(serializeMobilePractice);
 }

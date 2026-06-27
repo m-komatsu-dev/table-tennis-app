@@ -81,6 +81,7 @@ export default function PracticeDetailScreen() {
             </View>
             <Row label="練習メニュー" value={item.practiceMenu?.title} />
             <Row label="内容" value={item.content} />
+            <Row label="メモ" value={item.memo} />
           </Card>
 
           <View style={{ gap: 10 }}>

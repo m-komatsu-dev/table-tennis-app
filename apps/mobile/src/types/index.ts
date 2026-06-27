@@ -18,6 +18,7 @@ export type PracticeLog = {
   durationMin: number;
   location: string | null;
   content: string | null;
+  memo: string | null;
   practiceMenuId: string | null;
   practiceMenu: { id: string; title: string } | null;
 };

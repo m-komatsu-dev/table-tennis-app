@@ -5,7 +5,7 @@ import { Header, Screen } from "@/components/ui";
 
 export default function NewMatchScreen() {
   return (
-    <Screen>
+    <Screen keyboardAware>
       <Header backLabel="戻る" onBack={() => router.back()} title="試合記録を追加" />
       <MatchRecordForm
         onSubmit={async (input) => {

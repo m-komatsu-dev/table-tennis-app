@@ -37,7 +37,7 @@ export default function PracticeEditScreen() {
   }, [practiceId]);
 
   return (
-    <Screen>
+    <Screen keyboardAware>
       <Header backLabel="詳細へ戻る" onBack={() => router.back()} title="練習記録を編集" />
       <ErrorMessage message={error} />
       {loading ? <LoadingState /> : null}

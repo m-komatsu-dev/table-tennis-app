@@ -37,7 +37,7 @@ export default function MatchEditScreen() {
   }, [matchId]);
 
   return (
-    <Screen>
+    <Screen keyboardAware>
       <Header backLabel="詳細へ戻る" onBack={() => router.back()} title="試合記録を編集" />
       <ErrorMessage message={error} />
       {loading ? <LoadingState /> : null}

@@ -6,6 +6,7 @@ export type PracticeInput = {
   durationMin: number;
   location?: string;
   content?: string;
+  memo?: string;
   practiceMenuId?: string | null;
 };
 

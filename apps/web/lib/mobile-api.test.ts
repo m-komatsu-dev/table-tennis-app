@@ -6,10 +6,12 @@ const mockPrisma = vi.hoisted(() => ({
     create: vi.fn()
   },
   practiceLog: {
-    findMany: vi.fn()
+    findMany: vi.fn(),
+    create: vi.fn()
   },
   matchRecord: {
-    findMany: vi.fn()
+    findMany: vi.fn(),
+    create: vi.fn()
   }
 }));
 
@@ -28,9 +30,10 @@ vi.mock("bcryptjs", () => ({
 
 import { POST as login } from "@/app/api/mobile/auth/login/route";
 import { POST as register } from "@/app/api/mobile/auth/register/route";
-import { GET as getPractice } from "@/app/api/mobile/practice/route";
-import { GET as getMatch } from "@/app/api/mobile/match/route";
+import { GET as getPractice, POST as createPractice } from "@/app/api/mobile/practice/route";
+import { GET as getMatch, POST as createMatch } from "@/app/api/mobile/match/route";
 import { createMobileAccessToken } from "./mobile-auth";
+import { combineMobilePracticeContent, splitMobilePracticeContent } from "./mobile-api";
 
 function jsonRequest(path: string, body: unknown, token?: string) {
   return new Request(`http://localhost${path}`, {
@@ -241,7 +244,7 @@ describe("mobile practice API", () => {
         practicedAt: new Date("2026-06-20T00:00:00.000Z"),
         durationMin: 90,
         location: "体育館",
-        content: "サーブ練習",
+        content: "サーブ練習\n\nメモ\nYGショート",
         equipmentId: null,
         equipment: null,
         practiceMenuId: null,
@@ -259,6 +262,77 @@ describe("mobile practice API", () => {
       where: { userId: "user-1" }
     }));
     expect(body.practiceLogs).toHaveLength(1);
+    expect(body.practiceLogs[0]).toMatchObject({
+      content: "サーブ練習",
+      memo: "YGショート"
+    });
+  });
+
+  test("同じユーザーが練習記録を複数作成できる", async () => {
+    const basePractice = {
+      userId: "user-1",
+      practicedAt: new Date("2026-06-20T00:00:00.000Z"),
+      durationMin: 90,
+      location: "体育館",
+      content: "サーブ練習\n\nメモ\nYGショート",
+      equipmentId: null,
+      equipment: null,
+      practiceMenuId: null,
+      practiceMenu: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    mockPrisma.practiceLog.create
+      .mockResolvedValueOnce({ ...basePractice, id: "practice-1" })
+      .mockResolvedValueOnce({ ...basePractice, id: "practice-2", content: "レシーブ練習" });
+
+    const input = {
+      practicedAt: "2026-06-20",
+      durationMin: 90,
+      location: "体育館",
+      content: "サーブ練習",
+      memo: "YGショート",
+      practiceMenuId: null
+    };
+
+    const first = await createPractice(jsonRequest("/api/mobile/practice", input, createMobileAccessToken("user-1")));
+    const second = await createPractice(jsonRequest("/api/mobile/practice", {
+      ...input,
+      content: "レシーブ練習",
+      memo: ""
+    }, createMobileAccessToken("user-1")));
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(201);
+    expect(mockPrisma.practiceLog.create).toHaveBeenCalledTimes(2);
+    expect(mockPrisma.practiceLog.create.mock.calls[0]?.[0].data).toMatchObject({
+      userId: "user-1",
+      content: "サーブ練習\n\nメモ\nYGショート"
+    });
+    expect(mockPrisma.practiceLog.create.mock.calls[1]?.[0].data).toMatchObject({
+      userId: "user-1",
+      content: "レシーブ練習"
+    });
+  });
+});
+
+describe("mobile practice content parser", () => {
+  test("練習内容とメモを分離できる", () => {
+    const stored = combineMobilePracticeContent("サーブ", "YGショート");
+
+    expect(stored).toBe("サーブ\n\nメモ\nYGショート");
+    expect(splitMobilePracticeContent(stored)).toEqual({
+      content: "サーブ",
+      memo: "YGショート"
+    });
+  });
+
+  test("メモだけの保存形式も分離できる", () => {
+    expect(splitMobilePracticeContent("メモ\nYGショート")).toEqual({
+      content: null,
+      memo: "YGショート"
+    });
   });
 });
 
@@ -295,5 +369,53 @@ describe("mobile match API", () => {
       where: { userId: "user-1" }
     }));
     expect(body.matchRecords).toHaveLength(1);
+  });
+
+  test("同じユーザーが試合記録を複数作成できる", async () => {
+    const baseMatch = {
+      userId: "user-1",
+      equipmentId: null,
+      equipment: null,
+      opponentTeam: "A高校",
+      matchType: "PRACTICE",
+      scores: [{ set: 1, me: 11, opp: 7 }],
+      result: "WIN",
+      memo: "よい出足",
+      playedAt: new Date("2026-06-21T00:00:00.000Z"),
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    mockPrisma.matchRecord.create
+      .mockResolvedValueOnce({ ...baseMatch, id: "match-1", opponentName: "佐藤" })
+      .mockResolvedValueOnce({ ...baseMatch, id: "match-2", opponentName: "鈴木" });
+
+    const input = {
+      playedAt: "2026-06-21",
+      opponentName: "佐藤",
+      opponentTeam: "A高校",
+      matchType: "PRACTICE",
+      result: "WIN",
+      scores: [{ set: 1, me: 11, opp: 7 }],
+      memo: "よい出足"
+    };
+
+    const first = await createMatch(jsonRequest("/api/mobile/match", input, createMobileAccessToken("user-1")));
+    const second = await createMatch(jsonRequest("/api/mobile/match", {
+      ...input,
+      opponentName: "鈴木"
+    }, createMobileAccessToken("user-1")));
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(201);
+    expect(mockPrisma.matchRecord.create).toHaveBeenCalledTimes(2);
+    expect(mockPrisma.matchRecord.create.mock.calls[0]?.[0].data).toMatchObject({
+      userId: "user-1",
+      opponentName: "佐藤"
+    });
+    expect(mockPrisma.matchRecord.create.mock.calls[1]?.[0].data).toMatchObject({
+      userId: "user-1",
+      opponentName: "鈴木"
+    });
   });
 });

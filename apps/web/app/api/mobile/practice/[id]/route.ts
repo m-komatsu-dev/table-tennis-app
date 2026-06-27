@@ -1,7 +1,20 @@
 import { prisma } from "@table-tennis/db";
-import { ensureMobilePracticeMenu, mobileError, mobileJson, mobileValidationError, nullableMobileText, requireMobileAuth } from "@/lib/mobile-api";
-import { serializePractice } from "@/lib/serialize";
+import { z } from "zod";
+import {
+  combineMobilePracticeContent,
+  ensureMobilePracticeMenu,
+  mobileError,
+  mobileJson,
+  mobileValidationError,
+  nullableMobileText,
+  requireMobileAuth,
+  serializeMobilePractice
+} from "@/lib/mobile-api";
 import { practiceSchema } from "@/lib/validators";
+
+const mobilePracticeSchema = practiceSchema.extend({
+  memo: z.string().trim().max(4000, "メモは4000文字以内で入力してください").optional().nullable()
+});
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -24,7 +37,7 @@ export async function GET(request: Request, context: RouteContext) {
     return mobileError("練習記録が見つかりません", 404);
   }
 
-  return mobileJson({ practiceLog: serializePractice(log) });
+  return mobileJson({ practiceLog: serializeMobilePractice(log) });
 }
 
 export async function PUT(request: Request, context: RouteContext) {
@@ -36,7 +49,7 @@ export async function PUT(request: Request, context: RouteContext) {
 
   try {
     const { id } = await context.params;
-    const body = practiceSchema.parse(await request.json());
+    const body = mobilePracticeSchema.parse(await request.json());
 
     if (!(await ensureMobilePracticeMenu(userId, body.practiceMenuId))) {
       return mobileError("指定された練習メニューが見つかりません", 400);
@@ -48,7 +61,7 @@ export async function PUT(request: Request, context: RouteContext) {
         practicedAt: new Date(body.practicedAt),
         durationMin: body.durationMin,
         location: nullableMobileText(body.location),
-        content: nullableMobileText(body.content),
+        content: combineMobilePracticeContent(body.content, body.memo),
         practiceMenuId: body.practiceMenuId ?? null,
         equipmentId: null
       }
@@ -63,7 +76,7 @@ export async function PUT(request: Request, context: RouteContext) {
       include: { equipment: true, practiceMenu: { select: { id: true, title: true } } }
     });
 
-    return mobileJson({ practiceLog: serializePractice(log) });
+    return mobileJson({ practiceLog: serializeMobilePractice(log) });
   } catch (error) {
     return mobileValidationError(error);
   }

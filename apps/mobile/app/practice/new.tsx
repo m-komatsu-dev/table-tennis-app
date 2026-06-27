@@ -5,7 +5,7 @@ import { Header, Screen } from "@/components/ui";
 
 export default function NewPracticeScreen() {
   return (
-    <Screen>
+    <Screen keyboardAware>
       <Header backLabel="戻る" onBack={() => router.back()} title="練習記録を追加" />
       <PracticeLogForm
         onSubmit={async (input) => {

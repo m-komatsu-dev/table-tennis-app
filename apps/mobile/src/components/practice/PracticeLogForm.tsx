@@ -20,7 +20,7 @@ export function PracticeLogForm({ initialLog, onSubmit, savingLabel, submitLabel
   const [durationMin, setDurationMin] = useState(initialLog ? String(initialLog.durationMin) : "");
   const [location, setLocation] = useState(initialLog?.location ?? "");
   const [content, setContent] = useState(initialLog?.content ?? "");
-  const [memo, setMemo] = useState("");
+  const [memo, setMemo] = useState(initialLog?.memo ?? "");
   const [practiceMenuId, setPracticeMenuId] = useState<string | null>(initialLog?.practiceMenuId ?? null);
   const [menus, setMenus] = useState<PracticeMenu[]>([]);
   const [loadingMenus, setLoadingMenus] = useState(true);
@@ -70,18 +70,12 @@ export function PracticeLogForm({ initialLog, onSubmit, savingLabel, submitLabel
     setSaving(true);
 
     try {
-      const body = [
-        content.trim(),
-        memo.trim().length > 0 ? `メモ\n${memo.trim()}` : ""
-      ]
-        .filter((value) => value.length > 0)
-        .join("\n\n");
-
       await onSubmit({
         practicedAt: practicedAt.trim(),
         durationMin: Number(durationMin),
         location: location.trim(),
-        content: body,
+        content: content.trim(),
+        memo: memo.trim(),
         practiceMenuId: practiceMenuId ?? null
       });
     } catch (caught) {
