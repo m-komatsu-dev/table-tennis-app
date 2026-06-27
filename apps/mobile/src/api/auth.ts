@@ -10,6 +10,7 @@ export type RegisterInput = {
 
 export async function login(email: string, password: string) {
   return apiRequest<{ accessToken: string; user: User }>("/api/mobile/auth/login", {
+    auth: false,
     method: "POST",
     body: JSON.stringify({ email, password })
   });
@@ -17,6 +18,7 @@ export async function login(email: string, password: string) {
 
 export async function register(input: RegisterInput) {
   return apiRequest<{ accessToken: string; user: User }>("/api/mobile/auth/register", {
+    auth: false,
     method: "POST",
     body: JSON.stringify(input)
   });

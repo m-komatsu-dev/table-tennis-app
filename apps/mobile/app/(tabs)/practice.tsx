@@ -45,7 +45,11 @@ export default function PracticeListScreen() {
       />
       <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
-      {!loading && !error && items.length === 0 ? <EmptyState>まだ練習記録がありません。</EmptyState> : null}
+      {!loading && !error && items.length === 0 ? (
+        <EmptyState actionLabel="最初の記録を追加" onAction={() => router.push("/practice/new")}>
+          まだ練習記録がありません。
+        </EmptyState>
+      ) : null}
       {!loading && items.map((item) => <PracticeLogCard key={item.id} item={item} />)}
       <Button variant="secondary" onPress={() => router.push("/(tabs)/home")}>
         ホームへ戻る

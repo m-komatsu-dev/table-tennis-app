@@ -60,6 +60,10 @@ export default function NewPracticeScreen() {
   );
 
   async function handleSave() {
+    if (saving) {
+      return;
+    }
+
     const validationError = validatePracticeInput(practicedAt, durationMin);
 
     if (validationError) {
@@ -83,7 +87,7 @@ export default function NewPracticeScreen() {
         durationMin: Number(durationMin),
         location: location.trim(),
         content: body,
-        practiceMenuId
+        practiceMenuId: practiceMenuId ?? null
       });
       router.replace("/practice");
     } catch (caught) {

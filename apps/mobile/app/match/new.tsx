@@ -64,6 +64,10 @@ export default function NewMatchScreen() {
   }
 
   async function handleSave() {
+    if (saving) {
+      return;
+    }
+
     const validation = validateMatchInput({
       playedAt,
       opponentName,

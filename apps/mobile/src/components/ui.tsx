@@ -202,10 +202,23 @@ export function LoadingState() {
   );
 }
 
-export function EmptyState({ children }: { children: ReactNode }) {
+export function EmptyState({
+  children,
+  actionLabel,
+  onAction
+}: {
+  children: ReactNode;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyText}>{children}</Text>
+      {onAction ? (
+        <Pressable onPress={onAction} style={styles.emptyAction}>
+          <Text style={styles.emptyActionText}>{actionLabel ?? "追加"}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -455,12 +468,26 @@ export const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 8,
     borderWidth: 1,
+    gap: 12,
     padding: 16
   },
   emptyText: {
     color: colors.muted,
     fontSize: 14,
     lineHeight: 20
+  },
+  emptyAction: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    minHeight: 40,
+    justifyContent: "center",
+    paddingHorizontal: 14
+  },
+  emptyActionText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "800"
   },
   metaPill: {
     alignSelf: "flex-start",
