@@ -24,7 +24,12 @@ function routeFiles(dir: string): string[] {
 
 const protectedRoutes = routeFiles(appApiDir).filter((file) => {
   const routePath = relative(appApiDir, file);
-  return !publicRoutes.has(routePath);
+  return !publicRoutes.has(routePath) && !routePath.startsWith("mobile/");
+});
+
+const mobileRoutes = routeFiles(join(appApiDir, "mobile")).filter((file) => {
+  const routePath = relative(join(appApiDir, "mobile"), file);
+  return routePath !== "auth/login/route.ts";
 });
 
 test("protected API routes require a logged-in user and return 401", () => {
@@ -35,6 +40,17 @@ test("protected API routes require a logged-in user and return 401", () => {
 
     expect(content, relative(appApiDir, file)).toMatch(/requireUserId\(\)/);
     expect(content, relative(appApiDir, file)).toMatch(/errorResponse\("認証が必要です", 401\)/);
+  }
+});
+
+test("mobile API routes use bearer token auth and return 401", () => {
+  expect(mobileRoutes.length).toBeGreaterThan(0);
+
+  for (const file of mobileRoutes) {
+    const content = readFileSync(file, "utf8");
+
+    expect(content, relative(appApiDir, file)).toMatch(/requireMobileAuth\(request\)/);
+    expect(content, relative(appApiDir, file)).toMatch(/mobileError\("認証が必要です", 401\)/);
   }
 });
 
@@ -59,6 +75,20 @@ test("user-owned data API routes include userId in database queries", () => {
   const userOwnedRoutes = protectedRoutes.filter((file) => {
     const routePath = relative(appApiDir, file);
     return !routePath.startsWith("profile/") && !routePath.startsWith("ai/");
+  });
+
+  for (const file of userOwnedRoutes) {
+    const content = readFileSync(file, "utf8");
+
+    expect(content, relative(appApiDir, file)).toMatch(/userId/);
+    expect(content, relative(appApiDir, file)).toMatch(/where:\s*{[\s\S]*userId/);
+  }
+});
+
+test("mobile user-owned data API routes include userId in database queries", () => {
+  const userOwnedRoutes = mobileRoutes.filter((file) => {
+    const routePath = relative(appApiDir, file);
+    return !routePath.startsWith("me/") && !routePath.startsWith("profile/");
   });
 
   for (const file of userOwnedRoutes) {

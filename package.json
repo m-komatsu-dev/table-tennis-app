@@ -18,5 +18,9 @@
     "prisma:migrate:deploy": "npm run prisma:migrate:deploy -w @table-tennis/db",
     "prisma:studio": "npm run prisma:studio -w @table-tennis/db",
     "db:seed": "npm run db:seed -w @table-tennis/db"
+  },
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
   }
 }

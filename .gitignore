@@ -16,3 +16,5 @@ packages/db/.env
 coverage
 .vercel
 *.tsbuildinfo
+.expo/
+apps/mobile/.expo/
