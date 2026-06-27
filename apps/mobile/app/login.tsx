@@ -107,6 +107,12 @@ export default function LoginScreen() {
           ログイン
         </Button>
       </Card>
+
+      <Pressable onPress={() => router.push("/register")} style={{ alignItems: "center", minHeight: 44, justifyContent: "center" }}>
+        <Text style={{ color: colors.primaryDark, fontSize: 14, fontWeight: "800" }}>
+          アカウントをお持ちでない方は新規登録
+        </Text>
+      </Pressable>
     </Screen>
   );
 }

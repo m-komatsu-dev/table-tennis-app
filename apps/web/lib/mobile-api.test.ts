@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const mockPrisma = vi.hoisted(() => ({
   user: {
-    findUnique: vi.fn()
+    findUnique: vi.fn(),
+    create: vi.fn()
   },
   practiceLog: {
     findMany: vi.fn()
@@ -13,7 +14,8 @@ const mockPrisma = vi.hoisted(() => ({
 }));
 
 const mockBcrypt = vi.hoisted(() => ({
-  compare: vi.fn()
+  compare: vi.fn(),
+  hash: vi.fn()
 }));
 
 vi.mock("@table-tennis/db", () => ({
@@ -25,6 +27,7 @@ vi.mock("bcryptjs", () => ({
 }));
 
 import { POST as login } from "@/app/api/mobile/auth/login/route";
+import { POST as register } from "@/app/api/mobile/auth/register/route";
 import { GET as getPractice } from "@/app/api/mobile/practice/route";
 import { GET as getMatch } from "@/app/api/mobile/match/route";
 import { createMobileAccessToken } from "./mobile-auth";
@@ -106,6 +109,121 @@ describe("mobile login API", () => {
 
     expect(response.status).toBe(401);
     expect(mockBcrypt.compare).not.toHaveBeenCalled();
+  });
+});
+
+describe("mobile register API", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.MOBILE_AUTH_SECRET = "test-mobile-secret-that-is-long-enough-12345";
+  });
+
+  test("正常な入力で201とaccessToken/userを返す", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    mockBcrypt.hash.mockResolvedValue("hashed-password");
+    mockPrisma.user.create.mockResolvedValue({
+      id: "user-1",
+      name: "中野",
+      email: "user@example.com"
+    });
+
+    const response = await register(jsonRequest("/api/mobile/auth/register", {
+      name: "中野",
+      email: "USER@example.com",
+      password: "password123",
+      confirmPassword: "password123"
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(body.accessToken).toEqual(expect.any(String));
+    expect(body.user).toEqual({
+      id: "user-1",
+      name: "中野",
+      email: "user@example.com"
+    });
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith(expect.objectContaining({
+      where: { email: "user@example.com" }
+    }));
+  });
+
+  test("email形式不正で400を返す", async () => {
+    const response = await register(jsonRequest("/api/mobile/auth/register", {
+      name: "中野",
+      email: "invalid-email",
+      password: "password123",
+      confirmPassword: "password123"
+    }));
+
+    expect(response.status).toBe(400);
+    expect(mockPrisma.user.create).not.toHaveBeenCalled();
+  });
+
+  test("passwordが短い場合400を返す", async () => {
+    const response = await register(jsonRequest("/api/mobile/auth/register", {
+      name: "中野",
+      email: "user@example.com",
+      password: "short",
+      confirmPassword: "short"
+    }));
+
+    expect(response.status).toBe(400);
+    expect(mockPrisma.user.create).not.toHaveBeenCalled();
+  });
+
+  test("confirmPassword不一致で400を返す", async () => {
+    const response = await register(jsonRequest("/api/mobile/auth/register", {
+      name: "中野",
+      email: "user@example.com",
+      password: "password123",
+      confirmPassword: "password456"
+    }));
+
+    expect(response.status).toBe(400);
+    expect(mockPrisma.user.create).not.toHaveBeenCalled();
+  });
+
+  test("既存emailの場合409を返す", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ id: "user-1" });
+
+    const response = await register(jsonRequest("/api/mobile/auth/register", {
+      name: "中野",
+      email: "user@example.com",
+      password: "password123",
+      confirmPassword: "password123"
+    }));
+
+    expect(response.status).toBe(409);
+    expect(mockBcrypt.hash).not.toHaveBeenCalled();
+    expect(mockPrisma.user.create).not.toHaveBeenCalled();
+  });
+
+  test("passwordHashを保存しpassword平文は保存しない", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    mockBcrypt.hash.mockResolvedValue("hashed-password");
+    mockPrisma.user.create.mockResolvedValue({
+      id: "user-1",
+      name: "中野",
+      email: "user@example.com"
+    });
+
+    await register(jsonRequest("/api/mobile/auth/register", {
+      name: "中野",
+      email: "user@example.com",
+      password: "password123",
+      confirmPassword: "password123"
+    }));
+
+    expect(mockBcrypt.hash).toHaveBeenCalledWith("password123", 12);
+    expect(mockPrisma.user.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: {
+        email: "user@example.com",
+        name: "中野",
+        passwordHash: "hashed-password"
+      }
+    }));
+    expect(mockPrisma.user.create.mock.calls[0]?.[0].data).not.toHaveProperty("password");
+    expect(mockPrisma.user.create.mock.calls[0]?.[0].data.passwordHash).not.toBe("password123");
   });
 });
 

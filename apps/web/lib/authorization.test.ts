@@ -29,7 +29,7 @@ const protectedRoutes = routeFiles(appApiDir).filter((file) => {
 
 const mobileRoutes = routeFiles(join(appApiDir, "mobile")).filter((file) => {
   const routePath = relative(join(appApiDir, "mobile"), file);
-  return routePath !== "auth/login/route.ts";
+  return routePath !== "auth/login/route.ts" && routePath !== "auth/register/route.ts";
 });
 
 test("protected API routes require a logged-in user and return 401", () => {

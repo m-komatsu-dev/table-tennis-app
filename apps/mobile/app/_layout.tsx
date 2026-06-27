@@ -16,6 +16,7 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="login" options={{ title: "ログイン", headerShown: false }} />
+        <Stack.Screen name="register" options={{ title: "新規登録", headerShown: false }} />
         <Stack.Screen name="index" options={{ title: "卓球記録", headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="practice/new" options={{ title: "練習を記録" }} />

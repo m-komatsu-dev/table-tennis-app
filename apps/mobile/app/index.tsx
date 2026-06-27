@@ -50,9 +50,16 @@ export default function PublicHomeScreen() {
         <Text style={{ color: colors.text, fontSize: 16, fontWeight: "700", lineHeight: 24 }}>
           練習・試合・練習メニューを記録して、成長を見える化する卓球プレイヤー向けアプリ
         </Text>
-        <Button onPress={() => router.push(hasToken ? "/(tabs)/home" : "/login")}>
-          {hasToken ? "アプリを開く" : "ログインする"}
-        </Button>
+        {hasToken ? (
+          <Button onPress={() => router.push("/(tabs)/home")}>アプリを開く</Button>
+        ) : (
+          <View style={{ gap: 10 }}>
+            <Button onPress={() => router.push("/register")}>新規登録</Button>
+            <Button variant="secondary" onPress={() => router.push("/login")}>
+              ログイン
+            </Button>
+          </View>
+        )}
       </View>
 
       <Card>
@@ -78,13 +85,15 @@ export default function PublicHomeScreen() {
       </Card>
 
       <Card>
-        <SectionTitle title="新規登録について" />
+        <SectionTitle title="はじめる" />
         <Text style={{ color: colors.muted, fontSize: 14, lineHeight: 21 }}>
-          Phase 1のモバイル版はログインに対応しています。アカウント作成はWeb版で行い、同じメールアドレスとパスワードでログインしてください。
+          モバイル版だけでアカウント作成から記録の開始まで進めます。登録後は自動でログインします。
         </Text>
-        <Button variant="secondary" onPress={() => router.push("/login")}>
-          Web版アカウントでログイン
-        </Button>
+        {hasToken ? null : (
+          <Button variant="secondary" onPress={() => router.push("/register")}>
+            新規登録へ進む
+          </Button>
+        )}
       </Card>
     </Screen>
   );
