@@ -1,6 +1,9 @@
 {
   "name": "table-tennis-platform",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "workspaces": [
     "apps/web",
     "packages/*"
@@ -24,5 +27,9 @@
     "@types/react-dom": "19.1.6",
     "react": "19.2.7",
     "react-dom": "19.2.7"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.62.2",
+    "lightningcss-linux-x64-gnu": "1.32.0"
   }
 }

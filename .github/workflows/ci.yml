@@ -27,17 +27,17 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
-        run: npm install
-
-      - name: Generate Prisma Client
-        run: npm run prisma:generate
+        run: npm ci
 
       - name: Run unit tests
         run: npm run test
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
 
       - name: Run typecheck
         run: npm run typecheck -w @table-tennis/web

@@ -26,7 +26,7 @@
 │   └── mobile/           # Expo React Nativeアプリ
 ├── packages/
 │   └── db/               # Prisma schema・Prisma client共有
-├── package.json          # npm workspaces
+├── package.json          # npm workspaces（web/packagesのみ）
 └── README.md
 ```
 
@@ -37,6 +37,8 @@ npm install
 cp apps/web/.env.local.example apps/web/.env.local
 cp packages/db/.env.example packages/db/.env
 ```
+
+rootのnpm workspaceには `apps/web` と `packages/*` のみを含めます。`apps/mobile` はExpo SDK 54用の独立したnpm projectとして扱うため、rootの `npm install` / `npm ci` には含めません。
 
 monorepo構成では、Webアプリ用とPrisma CLI用の2つの環境変数ファイルが必要です。
 
@@ -89,7 +91,9 @@ http://localhost:3000/api/auth/callback/google
 ```bash
 npm install
 npm run dev -w @table-tennis/web
-npm run start -w @table-tennis/mobile
+cd apps/mobile
+npm install
+npx expo start -c
 ```
 
 `apps/mobile` では `EXPO_PUBLIC_API_URL` をAPIのbase URLとして使います。ローカルのWeb APIへ接続する場合は次のように設定します。
@@ -170,9 +174,10 @@ npm run test:watch
 
 AI関連テストではGoogle Gen AI SDKをモックしており、Gemini APIを実際には呼び出しません。テスト実行に `GEMINI_API_KEY` は不要で、料金・レート制限・ネットワーク状態にも依存しません。
 
-CIでは依存関係をインストールした後、少なくとも次を実行してください。DB接続を使う統合テストは現時点では含まれませんが、Prisma Clientを使う型検査とビルドの前に `prisma:generate` が必要です。
+CIではNode.js 22 LTSを使い、依存関係は `npm ci` でlockfileどおりにインストールします。DB接続を使う統合テストは現時点では含まれませんが、Prisma Clientを使う型検査とビルドの前に `prisma:generate` が必要です。
 
 ```bash
+npm ci
 npm run test
 npm run prisma:generate
 npm run typecheck -w @table-tennis/web
@@ -264,11 +269,13 @@ npm run prisma:migrate:deploy
 1. VercelでこのリポジトリをImportします。
 2. Framework Presetは `Next.js` を選択します。
 3. monorepo構成のため、Root Directoryはリポジトリルートのままにします。
-4. Install Commandは通常どおり `npm install` を使います。
+4. Install Commandは `npm ci` を使います。
 5. Build Commandは `npm run vercel-build` を設定します。
 6. Output DirectoryはNext.jsのデフォルトのままにします。
 
 `npm run vercel-build` は `npm run prisma:generate` のあとにWebアプリの `npm run build` を実行します。Vercel上ではmigrationを自動実行せず、デプロイ前に `npm run prisma:migrate:deploy` で本番DBへ適用してください。
+
+Vercelで過去のビルドキャッシュから `lightningcss` やNext.js SWCなどのnative optional dependencyが欠ける場合は、一度だけRedeploy without cacheを実行してください。その後は `package-lock.json` と `npm ci` によりLinux用optional dependencyを含めて再現性のあるインストールになります。
 
 ### 3. Vercelに設定する環境変数
 
