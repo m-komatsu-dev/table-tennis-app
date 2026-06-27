@@ -43,7 +43,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
       headers
     });
   } catch {
-    throw new ApiError("サーバーに接続できません。通信環境またはAPI URLを確認してください", apiStatus.network);
+    throw new ApiError("サーバーに接続できません", apiStatus.network);
   }
 
   const body = await response.json().catch(() => ({}));
@@ -53,8 +53,24 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
       await clearAccessToken();
     }
 
-    throw new ApiError(body.error ?? "通信に失敗しました", response.status);
+    throw new ApiError(apiErrorMessage(response.status), response.status);
   }
 
   return body as T;
+}
+
+function apiErrorMessage(status: number) {
+  if (status === 400) {
+    return "入力内容を確認してください";
+  }
+
+  if (status === 401) {
+    return "ログインし直してください";
+  }
+
+  if (status >= 500) {
+    return "サーバー側でエラーが発生しました";
+  }
+
+  return "通信に失敗しました";
 }

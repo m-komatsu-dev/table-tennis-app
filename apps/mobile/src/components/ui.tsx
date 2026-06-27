@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -29,9 +31,15 @@ export const colors = {
 export function Screen({ children }: { children: ReactNode }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.screen} keyboardShouldPersistTaps="handled">
-        {children}
-      </ScrollView>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
+        style={styles.keyboardAvoiding}
+      >
+        <ScrollView contentContainerStyle={styles.screen} keyboardShouldPersistTaps="handled">
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -39,19 +47,30 @@ export function Screen({ children }: { children: ReactNode }) {
 export function Header({
   title,
   subtitle,
+  backLabel,
+  onBack,
   action
 }: {
   title: string;
   subtitle?: string;
+  backLabel?: string;
+  onBack?: () => void;
   action?: ReactNode;
 }) {
   return (
-    <View style={styles.header}>
-      <View style={styles.headerText}>
-        <Text style={styles.title}>{title}</Text>
-        {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+    <View style={{ gap: 10 }}>
+      {onBack ? (
+        <Pressable onPress={onBack} style={styles.backButton}>
+          <Text style={styles.backButtonText}>{backLabel ?? "戻る"}</Text>
+        </Pressable>
+      ) : null}
+      <View style={styles.header}>
+        <View style={styles.headerText}>
+          <Text style={styles.title}>{title}</Text>
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        </View>
+        {action}
       </View>
-      {action}
     </View>
   );
 }
@@ -73,24 +92,35 @@ export function Button({
   children,
   onPress,
   loading,
+  loadingLabel,
+  disabled,
   variant = "primary"
 }: {
   children: ReactNode;
   onPress: () => void;
   loading?: boolean;
+  loadingLabel?: string;
+  disabled?: boolean;
   variant?: "primary" | "secondary" | "danger";
 }) {
   const buttonStyle = [
     styles.button,
     variant === "secondary" && styles.secondaryButton,
     variant === "danger" && styles.dangerButton,
-    loading && styles.disabledButton
+    (loading || disabled) && styles.disabledButton
   ];
   const textStyle = [styles.buttonText, variant === "secondary" && styles.secondaryButtonText];
 
   return (
-    <Pressable disabled={loading} onPress={onPress} style={buttonStyle}>
-      {loading ? <ActivityIndicator color="#ffffff" /> : <Text style={textStyle}>{children}</Text>}
+    <Pressable disabled={loading || disabled} onPress={onPress} style={buttonStyle}>
+      {loading ? (
+        <View style={styles.buttonLoading}>
+          <ActivityIndicator color="#ffffff" />
+          <Text style={styles.buttonText}>{loadingLabel ?? "保存中..."}</Text>
+        </View>
+      ) : (
+        <Text style={textStyle}>{children}</Text>
+      )}
     </Pressable>
   );
 }
@@ -113,6 +143,27 @@ export function TextField({
         placeholderTextColor={colors.faint}
         style={[styles.input, multiline && styles.textArea, props.style]}
       />
+    </View>
+  );
+}
+
+export function InlineField({
+  label,
+  suffix,
+  containerStyle,
+  ...props
+}: TextInputProps & {
+  label: string;
+  suffix?: string;
+  containerStyle?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <View style={[styles.field, containerStyle]}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.inlineInputRow}>
+        <TextInput {...props} placeholderTextColor={colors.faint} style={[styles.input, styles.inlineInput, props.style]} />
+        {suffix ? <Text style={styles.inputSuffix}>{suffix}</Text> : null}
+      </View>
     </View>
   );
 }
@@ -183,6 +234,9 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background
   },
+  keyboardAvoiding: {
+    flex: 1
+  },
   screen: {
     gap: 16,
     padding: 20,
@@ -208,6 +262,16 @@ export const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 14,
     lineHeight: 21
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    minHeight: 34,
+    justifyContent: "center"
+  },
+  backButtonText: {
+    color: colors.primaryDark,
+    fontSize: 15,
+    fontWeight: "800"
   },
   card: {
     backgroundColor: colors.surface,
@@ -251,6 +315,11 @@ export const styles = StyleSheet.create({
   disabledButton: {
     opacity: 0.72
   },
+  buttonLoading: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8
+  },
   buttonText: {
     color: "#ffffff",
     fontSize: 15,
@@ -281,6 +350,20 @@ export const styles = StyleSheet.create({
   textArea: {
     minHeight: 96,
     textAlignVertical: "top"
+  },
+  inlineInputRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10
+  },
+  inlineInput: {
+    flex: 1
+  },
+  inputSuffix: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "800",
+    width: 28
   },
   error: {
     backgroundColor: "#fef2f2",
@@ -341,7 +424,9 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 8
   },
   segmentItemSelected: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#ecfdf5",
+    borderColor: "#a7f3d0",
+    borderWidth: 1,
     shadowColor: "#0f172a",
     shadowOpacity: 0.06,
     shadowRadius: 6,
@@ -353,6 +438,6 @@ export const styles = StyleSheet.create({
     fontWeight: "700"
   },
   segmentTextSelected: {
-    color: colors.text
+    color: colors.primaryDark
   }
 });
