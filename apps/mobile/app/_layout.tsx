@@ -20,7 +20,11 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ title: "卓球記録", headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="practice/new" options={{ title: "練習を記録" }} />
+        <Stack.Screen name="practice/[id]/index" options={{ title: "練習記録詳細" }} />
+        <Stack.Screen name="practice/[id]/edit/index" options={{ title: "練習記録を編集" }} />
         <Stack.Screen name="match/new" options={{ title: "試合を記録" }} />
+        <Stack.Screen name="match/[id]/index" options={{ title: "試合記録詳細" }} />
+        <Stack.Screen name="match/[id]/edit/index" options={{ title: "試合記録を編集" }} />
       </Stack>
     </SafeAreaProvider>
   );

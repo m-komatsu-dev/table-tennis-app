@@ -60,20 +60,22 @@ export default function PracticeListScreen() {
 
 function PracticeLogCard({ item }: { item: PracticeLog }) {
   return (
-    <Card>
-      <View style={{ flexDirection: "row", gap: 10, justifyContent: "space-between" }}>
-        <View style={{ flex: 1, gap: 8 }}>
-          <Text style={{ color: colors.text, fontSize: 18, fontWeight: "900", lineHeight: 24 }}>
-            {formatDate(item.practicedAt)}
-          </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            <MetaPill label={`${item.durationMin}分`} tone="green" />
-            <MetaPill label={item.location || "場所未設定"} />
+    <Pressable onPress={() => router.push(`/practice/${item.id}`)}>
+      <Card>
+        <View style={{ flexDirection: "row", gap: 10, justifyContent: "space-between" }}>
+          <View style={{ flex: 1, gap: 8 }}>
+            <Text style={{ color: colors.text, fontSize: 18, fontWeight: "900", lineHeight: 24 }}>
+              {formatDate(item.practicedAt)}
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              <MetaPill label={`${item.durationMin}分`} tone="green" />
+              <MetaPill label={item.location || "場所未設定"} />
+            </View>
           </View>
         </View>
-      </View>
-      <Row label="練習メニュー" value={item.practiceMenu?.title} />
-      <Row label="内容" value={item.content} />
-    </Card>
+        <Row label="練習メニュー" value={item.practiceMenu?.title} />
+        <Row label="内容" value={item.content} />
+      </Card>
+    </Pressable>
   );
 }

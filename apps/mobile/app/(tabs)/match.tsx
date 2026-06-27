@@ -62,20 +62,22 @@ function MatchRecordCard({ item }: { item: MatchRecord }) {
   const resultTone = item.result === "WIN" ? "green" : "red";
 
   return (
-    <Card>
-      <View style={{ gap: 8 }}>
-        <Text style={{ color: colors.text, fontSize: 18, fontWeight: "900", lineHeight: 24 }}>
-          {formatDate(item.playedAt)} vs {item.opponentName}
-        </Text>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          <MetaPill label={resultLabels[item.result]} tone={resultTone} />
-          <MetaPill label={matchTypeLabels[item.matchType]} tone="blue" />
-          <MetaPill label={formatSetCount(item.scores)} tone="green" />
+    <Pressable onPress={() => router.push(`/match/${item.id}`)}>
+      <Card>
+        <View style={{ gap: 8 }}>
+          <Text style={{ color: colors.text, fontSize: 18, fontWeight: "900", lineHeight: 24 }}>
+            {formatDate(item.playedAt)} vs {item.opponentName}
+          </Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            <MetaPill label={resultLabels[item.result]} tone={resultTone} />
+            <MetaPill label={matchTypeLabels[item.matchType]} tone="blue" />
+            <MetaPill label={formatSetCount(item.scores)} tone="green" />
+          </View>
         </View>
-      </View>
-      <Row label="所属チーム" value={item.opponentTeam} />
-      <Row label="スコア概要" value={formatScores(item.scores)} />
-      <Row label="メモ" value={item.memo} />
-    </Card>
+        <Row label="所属チーム" value={item.opponentTeam} />
+        <Row label="スコア概要" value={formatScores(item.scores)} />
+        <Row label="メモ" value={item.memo} />
+      </Card>
+    </Pressable>
   );
 }
