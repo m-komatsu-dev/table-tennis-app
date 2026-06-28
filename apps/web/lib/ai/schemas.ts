@@ -58,6 +58,17 @@ export const aiPracticeMenuSuggestionSchema = z
 export type AiAnalysisResult = z.infer<typeof aiAnalysisResultSchema>;
 export type AiPracticeMenuSuggestion = z.infer<typeof aiPracticeMenuSuggestionSchema>;
 
+export const mobileAiCoachResultSchema = z
+  .object({
+    goodPoints: analysisList("良かった点").max(5, "良かった点は5件以内にしてください"),
+    issues: analysisList("課題").max(5, "課題は5件以内にしてください"),
+    nextPractice: analysisList("次にやる練習").max(5, "次にやる練習は5件以内にしてください"),
+    advice: shortText("一言アドバイス", 300)
+  })
+  .strict();
+
+export type MobileAiCoachResult = z.infer<typeof mobileAiCoachResultSchema>;
+
 export const aiAnalysisResponseJsonSchema = {
   type: "object",
   additionalProperties: false,
@@ -98,5 +109,17 @@ export const aiPracticeMenuResponseJsonSchema = {
         }
       }
     }
+  }
+} as const;
+
+export const mobileAiCoachResponseJsonSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["goodPoints", "issues", "nextPractice", "advice"],
+  properties: {
+    goodPoints: { type: "array", minItems: 1, maxItems: 5, items: { type: "string" } },
+    issues: { type: "array", minItems: 1, maxItems: 5, items: { type: "string" } },
+    nextPractice: { type: "array", minItems: 1, maxItems: 5, items: { type: "string" } },
+    advice: { type: "string", description: "日本語の短い一言アドバイス。300文字以内。" }
   }
 } as const;
