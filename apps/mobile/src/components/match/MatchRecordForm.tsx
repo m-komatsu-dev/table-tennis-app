@@ -113,7 +113,7 @@ export function MatchRecordForm({ initialRecord, onSubmit, savingLabel, submitLa
 
       <Card>
         <SectionTitle title="基本情報" />
-        <TextField label="試合日" onChangeText={setPlayedAt} placeholder="2026-06-27" value={playedAt} />
+        <TextField label="試合日" onChangeText={setPlayedAt} placeholder="例: 2026-06-27" value={playedAt} />
         <View style={{ gap: 7 }}>
           <Text style={fieldLabelStyle}>試合種別</Text>
           <Segment
@@ -129,8 +129,8 @@ export function MatchRecordForm({ initialRecord, onSubmit, savingLabel, submitLa
 
       <Card>
         <SectionTitle title="対戦相手" />
-        <TextField label="対戦相手名" onChangeText={setOpponentName} placeholder="佐藤 太郎" value={opponentName} />
-        <TextField label="相手所属チーム" onChangeText={setOpponentTeam} placeholder="〇〇クラブ" value={opponentTeam} />
+        <TextField label="対戦相手名" onChangeText={setOpponentName} placeholder="例: 佐藤 太郎" value={opponentName} />
+        <TextField label="相手所属チーム" onChangeText={setOpponentTeam} placeholder="例: 〇〇クラブ" value={opponentTeam} />
       </Card>
 
       <Card>
@@ -181,7 +181,7 @@ export function MatchRecordForm({ initialRecord, onSubmit, savingLabel, submitLa
           label="メモ"
           multiline
           onChangeText={setMemo}
-          placeholder="試合の反省、よかった点"
+          placeholder="例: 試合の反省、よかった点"
           value={memo}
         />
       </Card>

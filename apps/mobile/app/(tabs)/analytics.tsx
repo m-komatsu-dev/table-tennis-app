@@ -349,9 +349,14 @@ function BarRow({
 
   return (
     <View style={chartStyles.barRow}>
-      <Text numberOfLines={1} style={chartStyles.barLabel}>
-        {label}
-      </Text>
+      <View style={chartStyles.barHeader}>
+        <Text numberOfLines={1} style={chartStyles.barLabel}>
+          {label}
+        </Text>
+        <Text numberOfLines={1} style={chartStyles.barValue}>
+          {valueLabel}
+        </Text>
+      </View>
       <View style={chartStyles.barTrack}>
         <View
           style={[
@@ -362,9 +367,6 @@ function BarRow({
           ]}
         />
       </View>
-      <Text numberOfLines={1} style={chartStyles.barValue}>
-        {valueLabel}
-      </Text>
     </View>
   );
 }
@@ -411,15 +413,19 @@ const chartStyles = StyleSheet.create({
   },
   barLabel: {
     color: colors.text,
+    flex: 1,
     fontSize: 13,
-    fontWeight: "800",
-    width: 72
+    fontWeight: "800"
   },
-  barRow: {
+  barHeader: {
     alignItems: "center",
     flexDirection: "row",
     gap: 10,
-    minHeight: 30
+    justifyContent: "space-between"
+  },
+  barRow: {
+    gap: 7,
+    minHeight: 42
   },
   barTrack: {
     backgroundColor: "#ecfdf5",
@@ -433,7 +439,7 @@ const chartStyles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     textAlign: "right",
-    width: 72
+    minWidth: 72
   },
   center: {
     alignItems: "center",
@@ -441,7 +447,7 @@ const chartStyles = StyleSheet.create({
     paddingVertical: 8
   },
   chartRows: {
-    gap: 11
+    gap: 14
   },
   commentDot: {
     backgroundColor: colors.primary,

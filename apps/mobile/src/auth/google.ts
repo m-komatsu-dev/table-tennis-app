@@ -153,6 +153,7 @@ export function useGoogleLogin() {
 
   return {
     error,
+    unavailableMessage: isExpoGo() ? expoGoGoogleLoginMessage : null,
     loading,
     startGoogleLogin
   };

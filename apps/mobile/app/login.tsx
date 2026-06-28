@@ -100,7 +100,7 @@ export default function LoginScreen() {
           autoCapitalize="none"
           label="パスワード"
           onChangeText={setPassword}
-          placeholder="password"
+          placeholder="パスワードを入力"
           secureTextEntry
           value={password}
         />
@@ -120,6 +120,11 @@ export default function LoginScreen() {
         >
           Googleでログイン
         </Button>
+        {googleLogin.unavailableMessage ? (
+          <Text style={{ color: colors.muted, fontSize: 13, lineHeight: 19 }}>
+            {googleLogin.unavailableMessage}
+          </Text>
+        ) : null}
       </Card>
 
       <Pressable onPress={() => router.push("/register")} style={{ alignItems: "center", minHeight: 44, justifyContent: "center" }}>

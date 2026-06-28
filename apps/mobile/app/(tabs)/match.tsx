@@ -103,11 +103,20 @@ export default function MatchListScreen() {
             returnKeyType="search"
             value={keyword}
           />
+          {hasFilters ? (
+            <Text style={{ color: colors.primaryDark, fontSize: 13, fontWeight: "800" }}>
+              絞り込み中: 検索結果 {filteredItems.length}件
+            </Text>
+          ) : null}
           <View style={{ flexDirection: "row", gap: 10 }}>
             <Pressable onPress={() => setFiltersOpen((open) => !open)} style={[styles.button, styles.secondaryButton, { flex: 1 }]}>
               <Text style={[styles.buttonText, styles.secondaryButtonText]}>{filtersOpen ? "絞り込みを閉じる" : "絞り込み"}</Text>
             </Pressable>
-            <Pressable onPress={resetFilters} style={[styles.button, styles.secondaryButton, { flex: 1 }]}>
+            <Pressable
+              disabled={!hasFilters}
+              onPress={resetFilters}
+              style={[styles.button, styles.secondaryButton, { flex: 1 }, !hasFilters && styles.disabledButton]}
+            >
               <Text style={[styles.buttonText, styles.secondaryButtonText]}>リセット</Text>
             </Pressable>
           </View>
@@ -124,7 +133,9 @@ export default function MatchListScreen() {
               </FilterGroup>
             </Card>
           ) : null}
-          <Text style={{ color: colors.muted, fontSize: 13, fontWeight: "700" }}>検索結果 {filteredItems.length}件</Text>
+          <Text style={{ color: colors.muted, fontSize: 13, fontWeight: "700" }}>
+            {hasFilters ? "条件に一致した試合記録" : "すべての試合記録"} {filteredItems.length}件
+          </Text>
           {filteredItems.length === 0 && hasFilters ? (
             <EmptyState actionLabel="条件をリセット" onAction={resetFilters}>
               条件に一致する試合記録がありません。{"\n"}検索条件を変更するか、絞り込みをリセットしてください。

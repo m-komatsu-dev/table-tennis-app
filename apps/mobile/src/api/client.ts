@@ -39,7 +39,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
 
   if (auth) {
     if (!token) {
-      logApiError(requestUrl, 401);
+      logApiError(401);
       throw new ApiError("ログインし直してください", 401, "missing access token");
     }
 
@@ -54,7 +54,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
       headers
     });
   } catch (error) {
-    logApiError(requestUrl, apiStatus.network);
+    logApiError(apiStatus.network);
     throw new ApiError("サーバーに接続できません", apiStatus.network);
   }
 
@@ -67,7 +67,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
       await clearAccessToken();
     }
 
-    logApiError(requestUrl, response.status);
+    logApiError(response.status);
     throw new ApiError(apiErrorMessage(response.status), response.status, apiMessage);
   }
 
@@ -110,13 +110,12 @@ function extractApiErrorMessage(body: unknown) {
   return undefined;
 }
 
-function logApiError(url: string, status: number) {
+function logApiError(status: number) {
   if (process.env.NODE_ENV !== "development") {
     return;
   }
 
   console.error("API request failed", {
-    url,
     status
   });
 }

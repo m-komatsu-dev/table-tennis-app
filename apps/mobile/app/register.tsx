@@ -55,7 +55,7 @@ export default function RegisterScreen() {
 
   return (
     <Screen keyboardAware>
-      <Header title="新規登録" backLabel="← ホームへ戻る" onBack={() => router.push("/")} />
+      <Header title="新規登録" backLabel="ホームへ戻る" onBack={() => router.push("/")} />
 
       <Card>
         <TextField
@@ -81,7 +81,7 @@ export default function RegisterScreen() {
           autoComplete="new-password"
           label="パスワード"
           onChangeText={setPassword}
-          placeholder="8文字以上"
+          placeholder="8文字以上で入力"
           secureTextEntry
           textContentType="newPassword"
           value={password}
@@ -91,7 +91,7 @@ export default function RegisterScreen() {
           autoComplete="new-password"
           label="パスワード確認"
           onChangeText={setConfirmPassword}
-          placeholder="もう一度入力"
+          placeholder="同じパスワードをもう一度入力"
           secureTextEntry
           textContentType="newPassword"
           value={confirmPassword}
@@ -112,6 +112,11 @@ export default function RegisterScreen() {
         >
           Googleアカウントで始める
         </Button>
+        {googleLogin.unavailableMessage ? (
+          <Text style={{ color: colors.muted, fontSize: 13, lineHeight: 19 }}>
+            {googleLogin.unavailableMessage}
+          </Text>
+        ) : null}
       </Card>
 
       <Pressable onPress={() => router.push("/login")} style={{ alignItems: "center", minHeight: 44, justifyContent: "center" }}>

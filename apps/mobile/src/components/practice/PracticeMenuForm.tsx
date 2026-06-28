@@ -115,19 +115,19 @@ export function PracticeMenuForm({ initialMenu, onSubmit, savingLabel, submitLab
 
       <Card>
         <SectionTitle title="基本情報" />
-        <TextField label="メニュー名" onChangeText={setTitle} placeholder="サーブ強化メニュー" value={title} />
+        <TextField label="メニュー名" onChangeText={setTitle} placeholder="例: サーブ強化メニュー" value={title} />
         <TextField
           label="目的"
           multiline
           onChangeText={setGoal}
-          placeholder="3球目につながる短い下回転サーブを安定させる"
+          placeholder="例: 3球目につながる短い下回転サーブを安定させる"
           value={goal}
         />
         <TextField
           label="説明"
           multiline
           onChangeText={setDescription}
-          placeholder="練習全体の流れや意識するポイント"
+          placeholder="例: 練習全体の流れや意識するポイント"
           value={description}
         />
         <InlineField
@@ -156,11 +156,24 @@ export function PracticeMenuForm({ initialMenu, onSubmit, savingLabel, submitLab
             >
               <View style={{ alignItems: "center", flexDirection: "row", justifyContent: "space-between" }}>
                 <Text style={{ color: colors.text, fontSize: 15, fontWeight: "900" }}>項目 {index + 1}</Text>
-                <Pressable disabled={items.length === 1} onPress={() => removeItem(item.key)} style={{ opacity: items.length === 1 ? 0.35 : 1 }}>
+                <Pressable
+                  disabled={items.length === 1}
+                  onPress={() => removeItem(item.key)}
+                  style={{
+                    backgroundColor: colors.dangerSoft,
+                    borderColor: "#fecaca",
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    justifyContent: "center",
+                    minHeight: 36,
+                    opacity: items.length === 1 ? 0.35 : 1,
+                    paddingHorizontal: 12
+                  }}
+                >
                   <Text style={{ color: colors.danger, fontSize: 13, fontWeight: "900" }}>削除</Text>
                 </Pressable>
               </View>
-              <TextField label="項目名" onChangeText={(value) => updateItem(item.key, { title: value })} placeholder="ショートサーブ50本" value={item.title} />
+              <TextField label="項目名" onChangeText={(value) => updateItem(item.key, { title: value })} placeholder="例: ショートサーブ50本" value={item.title} />
               <InlineField
                 keyboardType="number-pad"
                 label="時間"
@@ -183,6 +196,8 @@ export function PracticeMenuForm({ initialMenu, onSubmit, savingLabel, submitLab
                           borderColor: selected ? "#34d399" : colors.border,
                           borderRadius: 999,
                           borderWidth: 1,
+                          minHeight: 36,
+                          justifyContent: "center",
                           paddingHorizontal: 10,
                           paddingVertical: 7
                         }}
@@ -199,7 +214,7 @@ export function PracticeMenuForm({ initialMenu, onSubmit, savingLabel, submitLab
                 label="説明"
                 multiline
                 onChangeText={(value) => updateItem(item.key, { description: value })}
-                placeholder="コース、回転、成功条件など"
+                placeholder="例: コース、回転、成功条件など"
                 value={item.description}
               />
             </View>

@@ -25,6 +25,7 @@ export const colors = {
   primary: "#059669",
   primaryDark: "#047857",
   danger: "#dc2626",
+  dangerSoft: "#fef2f2",
   blue: "#2563eb"
 };
 
@@ -66,7 +67,7 @@ export function Header({
     <View style={{ gap: 10 }}>
       {onBack ? (
         <Pressable onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backButtonText}>{backLabel ?? "戻る"}</Text>
+          <Text style={styles.backButtonText}>← {backLabel ?? "戻る"}</Text>
         </Pressable>
       ) : null}
       <View style={styles.header}>
@@ -183,10 +184,12 @@ export function InlineField({
 
 export function ErrorMessage({
   message,
+  title,
   actionLabel,
   onAction
 }: {
   message?: string | null;
+  title?: string;
   actionLabel?: string;
   onAction?: () => void;
 }) {
@@ -196,7 +199,8 @@ export function ErrorMessage({
 
   return (
     <View style={styles.error}>
-      <Text style={styles.errorTitle}>{message}</Text>
+      <Text style={styles.errorTitle}>{title ?? "エラーが発生しました"}</Text>
+      <Text style={styles.errorText}>{message}</Text>
       {onAction ? (
         <Pressable onPress={onAction} style={styles.errorAction}>
           <Text style={styles.errorActionText}>{actionLabel ?? "再読み込み"}</Text>
@@ -313,10 +317,10 @@ export const styles = StyleSheet.create({
   screen: {
     gap: 16,
     padding: 20,
-    paddingBottom: 36
+    paddingBottom: 48
   },
   keyboardAwareScreen: {
-    paddingBottom: 180
+    paddingBottom: 220
   },
   header: {
     alignItems: "flex-start",
@@ -341,8 +345,9 @@ export const styles = StyleSheet.create({
   },
   backButton: {
     alignSelf: "flex-start",
-    minHeight: 34,
-    justifyContent: "center"
+    justifyContent: "center",
+    minHeight: 40,
+    paddingRight: 12
   },
   backButtonText: {
     color: colors.primaryDark,
@@ -375,7 +380,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.primary,
     borderRadius: 8,
-    minHeight: 48,
+    minHeight: 50,
     justifyContent: "center",
     paddingHorizontal: 16,
     paddingVertical: 12
@@ -384,7 +389,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.primaryDark,
     borderRadius: 8,
-    minHeight: 48,
+    minHeight: 50,
     minWidth: 78,
     justifyContent: "center",
     paddingHorizontal: 18,
@@ -396,7 +401,9 @@ export const styles = StyleSheet.create({
     borderWidth: 1
   },
   dangerButton: {
-    backgroundColor: colors.danger
+    backgroundColor: colors.danger,
+    borderColor: "#fca5a5",
+    borderWidth: 1
   },
   disabledButton: {
     opacity: 0.72
@@ -434,7 +441,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 10
   },
   textArea: {
-    minHeight: 124,
+    minHeight: 148,
     textAlignVertical: "top"
   },
   inlineInputRow: {
@@ -452,7 +459,7 @@ export const styles = StyleSheet.create({
     width: 28
   },
   error: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: colors.dangerSoft,
     borderColor: "#fecaca",
     borderRadius: 8,
     borderWidth: 1,
@@ -461,8 +468,13 @@ export const styles = StyleSheet.create({
   },
   errorTitle: {
     color: colors.danger,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: "700",
+    lineHeight: 19
+  },
+  errorText: {
+    color: "#991b1b",
+    fontSize: 13,
     lineHeight: 19
   },
   errorAction: {
@@ -495,7 +507,7 @@ export const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     gap: 12,
-    padding: 16
+    padding: 18
   },
   emptyText: {
     color: colors.muted,
@@ -506,7 +518,7 @@ export const styles = StyleSheet.create({
     alignSelf: "flex-start",
     backgroundColor: colors.primary,
     borderRadius: 8,
-    minHeight: 40,
+    minHeight: 44,
     justifyContent: "center",
     paddingHorizontal: 14
   },

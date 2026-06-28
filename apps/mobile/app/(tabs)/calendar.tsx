@@ -115,7 +115,7 @@ export default function CalendarScreen() {
       ) : null}
       {!loading && !error && sections.length > 0 ? (
         <View style={{ gap: 12 }}>
-          <SectionTitle title="日付別一覧" subtitle="これまでの簡易カレンダー表示です。" />
+          <SectionTitle title="日付別一覧" subtitle="記録がある日を新しい順に確認できます。" />
           {sections.map((section) => (
             <View key={section.key} style={{ gap: 10 }}>
               <SectionTitle title={section.title} subtitle={`${section.items.length}件`} />
@@ -259,7 +259,7 @@ function PracticeCalendarCard({ item }: { item: PracticeLog }) {
 
 const calendarStyles = StyleSheet.create({
   blankCell: {
-    minHeight: 48
+    minHeight: 52
   },
   dayCell: {
     alignItems: "center",
@@ -267,7 +267,7 @@ const calendarStyles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     gap: 4,
-    minHeight: 48,
+    minHeight: 52,
     justifyContent: "center",
     paddingVertical: 6
   },
@@ -326,9 +326,9 @@ const calendarStyles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 8,
     borderWidth: 1,
-    minHeight: 38,
+    minHeight: 44,
     justifyContent: "center",
-    paddingHorizontal: 10
+    paddingHorizontal: 12
   },
   monthButtonText: {
     color: colors.primaryDark,

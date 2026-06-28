@@ -92,7 +92,7 @@ export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, s
 
       <Card>
         <SectionTitle title="基本情報" />
-        <TextField label="練習日" onChangeText={setPracticedAt} placeholder="2026-06-27" value={practicedAt} />
+        <TextField label="練習日" onChangeText={setPracticedAt} placeholder="例: 2026-06-27" value={practicedAt} />
         <InlineField
           keyboardType="number-pad"
           label="練習時間"
@@ -101,7 +101,7 @@ export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, s
           suffix="分"
           value={durationMin}
         />
-        <TextField label="場所" onChangeText={setLocation} placeholder="市民体育館" value={location} />
+        <TextField label="場所" onChangeText={setLocation} placeholder="例: 市民体育館" value={location} />
       </Card>
 
       <Card>
@@ -139,14 +139,14 @@ export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, s
           label="練習内容"
           multiline
           onChangeText={setContent}
-          placeholder="サーブ練習、3球目攻撃、フットワークなど"
+          placeholder="例: サーブ練習、3球目攻撃、フットワークなど"
           value={content}
         />
         <TextField
           label="メモ"
           multiline
           onChangeText={setMemo}
-          placeholder="今日はバックハンドの安定感が課題だった"
+          placeholder="例: 今日はバックハンドの安定感が課題だった"
           value={memo}
         />
       </Card>
