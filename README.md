@@ -131,6 +131,24 @@ MOBILE_AUTH_SECRET=
 
 `MOBILE_AUTH_SECRET` は未設定時に `AUTH_SECRET` / `NEXTAUTH_SECRET` へフォールバックしますが、運用では専用の値を設定することを推奨します。
 
+### Googleログイン設定
+
+Web版のGoogleログインでは、Google Cloud ConsoleでWebアプリ用OAuth Clientを作成し、発行された値をサーバー側の環境変数に設定します。実値はREADMEやGitに書かないでください。
+
+```env
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+```
+
+承認済みリダイレクトURIには、利用するWebアプリURLに合わせて以下を設定します。
+
+```txt
+http://localhost:3000/api/auth/callback/google
+https://table-tennis-app-rho.vercel.app/api/auth/callback/google
+```
+
+本番URLが変わる場合は、そのURLの `/api/auth/callback/google` を登録してください。`GOOGLE_CLIENT_SECRET` はWebサーバー側だけに設定し、モバイルアプリや `NEXT_PUBLIC_` / `EXPO_PUBLIC_` 変数には入れないでください。
+
 ### Prisma CLI
 
 `packages/db/.env` に設定します。

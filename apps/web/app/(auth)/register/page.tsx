@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -82,6 +83,24 @@ export default function RegisterPage() {
             {isSubmitting ? "登録中..." : "登録して開始"}
           </Button>
         </form>
+        <div className="my-5 flex items-center gap-3 text-xs font-semibold text-slate-400">
+          <span className="h-px flex-1 bg-slate-200" />
+          <span>または</span>
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+        <Button
+          className="w-full"
+          disabled={isGoogleSubmitting}
+          onClick={() => {
+            setError(null);
+            setIsGoogleSubmitting(true);
+            void signIn("google", { callbackUrl: "/dashboard" });
+          }}
+          type="button"
+          variant="secondary"
+        >
+          {isGoogleSubmitting ? "Googleへ移動中..." : "Googleアカウントで始める"}
+        </Button>
         <p className="mt-5 text-center text-sm text-slate-600">
           すでにアカウントがある場合は{" "}
           <Link className="font-semibold text-emerald-700" href="/login">

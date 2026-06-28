@@ -6,12 +6,24 @@ import { signIn } from "next-auth/react";
 import { FormEvent, Suspense, useState } from "react";
 import { Button, ErrorMessage, Field, inputClass } from "@/components/ui";
 
+const authErrorMessages: Record<string, string> = {
+  OAuthAccountNotLinked: "このメールアドレスは別のログイン方法で登録されています。メールアドレスとパスワードでログインしてください。",
+  GoogleEmailNotVerified: "Googleアカウントのメールアドレス確認が完了していません。確認済みのGoogleアカウントでお試しください。",
+  GoogleLoginFailed: "Googleログインに失敗しました。別のログイン方法を試すか、時間をおいて再度お試しください。",
+  AccessDenied: "Googleログインに失敗しました。別のログイン方法を試すか、時間をおいて再度お試しください。",
+  OAuthCallbackError: "Googleログインに失敗しました。別のログイン方法を試すか、時間をおいて再度お試しください。",
+  Configuration: "Googleログインの設定を確認してください。時間をおいて再度お試しください。"
+};
+
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
+  const authError = searchParams.get("error");
+  const authErrorMessage = authError ? authErrorMessages[authError] ?? authErrorMessages.GoogleLoginFailed : null;
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,7 +58,7 @@ function LoginContent() {
         <h1 className="text-2xl font-bold tracking-tight text-slate-950">ログイン</h1>
         <p className="mt-2 text-sm text-slate-600">おかえりなさい。記録を続けましょう。</p>
         <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
-          <ErrorMessage message={error} />
+          <ErrorMessage message={error ?? authErrorMessage} />
           <Field label="メールアドレス">
             <input autoComplete="email" className={inputClass} name="email" placeholder="you@example.com" type="email" required />
           </Field>
@@ -61,13 +73,23 @@ function LoginContent() {
             {isSubmitting ? "ログイン中..." : "ログイン"}
           </Button>
         </form>
+        <div className="my-5 flex items-center gap-3 text-xs font-semibold text-slate-400">
+          <span className="h-px flex-1 bg-slate-200" />
+          <span>または</span>
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
         <Button
-          className="mt-3 w-full"
-          onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+          className="w-full"
+          disabled={isGoogleSubmitting}
+          onClick={() => {
+            setError(null);
+            setIsGoogleSubmitting(true);
+            void signIn("google", { callbackUrl });
+          }}
           type="button"
           variant="secondary"
         >
-          Googleでログイン
+          {isGoogleSubmitting ? "Googleへ移動中..." : "Googleでログイン"}
         </Button>
         <p className="mt-5 text-center text-sm text-slate-600">
           アカウントがない場合は{" "}

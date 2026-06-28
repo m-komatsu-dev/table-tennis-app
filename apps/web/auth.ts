@@ -5,6 +5,22 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@table-tennis/db";
 import { loginSchema } from "@/lib/validators";
 
+type GoogleProfile = {
+  email?: string | null;
+  email_verified?: boolean | string | null;
+  name?: string | null;
+  picture?: string | null;
+  sub?: string | null;
+};
+
+function getSafeGoogleProfile(profile: unknown) {
+  return (profile ?? {}) as GoogleProfile;
+}
+
+function isVerifiedGoogleEmail(profile: GoogleProfile) {
+  return profile.email_verified === true || profile.email_verified === "true";
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   session: {
@@ -59,20 +75,47 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return true;
       }
 
-      const email = profile?.email?.toLowerCase();
-      const googleId = profile?.sub;
+      const googleProfile = getSafeGoogleProfile(profile);
+      const email = googleProfile.email?.toLowerCase();
+      const googleId = account.providerAccountId ?? googleProfile.sub;
 
       if (!email || !googleId) {
-        return false;
+        return "/login?error=GoogleLoginFailed";
+      }
+
+      if (!isVerifiedGoogleEmail(googleProfile)) {
+        return "/login?error=GoogleEmailNotVerified";
+      }
+
+      const existingGoogleUser = await prisma.user.findUnique({
+        where: { googleId },
+        select: { id: true, email: true }
+      });
+
+      if (existingGoogleUser && existingGoogleUser.email !== email) {
+        return "/login?error=GoogleLoginFailed";
+      }
+
+      const existingEmailUser = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, passwordHash: true, googleId: true }
+      });
+
+      if (existingEmailUser?.googleId && existingEmailUser.googleId !== googleId) {
+        return "/login?error=GoogleLoginFailed";
+      }
+
+      if (existingEmailUser?.passwordHash && !existingEmailUser.googleId) {
+        return "/login?error=OAuthAccountNotLinked";
       }
 
       const name =
-        typeof profile.name === "string" && profile.name.trim().length > 0
-          ? profile.name
+        typeof googleProfile.name === "string" && googleProfile.name.trim().length > 0
+          ? googleProfile.name
           : email.split("@")[0];
       const avatarUrl =
-        typeof profile.picture === "string" && profile.picture.trim().length > 0
-          ? profile.picture
+        typeof googleProfile.picture === "string" && googleProfile.picture.trim().length > 0
+          ? googleProfile.picture
           : undefined;
 
       await prisma.user.upsert({
@@ -97,9 +140,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id;
       }
 
-      if (account?.provider === "google" && profile?.email) {
+      const googleProfile = getSafeGoogleProfile(profile);
+
+      if (account?.provider === "google" && googleProfile.email) {
         const dbUser = await prisma.user.findUnique({
-          where: { email: profile.email.toLowerCase() },
+          where: { email: googleProfile.email.toLowerCase() },
           select: { id: true, name: true, avatarUrl: true }
         });
 
