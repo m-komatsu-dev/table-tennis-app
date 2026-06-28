@@ -20,6 +20,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ title: "卓球記録", headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="ai-coach" options={{ title: "AIコーチ", headerShown: false }} />
+        <Stack.Screen name="notifications" options={{ title: "お知らせ", headerShown: false }} />
         <Stack.Screen name="profile/edit" options={{ title: "プロフィール編集", headerShown: false }} />
         <Stack.Screen name="practice/new" options={{ title: "練習を記録", headerShown: false }} />
         <Stack.Screen name="practice/[id]/index" options={{ title: "練習記録詳細", headerShown: false }} />

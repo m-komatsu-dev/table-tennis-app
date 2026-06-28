@@ -1,17 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, router, useFocusEffect } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchMe } from "@/api/auth";
 import { fetchMatchRecords } from "@/api/match";
 import { fetchPracticeLogs } from "@/api/practice";
+import { fetchPracticeMenus } from "@/api/practice-menus";
 import { formatDate, formatScores, formatSetCount, resultLabels } from "@/components/format";
 import { Button, Card, EmptyState, ErrorMessage, Header, LoadingState, MetaPill, Row, Screen, SectionTitle, colors, styles } from "@/components/ui";
-import type { MatchRecord, PracticeLog, User } from "@/types";
+import { getNotificationSettings, getNotificationState, type NotificationState } from "@/storage/notificationStorage";
+import type { MatchRecord, PracticeLog, PracticeMenu, User } from "@/types";
+import { defaultNotificationSettings, generateInAppNotifications, getUnreadNotificationCount, type NotificationSettings } from "@/utils/notifications";
 
 export default function AppHomeScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [practices, setPractices] = useState<PracticeLog[]>([]);
   const [matches, setMatches] = useState<MatchRecord[]>([]);
+  const [menus, setMenus] = useState<PracticeMenu[]>([]);
+  const [notificationState, setNotificationState] = useState<NotificationState>({ readIds: [], hiddenIds: [] });
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(defaultNotificationSettings);
+  const [notificationPreviewReady, setNotificationPreviewReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,6 +34,23 @@ export default function AppHomeScreen() {
       setUser(me.user);
       setPractices(practiceResult.practiceLogs);
       setMatches(matchResult.matchRecords);
+
+      try {
+        const [menuResult, storedNotificationState, storedNotificationSettings] = await Promise.all([
+          fetchPracticeMenus(),
+          getNotificationState(),
+          getNotificationSettings()
+        ]);
+        setMenus(menuResult.practiceMenus);
+        setNotificationState(storedNotificationState);
+        setNotificationSettings(storedNotificationSettings);
+        setNotificationPreviewReady(true);
+      } catch {
+        setMenus([]);
+        setNotificationState({ readIds: [], hiddenIds: [] });
+        setNotificationSettings(defaultNotificationSettings);
+        setNotificationPreviewReady(false);
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "ホーム情報を取得できませんでした");
     } finally {
@@ -44,6 +68,18 @@ export default function AppHomeScreen() {
     }, [load])
   );
 
+  const notifications = useMemo(
+    () => generateInAppNotifications({ practiceLogs: practices, matchRecords: matches, practiceMenus: menus, settings: notificationSettings }),
+    [matches, menus, notificationSettings, practices]
+  );
+  const unreadNotificationCount = notificationPreviewReady
+    ? getUnreadNotificationCount(notifications, notificationState.readIds, notificationState.hiddenIds)
+    : 0;
+  const latestPractice = practices[0];
+  const latestMatch = matches[0];
+  const wins = matches.filter((match) => match.result === "WIN").length;
+  const winRate = matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0;
+
   if (loading) {
     return (
       <Screen>
@@ -52,11 +88,6 @@ export default function AppHomeScreen() {
     );
   }
 
-  const latestPractice = practices[0];
-  const latestMatch = matches[0];
-  const wins = matches.filter((match) => match.result === "WIN").length;
-  const winRate = matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0;
-
   return (
     <Screen>
       <Header
@@ -64,6 +95,15 @@ export default function AppHomeScreen() {
         subtitle="今日の記録を積み重ねて、成長を見える化しましょう。"
       />
       <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
+
+      {unreadNotificationCount > 0 ? (
+        <Card>
+          <SectionTitle title={`お知らせ ${unreadNotificationCount}件`} subtitle="練習や試合の振り返りにつながる案内があります。" />
+          <Button variant="secondary" onPress={() => router.push("/notifications")}>
+            お知らせを見る
+          </Button>
+        </Card>
+      ) : null}
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
         {[
