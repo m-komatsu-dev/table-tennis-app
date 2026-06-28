@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { router } from "expo-router";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import { loginWithGoogle } from "@/api/auth";
 import { ApiError, apiStatus } from "@/api/client";
 import { saveAccessToken } from "@/storage/token";
@@ -13,6 +14,12 @@ const googleExpoClientId = process.env.EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID ?? goog
 const googleAndroidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID ?? googleExpoClientId;
 const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? googleExpoClientId;
 const missingGoogleClientId = "missing-google-client-id.apps.googleusercontent.com";
+const expoGoGoogleLoginMessage =
+  "Googleログインは開発ビルドで利用できます。現在はメールアドレス・パスワードでログインしてください。";
+
+function isExpoGo() {
+  return Constants.executionEnvironment === ExecutionEnvironment.StoreClient || Constants.appOwnership === "expo";
+}
 
 function getGoogleErrorMessage(caught: unknown) {
   if (caught instanceof ApiError) {
@@ -111,6 +118,11 @@ export function useGoogleLogin() {
 
   async function startGoogleLogin() {
     setError(null);
+
+    if (isExpoGo()) {
+      setError(expoGoGoogleLoginMessage);
+      return;
+    }
 
     if (!isConfigured) {
       setError("Googleログイン設定が不足しています");
