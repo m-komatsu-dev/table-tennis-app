@@ -67,6 +67,20 @@ export default function ProfileScreen() {
           </Button>
         </Card>
       ) : null}
+      {user ? (
+        <Card>
+          <SectionTitle
+            title="募集"
+            subtitle="練習相手・試合相手の募集を作成し、届いた参加希望を確認できます。"
+          />
+          <Button variant="secondary" onPress={() => router.push("/partner-posts" as Href)}>
+            募集を見る
+          </Button>
+          <Button variant="secondary" onPress={() => router.push("/partner-posts/new" as Href)}>
+            募集を作成する
+          </Button>
+        </Card>
+      ) : null}
       <Button variant="danger" onPress={handleLogout}>
         ログアウト
       </Button>

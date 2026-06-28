@@ -101,7 +101,7 @@ export default async function DashboardPage() {
           tone="blue"
         />
       </div>
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-900/4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md" href="/practice/new">
           <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-slate-100 text-xl text-slate-700" aria-hidden="true">＋</span>
           <span className="min-w-0">
@@ -123,6 +123,14 @@ export default async function DashboardPage() {
           <span className="min-w-0">
             <span className="block text-sm font-bold text-slate-950">カレンダーを見る</span>
             <span className="mt-1 block text-xs text-slate-500">練習と試合を月ごとに確認</span>
+          </span>
+          <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
+        </Link>
+        <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm shadow-slate-900/4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md" href="/partner-posts">
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-xl text-emerald-700" aria-hidden="true">◎</span>
+          <span className="min-w-0">
+            <span className="block text-sm font-bold text-slate-950">募集を見る</span>
+            <span className="mt-1 block text-xs text-slate-500">練習相手・試合相手を探す</span>
           </span>
           <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
         </Link>

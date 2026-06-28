@@ -27,6 +27,10 @@ export const practiceMenuCategorySchema = z.enum([
   "OTHER"
 ]);
 
+export const partnerPostTypeSchema = z.enum(["PRACTICE", "MATCH"]);
+export const partnerPostStatusSchema = z.enum(["OPEN", "CLOSED"]);
+export const partnerRequestStatusSchema = z.enum(["PENDING", "ACCEPTED", "DECLINED"]);
+
 const dateStringSchema = z
   .string({ required_error: "日付を入力してください" })
   .trim()
@@ -151,6 +155,29 @@ export const practiceMenuSchema = z.object({
     .optional()
     .nullable(),
   items: z.array(practiceMenuItemSchema).min(1, "メニュー項目を1件以上追加してください")
+});
+
+export const partnerPostSchema = z.object({
+  type: partnerPostTypeSchema,
+  title: z.string().trim().min(1, "タイトルを入力してください").max(60, "タイトルは60文字以内で入力してください"),
+  area: z.string().trim().max(100, "エリアは100文字以内で入力してください").optional().nullable(),
+  preferredTime: z.string().trim().max(100, "希望日時は100文字以内で入力してください").optional().nullable(),
+  level: z.string().trim().max(50, "レベルは50文字以内で入力してください").optional().nullable(),
+  purpose: z.string().trim().max(120, "目的は120文字以内で入力してください").optional().nullable(),
+  message: z.string().trim().max(500, "募集メッセージは500文字以内で入力してください").optional().nullable(),
+  status: partnerPostStatusSchema.optional()
+});
+
+export const partnerPostUpdateSchema = partnerPostSchema.extend({
+  status: partnerPostStatusSchema.default("OPEN")
+});
+
+export const partnerRequestSchema = z.object({
+  message: z.string().trim().max(300, "参加希望メッセージは300文字以内で入力してください").optional().nullable()
+});
+
+export const partnerRequestUpdateSchema = z.object({
+  status: partnerRequestStatusSchema
 });
 
 const scoreRowSchema = z.object({

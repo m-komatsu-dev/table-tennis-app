@@ -48,6 +48,22 @@ enum PracticeMenuCategory {
   OTHER
 }
 
+enum PartnerPostType {
+  PRACTICE
+  MATCH
+}
+
+enum PartnerPostStatus {
+  OPEN
+  CLOSED
+}
+
+enum PartnerRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
 model User {
   id                   String   @id @default(uuid())
   email                String   @unique
@@ -64,10 +80,12 @@ model User {
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  practiceLogs  PracticeLog[]
-  practiceMenus PracticeMenu[]
-  matchRecords  MatchRecord[]
-  equipment     Equipment[]
+  practiceLogs    PracticeLog[]
+  practiceMenus   PracticeMenu[]
+  matchRecords    MatchRecord[]
+  equipment       Equipment[]
+  partnerPosts    PartnerPost[]
+  partnerRequests PartnerRequest[]
 }
 
 model PracticeLog {
@@ -149,4 +167,41 @@ model Equipment {
 
   practiceLogs PracticeLog[]
   matchRecords MatchRecord[]
+}
+
+model PartnerPost {
+  id            String            @id @default(uuid())
+  ownerId       String
+  owner         User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  type          PartnerPostType
+  title         String
+  area          String?
+  preferredTime String?
+  level         String?
+  purpose       String?
+  message       String?
+  status        PartnerPostStatus @default(OPEN)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  requests PartnerRequest[]
+
+  @@index([status, createdAt])
+  @@index([ownerId, createdAt])
+}
+
+model PartnerRequest {
+  id          String               @id @default(uuid())
+  postId      String
+  requesterId String
+  message     String?
+  status      PartnerRequestStatus @default(PENDING)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  post      PartnerPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  requester User        @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, requesterId])
+  @@index([requesterId, createdAt])
 }

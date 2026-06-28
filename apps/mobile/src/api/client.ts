@@ -68,7 +68,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
     }
 
     logApiError(response.status);
-    throw new ApiError(apiErrorMessage(response.status), response.status, apiMessage);
+    throw new ApiError(apiMessage ?? apiErrorMessage(response.status), response.status, apiMessage);
   }
 
   return body as T;
@@ -83,12 +83,20 @@ function apiErrorMessage(status: number) {
     return "ログインし直してください";
   }
 
+  if (status === 403) {
+    return "この操作を行う権限がありません";
+  }
+
   if (status === 405) {
     return "APIが未対応です";
   }
 
   if (status === 404) {
     return "データが見つかりません";
+  }
+
+  if (status === 409) {
+    return "すでに参加希望を送っています";
   }
 
   if (status >= 500) {

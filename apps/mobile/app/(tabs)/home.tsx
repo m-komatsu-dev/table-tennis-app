@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, router, useFocusEffect } from "expo-router";
+import type { Href } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchMe } from "@/api/auth";
 import { fetchMatchRecords } from "@/api/match";
@@ -181,6 +182,9 @@ export default function AppHomeScreen() {
         </Button>
         <Button variant="secondary" onPress={() => router.push("/practice-menus")}>
           練習メニューを見る
+        </Button>
+        <Button variant="secondary" onPress={() => router.push("/partner-posts" as Href)}>
+          募集を見る
         </Button>
         <Button variant="secondary" onPress={() => router.push("/profile")}>
           プロフィールを確認

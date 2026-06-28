@@ -74,3 +74,42 @@ export type PracticeMenu = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+export type PartnerPostType = "PRACTICE" | "MATCH";
+export type PartnerPostStatus = "OPEN" | "CLOSED";
+export type PartnerRequestStatus = "PENDING" | "ACCEPTED" | "DECLINED";
+
+export type PartnerPublicUser = {
+  name: string;
+  username: string | null;
+  publicProfileEnabled: boolean;
+};
+
+export type PartnerPost = {
+  id: string;
+  ownerId: string;
+  type: PartnerPostType;
+  title: string;
+  area: string | null;
+  preferredTime: string | null;
+  level: string | null;
+  purpose: string | null;
+  message: string | null;
+  status: PartnerPostStatus;
+  createdAt: string;
+  updatedAt: string;
+  owner: PartnerPublicUser;
+  isOwner: boolean;
+  ownRequestStatus: PartnerRequestStatus | null;
+  requestCount: number;
+};
+
+export type PartnerRequest = {
+  id: string;
+  postId: string;
+  message: string | null;
+  status: PartnerRequestStatus;
+  createdAt: string;
+  updatedAt: string;
+  requester: PartnerPublicUser;
+};

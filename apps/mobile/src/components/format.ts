@@ -27,6 +27,22 @@ export const resultLabels = {
   DRAW: "引き分け"
 } as const;
 
+export const partnerPostTypeLabels = {
+  PRACTICE: "練習相手",
+  MATCH: "試合相手"
+} as const;
+
+export const partnerPostStatusLabels = {
+  OPEN: "募集中",
+  CLOSED: "締め切り"
+} as const;
+
+export const partnerRequestStatusLabels = {
+  PENDING: "未対応",
+  ACCEPTED: "承認",
+  DECLINED: "見送り"
+} as const;
+
 export function formatDate(value: string) {
   const date = new Date(value);
 

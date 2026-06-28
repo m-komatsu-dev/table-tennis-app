@@ -98,6 +98,19 @@ rootのnpm workspaceには `apps/web` と `packages/*` が含まれます。`app
 - 公開プロフィールページを用意
 - 公開プロフィールはデフォルトOFFで、プライバシーに配慮
 
+### マッチングLite
+
+- 練習相手・試合相手の募集を作成可能
+- 募集一覧・詳細を表示
+- 他ユーザーの募集に参加希望を送信可能
+- チャットなしで、まずは安全な募集・参加希望の土台を実装
+
+### Web版マッチングLite
+
+- 練習相手・試合相手の募集一覧を表示
+- 募集作成・詳細・編集・削除に対応
+- 参加希望の送信・確認・承認・見送りに対応
+
 ## セットアップ
 
 ### 依存関係インストール
@@ -345,6 +358,14 @@ POST   /api/mobile/practice-menus
 GET    /api/mobile/practice-menus/[id]
 PUT    /api/mobile/practice-menus/[id]
 DELETE /api/mobile/practice-menus/[id]
+GET    /api/mobile/partner-posts
+POST   /api/mobile/partner-posts
+GET    /api/mobile/partner-posts/[id]
+PUT    /api/mobile/partner-posts/[id]
+DELETE /api/mobile/partner-posts/[id]
+POST   /api/mobile/partner-posts/[id]/requests
+GET    /api/mobile/partner-posts/[id]/requests
+PUT    /api/mobile/partner-requests/[id]
 ```
 
 ## 注意事項
