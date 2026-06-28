@@ -567,15 +567,16 @@ export const styles = StyleSheet.create({
     backgroundColor: "#f1f5f9",
     borderRadius: 8,
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 4,
     padding: 4
   },
   segmentItem: {
     alignItems: "center",
     borderRadius: 6,
-    flex: 1,
     minHeight: 40,
     justifyContent: "center",
+    minWidth: 84,
     paddingHorizontal: 8
   },
   segmentItemSelected: {
