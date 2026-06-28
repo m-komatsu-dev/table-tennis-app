@@ -74,8 +74,8 @@ export function PartnerPostForm({ includeStatus = false, initialPost, onSubmit, 
           ]}
           value={type}
         />
-        <TextField label="タイトル" maxLength={60} onChangeText={setTitle} placeholder="例: サーブ練習に付き合ってくれる人募集" value={title} />
-        <TextField label="エリア" maxLength={100} onChangeText={setArea} placeholder="例: いわき市周辺" value={area} />
+        <TextField label="タイトル" maxLength={60} onChangeText={setTitle} placeholder="例: ドライブ練習に付き合ってくれる人募集" value={title} />
+        <TextField label="エリア" maxLength={100} onChangeText={setArea} placeholder="例: 東京都江戸川区" value={area} />
         <TextField label="希望日時" maxLength={100} onChangeText={setPreferredTime} placeholder="例: 土曜午後" value={preferredTime} />
         <TextField label="レベル" maxLength={50} onChangeText={setLevel} placeholder="例: 初級〜中級" value={level} />
         <TextField label="目的" maxLength={120} onChangeText={setPurpose} placeholder="例: サーブ・レシーブ練習" value={purpose} />
