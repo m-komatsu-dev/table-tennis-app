@@ -89,6 +89,9 @@ export default function MatchDetailScreen() {
           </Card>
 
           <View style={{ gap: 10 }}>
+            <Button onPress={() => router.push(`/share/match/${matchId}`)} variant="secondary">
+              共有
+            </Button>
             <Button onPress={() => router.push(`/match/${matchId}/edit`)}>編集</Button>
             <Button loading={deleting} loadingLabel="削除中..." onPress={confirmDelete} variant="danger">
               削除

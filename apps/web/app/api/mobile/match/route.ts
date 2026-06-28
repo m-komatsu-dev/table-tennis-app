@@ -38,7 +38,8 @@ export async function POST(request: Request) {
         scores: body.scores,
         result: body.result,
         memo: nullableMobileText(body.memo),
-        equipmentId: null
+        equipmentId: null,
+        isPublic: body.isPublic
       },
       include: { equipment: true }
     });

@@ -61,7 +61,8 @@ export async function POST(request: Request) {
         matchType: body.matchType,
         scores: body.scores,
         result: body.result,
-        memo: nullableText(body.memo)
+        memo: nullableText(body.memo),
+        isPublic: body.isPublic
       },
       include: { equipment: true }
     });

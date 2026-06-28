@@ -71,7 +71,8 @@ export async function POST(request: Request) {
         location: nullableText(body.location),
         content: nullableText(body.content),
         equipmentId: body.equipmentId ?? null,
-        practiceMenuId: body.practiceMenuId ?? null
+        practiceMenuId: body.practiceMenuId ?? null,
+        isPublic: body.isPublic
       },
       include: { equipment: true, practiceMenu: { select: { id: true, title: true } } }
     });

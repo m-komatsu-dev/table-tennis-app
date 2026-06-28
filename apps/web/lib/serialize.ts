@@ -48,6 +48,7 @@ export function serializePractice(log: PracticeWithEquipment): PracticeLogView {
     durationMin: log.durationMin,
     location: log.location,
     content: log.content,
+    isPublic: log.isPublic,
     equipmentId: log.equipmentId,
     equipment: log.equipment ? serializeEquipment(log.equipment) : null,
     practiceMenuId: log.practiceMenuId,
@@ -93,7 +94,8 @@ export function serializeMatch(record: MatchWithEquipment): MatchRecordView {
     matchType: record.matchType,
     scores: Array.isArray(record.scores) ? (record.scores as ScoreRow[]) : [],
     result: record.result,
-    memo: record.memo
+    memo: record.memo,
+    isPublic: record.isPublic
   };
 }
 

@@ -3,8 +3,10 @@ import type { Gender, Level, User } from "@/types";
 
 export type UpdateProfileInput = {
   name: string;
+  username?: string | null;
   level: Level;
   gender: Gender | null;
+  publicProfileEnabled: boolean;
 };
 
 export async function fetchProfile() {

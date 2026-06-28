@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
-import { Text, TextInput, View } from "react-native";
+import { Switch, Text, TextInput, View } from "react-native";
 import type { MatchInput } from "@/api/match";
 import { todayInputValue } from "@/components/format";
 import { Button, Card, ErrorMessage, SectionTitle, Segment, TextField, colors, styles } from "@/components/ui";
@@ -35,6 +35,7 @@ export function MatchRecordForm({ initialRecord, onSubmit, savingLabel, submitLa
   const [matchType, setMatchType] = useState<MatchTypeInput>(normalizeMatchType(initialRecord?.matchType));
   const [memo, setMemo] = useState(initialRecord?.memo ?? "");
   const [scores, setScores] = useState<ScoreInputRow[]>(scoresToInput(initialRecord?.scores));
+  const [isPublic, setIsPublic] = useState(initialRecord?.isPublic ?? false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -98,7 +99,8 @@ export function MatchRecordForm({ initialRecord, onSubmit, savingLabel, submitLa
         matchType,
         result: validation.result,
         scores: validation.scores,
-        memo: memo.trim()
+        memo: memo.trim(),
+        isPublic
       });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "試合記録を保存できませんでした");
@@ -184,6 +186,22 @@ export function MatchRecordForm({ initialRecord, onSubmit, savingLabel, submitLa
           placeholder="例: 試合の反省、よかった点"
           value={memo}
         />
+      </Card>
+
+      <Card>
+        <SectionTitle title="共有設定" subtitle="公開プロフィールに載せる場合だけONにしてください。" />
+        <View style={publicSwitchRowStyle}>
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text style={publicSwitchTitleStyle}>この試合記録を公開する</Text>
+            <Text style={publicSwitchDescriptionStyle}>対戦相手名は共有文には自動で入れません。</Text>
+          </View>
+          <Switch
+            onValueChange={setIsPublic}
+            thumbColor="#ffffff"
+            trackColor={{ false: "#cbd5e1", true: "#34d399" }}
+            value={isPublic}
+          />
+        </View>
       </Card>
 
       <Button loading={saving} loadingLabel={savingLabel} onPress={handleSave}>
@@ -314,6 +332,24 @@ const fieldLabelStyle = {
   color: colors.text,
   fontSize: 13,
   fontWeight: "700" as const
+};
+
+const publicSwitchRowStyle = {
+  alignItems: "center" as const,
+  flexDirection: "row" as const,
+  gap: 12
+};
+
+const publicSwitchTitleStyle = {
+  color: colors.text,
+  fontSize: 15,
+  fontWeight: "800" as const
+};
+
+const publicSwitchDescriptionStyle = {
+  color: colors.muted,
+  fontSize: 13,
+  lineHeight: 19
 };
 
 const scoreHeaderStyle = {

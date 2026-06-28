@@ -63,7 +63,8 @@ export async function PUT(request: Request, context: RouteContext) {
         location: nullableMobileText(body.location),
         content: combineMobilePracticeContent(body.content, body.memo),
         practiceMenuId: body.practiceMenuId ?? null,
-        equipmentId: null
+        equipmentId: null,
+        isPublic: body.isPublic
       }
     });
 

@@ -36,7 +36,8 @@ export function PracticeForm({
           durationMin: Number(formData.get("durationMin") ?? 0),
           location: String(formData.get("location") ?? ""),
           content: String(formData.get("content") ?? ""),
-          practiceMenuId: String(formData.get("practiceMenuId") ?? "") || null
+          practiceMenuId: String(formData.get("practiceMenuId") ?? "") || null,
+          isPublic: formData.get("isPublic") === "on"
         })
       });
       const payload = (await response.json()) as ApiResponse<PracticeLogView>;
@@ -122,6 +123,18 @@ export function PracticeForm({
       <Field hint="練習メニュー、気づき、次回試したいことを残せます。" label="練習内容メモ">
         <textarea className={`${inputClass} min-h-44 resize-y`} defaultValue={practice?.content ?? ""} maxLength={4000} name="content" placeholder="例：フォアドライブと3球目攻撃を重点的に練習" rows={7} />
       </Field>
+      <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <input
+          className="mt-1 size-4 accent-emerald-600"
+          defaultChecked={practice?.isPublic ?? false}
+          name="isPublic"
+          type="checkbox"
+        />
+        <span>
+          <span className="block text-sm font-bold text-slate-900">この練習記録を公開プロフィールに表示する</span>
+          <span className="mt-1 block text-xs leading-5 text-slate-500">公開プロフィールがOFFの場合、この記録も外部には表示されません。</span>
+        </span>
+      </label>
       <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center">
         <Button
           className="sm:min-w-28"

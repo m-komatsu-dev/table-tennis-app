@@ -86,6 +86,9 @@ export default function PracticeDetailScreen() {
           </Card>
 
           <View style={{ gap: 10 }}>
+            <Button onPress={() => router.push(`/share/practice/${practiceId}`)} variant="secondary">
+              共有
+            </Button>
             <Button onPress={() => router.push(`/practice/${practiceId}/edit`)}>編集</Button>
             <Button loading={deleting} loadingLabel="削除中..." onPress={confirmDelete} variant="danger">
               削除

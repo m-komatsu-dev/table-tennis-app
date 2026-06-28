@@ -49,18 +49,20 @@ enum PracticeMenuCategory {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  name         String
-  passwordHash String?
-  googleId     String?  @unique
-  level        Level    @default(BEGINNER)
-  playStyle    String?
-  club         String?
-  avatarUrl    String?
-  gender       Gender?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  email                String   @unique
+  username             String?  @unique
+  name                 String
+  passwordHash         String?
+  googleId             String?  @unique
+  level                Level    @default(BEGINNER)
+  playStyle            String?
+  club                 String?
+  avatarUrl            String?
+  gender               Gender?
+  publicProfileEnabled Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   practiceLogs  PracticeLog[]
   practiceMenus PracticeMenu[]
@@ -80,6 +82,7 @@ model PracticeLog {
   equipment      Equipment?    @relation(fields: [equipmentId], references: [id])
   practiceMenuId String?
   practiceMenu   PracticeMenu? @relation(fields: [practiceMenuId], references: [id], onDelete: SetNull)
+  isPublic       Boolean       @default(false)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 }
@@ -124,6 +127,7 @@ model MatchRecord {
   scores       Json
   result       MatchResult
   memo         String?
+  isPublic     Boolean     @default(false)
   playedAt     DateTime
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt

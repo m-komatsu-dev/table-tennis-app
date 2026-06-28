@@ -70,7 +70,8 @@ export async function PATCH(request: Request, { params }: Params) {
         matchType: body.matchType,
         scores: body.scores,
         result: body.result,
-        memo: nullableText(body.memo)
+        memo: nullableText(body.memo),
+        isPublic: body.isPublic
       }
     });
 

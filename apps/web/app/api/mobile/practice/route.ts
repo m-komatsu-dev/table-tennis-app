@@ -55,7 +55,8 @@ export async function POST(request: Request) {
         location: nullableMobileText(body.location),
         content: combineMobilePracticeContent(body.content, body.memo),
         practiceMenuId: body.practiceMenuId ?? null,
-        equipmentId: null
+        equipmentId: null,
+        isPublic: body.isPublic
       },
       include: { equipment: true, practiceMenu: { select: { id: true, title: true } } }
     });

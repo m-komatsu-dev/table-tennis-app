@@ -79,6 +79,7 @@ export async function PATCH(request: Request, { params }: Params) {
         durationMin: body.durationMin,
         location: nullableText(body.location),
         content: nullableText(body.content),
+        isPublic: body.isPublic,
         ...(body.equipmentId !== undefined ? { equipmentId: body.equipmentId } : {}),
         ...(body.practiceMenuId !== undefined ? { practiceMenuId: body.practiceMenuId } : {})
       }

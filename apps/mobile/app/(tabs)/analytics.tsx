@@ -90,6 +90,10 @@ export default function AnalyticsScreen() {
             ) : null}
           </Card>
 
+          <Button variant="secondary" onPress={() => router.push("/share/summary")}>
+            今週のまとめを共有
+          </Button>
+
           <View style={chartStyles.metricGrid}>
             <MetricCard label="総練習時間" value={formatDuration(summary.totalPracticeMinutes)} />
             <MetricCard label="総練習回数" value={`${summary.totalPractices}回`} />

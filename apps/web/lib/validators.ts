@@ -58,10 +58,19 @@ export const loginSchema = z.object({
 
 export const profileSchema = z.object({
   name: z.string().trim().min(1, "名前を入力してください").max(80, "名前は80文字以内で入力してください"),
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9_]{3,30}$/, "ユーザー名は3〜30文字の英数字と_で入力してください")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
   club: z.string().trim().max(120, "所属クラブは120文字以内で入力してください").optional().nullable(),
   level: levelSchema,
   gender: genderSchema.optional().nullable(),
   playStyle: z.string().trim().max(200, "プレースタイルは200文字以内で入力してください").optional().nullable(),
+  publicProfileEnabled: z.boolean().default(false),
   avatarUrl: z
     .string()
     .trim()
@@ -79,8 +88,17 @@ export const profileSchema = z.object({
 
 export const mobileProfileSchema = z.object({
   name: z.string().trim().min(1, "名前を入力してください").max(50, "名前は50文字以内で入力してください"),
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(/^[a-z0-9_]{3,30}$/, "ユーザー名は3〜30文字の英数字と_で入力してください")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
   level: levelSchema,
-  gender: genderSchema.nullable()
+  gender: genderSchema.nullable(),
+  publicProfileEnabled: z.boolean().default(false)
 });
 
 export const equipmentSchema = z.object({
@@ -103,7 +121,8 @@ export const practiceSchema = z.object({
   location: z.string().trim().max(120, "場所は120文字以内で入力してください").optional().nullable(),
   content: z.string().trim().max(4000, "練習内容メモは4000文字以内で入力してください").optional().nullable(),
   equipmentId: z.string().uuid().optional().nullable(),
-  practiceMenuId: z.string().uuid("練習メニューの指定が正しくありません").optional().nullable()
+  practiceMenuId: z.string().uuid("練習メニューの指定が正しくありません").optional().nullable(),
+  isPublic: z.boolean().default(false)
 });
 
 export const practiceMenuItemSchema = z.object({
@@ -165,7 +184,8 @@ export const matchSchema = z.object({
     }),
   result: matchResultSchema,
   memo: z.string().trim().max(4000, "反省・メモは4000文字以内で入力してください").optional().nullable(),
-  equipmentId: z.string().uuid().optional().nullable()
+  equipmentId: z.string().uuid().optional().nullable(),
+  isPublic: z.boolean().default(false)
 });
 
 export type ScoreRowInput = z.infer<typeof scoreRowSchema>;

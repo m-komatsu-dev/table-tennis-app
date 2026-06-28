@@ -67,11 +67,13 @@ export function ProfileForm({ profile }: { profile: ProfileView }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: String(formData.get("name") ?? ""),
+          username: String(formData.get("username") ?? ""),
           club: String(formData.get("club") ?? ""),
           level: String(formData.get("level") ?? "BEGINNER"),
           gender: String(formData.get("gender") ?? "NO_ANSWER"),
           playStyle: String(formData.get("playStyle") ?? ""),
-          avatarUrl
+          avatarUrl,
+          publicProfileEnabled: formData.get("publicProfileEnabled") === "on"
         })
       });
       const payload = (await response.json()) as ApiResponse<ProfileView>;
@@ -138,6 +140,16 @@ export function ProfileForm({ profile }: { profile: ProfileView }) {
         <Field label="メールアドレス">
           <input className={inputClass} defaultValue={profile.email} disabled />
         </Field>
+        <Field hint="公開プロフィールURLに使います。英数字と_で3〜30文字。" label="公開ユーザー名">
+          <input
+            className={inputClass}
+            defaultValue={profile.username ?? ""}
+            maxLength={30}
+            name="username"
+            pattern="[a-zA-Z0-9_]{3,30}"
+            placeholder="例：tabletennis_2026"
+          />
+        </Field>
         <Field hint="所属がない場合は空欄でも構いません。" label="所属クラブ">
           <input className={inputClass} defaultValue={profile.club ?? ""} maxLength={120} name="club" placeholder="例：〇〇卓球クラブ" />
         </Field>
@@ -172,6 +184,20 @@ export function ProfileForm({ profile }: { profile: ProfileView }) {
           rows={4}
         />
       </Field>
+      <label className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3">
+        <input
+          className="mt-1 size-4 accent-emerald-600"
+          defaultChecked={profile.publicProfileEnabled}
+          name="publicProfileEnabled"
+          type="checkbox"
+        />
+        <span>
+          <span className="block text-sm font-bold text-slate-900">公開プロフィールを有効にする</span>
+          <span className="mt-1 block text-xs leading-5 text-slate-600">
+            公開ユーザー名を設定した場合のみ表示されます。メールアドレスは公開されません。
+          </span>
+        </span>
+      </label>
       <div className="border-t border-slate-100 pt-5">
       <Button
         className="w-full sm:w-auto sm:min-w-44"

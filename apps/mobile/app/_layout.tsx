@@ -21,6 +21,9 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="ai-coach" options={{ title: "AIコーチ", headerShown: false }} />
         <Stack.Screen name="notifications" options={{ title: "お知らせ", headerShown: false }} />
+        <Stack.Screen name="share/practice/[id]" options={{ title: "練習記録を共有", headerShown: false }} />
+        <Stack.Screen name="share/match/[id]" options={{ title: "試合記録を共有", headerShown: false }} />
+        <Stack.Screen name="share/summary" options={{ title: "今週のまとめを共有", headerShown: false }} />
         <Stack.Screen name="profile/edit" options={{ title: "プロフィール編集", headerShown: false }} />
         <Stack.Screen name="practice/new" options={{ title: "練習を記録", headerShown: false }} />
         <Stack.Screen name="practice/[id]/index" options={{ title: "練習記録詳細", headerShown: false }} />

@@ -2,11 +2,13 @@ export type User = {
   id: string;
   name: string;
   email: string;
+  username: string | null;
   level?: Level;
   gender?: Gender | null;
   club?: string | null;
   playStyle?: string | null;
   avatarUrl?: string | null;
+  publicProfileEnabled: boolean;
 };
 
 export type Level = "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "COMPETITIVE" | "PRO";
@@ -33,6 +35,7 @@ export type PracticeLog = {
   memo: string | null;
   practiceMenuId: string | null;
   practiceMenu: { id: string; title: string } | null;
+  isPublic: boolean;
 };
 
 export type ScoreRow = {
@@ -50,6 +53,7 @@ export type MatchRecord = {
   scores: ScoreRow[];
   result: "WIN" | "LOSE" | "DRAW";
   memo: string | null;
+  isPublic: boolean;
 };
 
 export type PracticeMenu = {

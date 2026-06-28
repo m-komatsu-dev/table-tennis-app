@@ -8,6 +8,7 @@ export type PracticeInput = {
   content?: string;
   memo?: string;
   practiceMenuId?: string | null;
+  isPublic?: boolean;
 };
 
 export async function fetchPracticeLogs() {

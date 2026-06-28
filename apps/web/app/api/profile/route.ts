@@ -20,12 +20,14 @@ export async function GET() {
     select: {
       id: true,
       email: true,
+      username: true,
       name: true,
       level: true,
       playStyle: true,
       club: true,
       avatarUrl: true,
-      gender: true
+      gender: true,
+      publicProfileEnabled: true
     }
   });
 
@@ -49,26 +51,38 @@ export async function PATCH(request: Request) {
       where: { id: userId },
       data: {
         name: body.name,
+        username: nullableText(body.username),
         level: body.level,
         gender: body.gender,
         club: nullableText(body.club),
         playStyle: nullableText(body.playStyle),
-        avatarUrl: nullableText(body.avatarUrl)
+        avatarUrl: nullableText(body.avatarUrl),
+        publicProfileEnabled: Boolean(body.publicProfileEnabled && nullableText(body.username))
       },
       select: {
         id: true,
         email: true,
+        username: true,
         name: true,
         level: true,
         playStyle: true,
         club: true,
         avatarUrl: true,
-        gender: true
+        gender: true,
+        publicProfileEnabled: true
       }
     });
 
     return dataResponse(profile);
   } catch (error) {
+    if (isUniqueUsernameError(error)) {
+      return errorResponse("この公開ユーザー名はすでに使われています", 400);
+    }
+
     return validationErrorResponse(error);
   }
+}
+
+function isUniqueUsernameError(error: unknown) {
+  return typeof error === "object" && error !== null && "code" in error && (error as { code?: unknown }).code === "P2002";
 }

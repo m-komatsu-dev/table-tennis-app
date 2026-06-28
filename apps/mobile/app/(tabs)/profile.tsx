@@ -3,7 +3,7 @@ import { router, useFocusEffect } from "expo-router";
 import type { Href } from "expo-router";
 import { fetchProfile } from "@/api/profile";
 import { genderLabels, levelLabels } from "@/components/format";
-import { Button, Card, ErrorMessage, Header, LoadingState, Row, Screen } from "@/components/ui";
+import { Button, Card, ErrorMessage, Header, LoadingState, Row, Screen, SectionTitle } from "@/components/ui";
 import { clearAccessToken } from "@/storage/token";
 import type { User } from "@/types";
 
@@ -51,6 +51,19 @@ export default function ProfileScreen() {
           <Row label="プレースタイル" value={user.playStyle} />
           <Button variant="secondary" onPress={() => router.push("/profile/edit" as Href)}>
             編集
+          </Button>
+        </Card>
+      ) : null}
+      {user ? (
+        <Card>
+          <SectionTitle
+            title="公開プロフィール"
+            subtitle="練習の成果を共有できるプロフィールページです。公開プロフィールは設定をONにした場合のみ表示されます。"
+          />
+          <Row label="状態" value={user.publicProfileEnabled ? "公開中" : "非公開"} />
+          <Row label="公開ユーザー名" value={user.username} />
+          <Button variant="secondary" onPress={() => router.push("/profile/edit" as Href)}>
+            公開プロフィール設定
           </Button>
         </Card>
       ) : null}

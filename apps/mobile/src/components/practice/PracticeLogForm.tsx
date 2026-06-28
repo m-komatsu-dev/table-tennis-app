@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Switch, Text, View } from "react-native";
 import { fetchPracticeMenus } from "@/api/practice-menus";
 import type { PracticeInput } from "@/api/practice";
 import { todayInputValue } from "@/components/format";
@@ -23,6 +23,7 @@ export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, s
   const [content, setContent] = useState(initialLog?.content ?? "");
   const [memo, setMemo] = useState(initialLog?.memo ?? "");
   const [practiceMenuId, setPracticeMenuId] = useState<string | null>(initialLog?.practiceMenuId ?? initialPracticeMenuId ?? null);
+  const [isPublic, setIsPublic] = useState(initialLog?.isPublic ?? false);
   const [menus, setMenus] = useState<PracticeMenu[]>([]);
   const [loadingMenus, setLoadingMenus] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -77,7 +78,8 @@ export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, s
         location: location.trim(),
         content: content.trim(),
         memo: memo.trim(),
-        practiceMenuId: practiceMenuId ?? null
+        practiceMenuId: practiceMenuId ?? null,
+        isPublic
       });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "練習記録を保存できませんでした");
@@ -147,6 +149,22 @@ export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, s
           placeholder="例: 今日はバックハンドの安定感が課題だった"
           value={memo}
         />
+      </Card>
+
+      <Card>
+        <SectionTitle title="共有設定" subtitle="公開プロフィールに載せる場合だけONにしてください。" />
+        <View style={publicSwitchRowStyle}>
+          <View style={{ flex: 1, gap: 4 }}>
+            <Text style={publicSwitchTitleStyle}>この練習記録を公開する</Text>
+            <Text style={publicSwitchDescriptionStyle}>メールアドレスや場所は公開プロフィールには表示しません。</Text>
+          </View>
+          <Switch
+            onValueChange={setIsPublic}
+            thumbColor="#ffffff"
+            trackColor={{ false: "#cbd5e1", true: "#34d399" }}
+            value={isPublic}
+          />
+        </View>
       </Card>
 
       <Button loading={saving} loadingLabel={savingLabel} onPress={handleSave}>
@@ -227,4 +245,22 @@ const menuOptionDescriptionStyle = {
 
 const selectedMenuOptionTextStyle = {
   color: colors.primaryDark
+};
+
+const publicSwitchRowStyle = {
+  alignItems: "center" as const,
+  flexDirection: "row" as const,
+  gap: 12
+};
+
+const publicSwitchTitleStyle = {
+  color: colors.text,
+  fontSize: 15,
+  fontWeight: "800" as const
+};
+
+const publicSwitchDescriptionStyle = {
+  color: colors.muted,
+  fontSize: 13,
+  lineHeight: 19
 };

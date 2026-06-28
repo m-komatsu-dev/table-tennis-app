@@ -403,18 +403,22 @@ describe("mobile profile API", () => {
   const token = () => createMobileAccessToken("user-1");
   const validInput = {
     name: "鈴木 太郎",
+    username: "suzuki_taro",
     level: "BEGINNER",
-    gender: "MALE"
+    gender: "MALE",
+    publicProfileEnabled: true
   };
   const updatedUser = {
     id: "user-1",
     name: "鈴木 太郎",
     email: "user@example.com",
+    username: "suzuki_taro",
     level: "BEGINNER",
     gender: "MALE",
     club: null,
     playStyle: null,
-    avatarUrl: null
+    avatarUrl: null,
+    publicProfileEnabled: true
   };
 
   beforeEach(() => {
@@ -448,8 +452,10 @@ describe("mobile profile API", () => {
       where: { id: "user-1" },
       data: {
         name: "鈴木 太郎",
+        username: "suzuki_taro",
         level: "BEGINNER",
-        gender: "MALE"
+        gender: "MALE",
+        publicProfileEnabled: true
       }
     }));
   });

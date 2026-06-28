@@ -13,12 +13,14 @@ export default async function ProfilePage() {
       where: { id: userId },
       select: {
         email: true,
+        username: true,
         name: true,
         club: true,
         level: true,
         gender: true,
         playStyle: true,
-        avatarUrl: true
+        avatarUrl: true,
+        publicProfileEnabled: true
       }
     }),
     prisma.equipment.findMany({

@@ -17,6 +17,7 @@ export type PracticeLogView = {
   durationMin: number;
   location: string | null;
   content: string | null;
+  isPublic: boolean;
   equipmentId: string | null;
   equipment: EquipmentView | null;
   practiceMenuId: string | null;
@@ -77,16 +78,19 @@ export type MatchRecordView = {
   scores: ScoreRow[];
   result: "WIN" | "LOSE" | "DRAW";
   memo: string | null;
+  isPublic: boolean;
 };
 
 export type ProfileView = {
   name: string;
   email: string;
+  username: string | null;
   club: string | null;
   level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "COMPETITIVE" | "PRO";
   gender: "MALE" | "FEMALE" | "OTHER" | "NO_ANSWER" | null;
   playStyle: string | null;
   avatarUrl: string | null;
+  publicProfileEnabled: boolean;
 };
 
 export type ApiResponse<T> = {

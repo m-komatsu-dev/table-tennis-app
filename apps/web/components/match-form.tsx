@@ -69,7 +69,8 @@ export function MatchForm({
           scores,
           result: String(formData.get("result") ?? "WIN"),
           memo: String(formData.get("memo") ?? ""),
-          equipmentId: String(formData.get("equipmentId") ?? "") || null
+          equipmentId: String(formData.get("equipmentId") ?? "") || null,
+          isPublic: formData.get("isPublic") === "on"
         })
       });
       const payload = (await response.json()) as ApiResponse<MatchRecordView>;
@@ -229,6 +230,18 @@ export function MatchForm({
       <Field hint="良かった点や次回改善したいプレーを残せます。" label="反省・メモ">
         <textarea className={`${inputClass} min-h-44 resize-y`} defaultValue={match?.memo ?? ""} maxLength={4000} name="memo" placeholder="例：相手のバック側への展開が有効だった" rows={7} />
       </Field>
+      <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <input
+          className="mt-1 size-4 accent-emerald-600"
+          defaultChecked={match?.isPublic ?? false}
+          name="isPublic"
+          type="checkbox"
+        />
+        <span>
+          <span className="block text-sm font-bold text-slate-900">この試合記録を公開プロフィールに表示する</span>
+          <span className="mt-1 block text-xs leading-5 text-slate-500">共有文では対戦相手名を自動で出しません。</span>
+        </span>
+      </label>
       <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center">
         <Button
           className="sm:min-w-28"

@@ -6,11 +6,13 @@ const mobileProfileSelect = {
   id: true,
   name: true,
   email: true,
+  username: true,
   level: true,
   gender: true,
   club: true,
   playStyle: true,
-  avatarUrl: true
+  avatarUrl: true,
+  publicProfileEnabled: true
 } as const;
 
 export async function GET(request: Request) {
@@ -58,8 +60,10 @@ export async function PUT(request: Request) {
       where: { id: userId },
       data: {
         name: bodyResult.data.name,
+        username: nullableProfileUsername(bodyResult.data.username),
         level: bodyResult.data.level,
-        gender: bodyResult.data.gender
+        gender: bodyResult.data.gender,
+        publicProfileEnabled: Boolean(bodyResult.data.publicProfileEnabled && nullableProfileUsername(bodyResult.data.username))
       },
       select: mobileProfileSelect
     });
@@ -70,8 +74,21 @@ export async function PUT(request: Request) {
       return mobileError("ユーザーが見つかりません", 404);
     }
 
+    if (isUniqueUsernameError(error)) {
+      return mobileError("この公開ユーザー名はすでに使われています", 400);
+    }
+
     return mobileError("サーバー側でエラーが発生しました", 500);
   }
+}
+
+function nullableProfileUsername(value: string | null | undefined) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim().toLowerCase();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
 function isPrismaNotFoundError(error: unknown) {
@@ -81,4 +98,8 @@ function isPrismaNotFoundError(error: unknown) {
     "code" in error &&
     (error as { code?: unknown }).code === "P2025"
   );
+}
+
+function isUniqueUsernameError(error: unknown) {
+  return typeof error === "object" && error !== null && "code" in error && (error as { code?: unknown }).code === "P2002";
 }

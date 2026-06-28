@@ -47,7 +47,8 @@ export async function PUT(request: Request, context: RouteContext) {
         scores: body.scores,
         result: body.result,
         memo: nullableMobileText(body.memo),
-        equipmentId: null
+        equipmentId: null,
+        isPublic: body.isPublic
       }
     });
 

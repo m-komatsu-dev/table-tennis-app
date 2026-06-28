@@ -9,6 +9,7 @@ export type MatchInput = {
   result: "WIN" | "LOSE";
   scores: ScoreRow[];
   memo?: string;
+  isPublic?: boolean;
 };
 
 export async function fetchMatchRecords() {
