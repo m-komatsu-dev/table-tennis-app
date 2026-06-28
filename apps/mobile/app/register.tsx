@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { register } from "@/api/auth";
 import { ApiError, apiStatus } from "@/api/client";
+import { useGoogleLogin } from "@/auth/google";
 import { Button, Card, ErrorMessage, Header, Screen, TextField, colors } from "@/components/ui";
 import { saveAccessToken } from "@/storage/token";
 
@@ -35,6 +36,7 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const googleLogin = useGoogleLogin();
 
   async function handleRegister() {
     setError(null);
@@ -94,9 +96,21 @@ export default function RegisterScreen() {
           textContentType="newPassword"
           value={confirmPassword}
         />
-        <ErrorMessage message={error} />
-        <Button loading={loading} loadingLabel="登録中..." onPress={handleRegister}>
+        <ErrorMessage message={error ?? googleLogin.error} />
+        <Button disabled={googleLogin.loading} loading={loading} loadingLabel="登録中..." onPress={handleRegister}>
           登録する
+        </Button>
+        <View style={{ alignItems: "center", paddingVertical: 2 }}>
+          <Text style={{ color: colors.faint, fontSize: 13, fontWeight: "700" }}>または</Text>
+        </View>
+        <Button
+          disabled={loading}
+          loading={googleLogin.loading}
+          loadingLabel="Googleへ移動中..."
+          onPress={googleLogin.startGoogleLogin}
+          variant="secondary"
+        >
+          Googleアカウントで始める
         </Button>
       </Card>
 

@@ -32,6 +32,17 @@ const mockBcrypt = vi.hoisted(() => ({
   hash: vi.fn()
 }));
 
+const mockGoogleToken = vi.hoisted(() => {
+  class GoogleAuthConfigError extends Error {}
+  class GoogleIdTokenVerificationError extends Error {}
+
+  return {
+    verifyGoogleIdToken: vi.fn(),
+    GoogleAuthConfigError,
+    GoogleIdTokenVerificationError
+  };
+});
+
 vi.mock("@table-tennis/db", () => ({
   prisma: mockPrisma
 }));
@@ -40,7 +51,14 @@ vi.mock("bcryptjs", () => ({
   default: mockBcrypt
 }));
 
+vi.mock("@/lib/google-id-token", () => ({
+  verifyGoogleIdToken: mockGoogleToken.verifyGoogleIdToken,
+  GoogleAuthConfigError: mockGoogleToken.GoogleAuthConfigError,
+  GoogleIdTokenVerificationError: mockGoogleToken.GoogleIdTokenVerificationError
+}));
+
 import { POST as login } from "@/app/api/mobile/auth/login/route";
+import { POST as googleLogin } from "@/app/api/mobile/auth/google/route";
 import { POST as register } from "@/app/api/mobile/auth/register/route";
 import { GET as getProfile, PUT as updateProfile } from "@/app/api/mobile/profile/route";
 import { GET as getPractice, POST as createPractice } from "@/app/api/mobile/practice/route";
@@ -153,6 +171,116 @@ describe("mobile login API", () => {
 
     expect(response.status).toBe(401);
     expect(mockBcrypt.compare).not.toHaveBeenCalled();
+  });
+});
+
+describe("mobile google login API", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.MOBILE_AUTH_SECRET = "test-mobile-secret-that-is-long-enough-12345";
+    mockGoogleToken.verifyGoogleIdToken.mockResolvedValue({
+      sub: "google-sub-1",
+      email: "google@example.com",
+      name: "Google 太郎",
+      picture: "https://example.com/avatar.png"
+    });
+  });
+
+  test("新しいGoogleユーザーを作成してaccessTokenを返す", async () => {
+    mockPrisma.user.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    mockPrisma.user.create.mockResolvedValue({
+      id: "user-google-1",
+      name: "Google 太郎",
+      email: "google@example.com"
+    });
+
+    const response = await googleLogin(jsonRequest("/api/mobile/auth/google", {
+      idToken: "google-id-token",
+      nonce: "nonce-1"
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.accessToken).toEqual(expect.any(String));
+    expect(body.user).toEqual({
+      id: "user-google-1",
+      name: "Google 太郎",
+      email: "google@example.com"
+    });
+    expect(mockGoogleToken.verifyGoogleIdToken).toHaveBeenCalledWith("google-id-token", "nonce-1");
+    expect(mockPrisma.user.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        email: "google@example.com",
+        googleId: "google-sub-1"
+      })
+    }));
+  });
+
+  test("既存Googleユーザーを更新してaccessTokenを返す", async () => {
+    mockPrisma.user.findUnique
+      .mockResolvedValueOnce({
+        id: "user-google-1",
+        name: "Old Name",
+        email: "google@example.com"
+      })
+      .mockResolvedValueOnce({
+        id: "user-google-1",
+        name: "Old Name",
+        email: "google@example.com",
+        passwordHash: null,
+        googleId: "google-sub-1"
+      });
+    mockPrisma.user.update.mockResolvedValue({
+      id: "user-google-1",
+      name: "Google 太郎",
+      email: "google@example.com"
+    });
+
+    const response = await googleLogin(jsonRequest("/api/mobile/auth/google", {
+      idToken: "google-id-token"
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.accessToken).toEqual(expect.any(String));
+    expect(mockPrisma.user.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "user-google-1" },
+      data: expect.objectContaining({ googleId: "google-sub-1" })
+    }));
+  });
+
+  test("password登録済みでGoogle未連携のemailは409を返す", async () => {
+    mockPrisma.user.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        id: "user-password-1",
+        name: "Password User",
+        email: "google@example.com",
+        passwordHash: "hashed-password",
+        googleId: null
+      });
+
+    const response = await googleLogin(jsonRequest("/api/mobile/auth/google", {
+      idToken: "google-id-token"
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body.error).toBe("このメールアドレスは別の方法で登録されています");
+    expect(mockPrisma.user.create).not.toHaveBeenCalled();
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  test("Google id_token検証失敗で401を返す", async () => {
+    mockGoogleToken.verifyGoogleIdToken.mockRejectedValue(new mockGoogleToken.GoogleIdTokenVerificationError());
+
+    const response = await googleLogin(jsonRequest("/api/mobile/auth/google", {
+      idToken: "bad-token"
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body.error).toBe("Googleログインに失敗しました");
   });
 });
 

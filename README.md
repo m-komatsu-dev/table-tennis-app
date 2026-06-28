@@ -116,6 +116,7 @@ NEXTAUTH_SECRET=
 NEXTAUTH_URL=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
+GOOGLE_MOBILE_CLIENT_IDS=
 GEMINI_API_KEY=
 GEMINI_MODEL=
 MOBILE_AUTH_SECRET=
@@ -124,7 +125,8 @@ MOBILE_AUTH_SECRET=
 - `DATABASE_URL`: PostgreSQL / Supabaseの接続文字列
 - `AUTH_SECRET` または `NEXTAUTH_SECRET`: Auth.js / NextAuthの署名用シークレット
 - `NEXTAUTH_URL`: ローカルまたは本番のWeb URL
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: Googleログインを使う場合に設定
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: Web版のGoogleログインを使う場合に設定
+- `GOOGLE_MOBILE_CLIENT_IDS`: モバイル版Googleログインで許可するClient ID。複数ある場合はカンマ区切り。未設定時は `GOOGLE_CLIENT_ID` などの公開Client IDも検証対象に使います
 - `GEMINI_API_KEY`: AIコーチを使う場合に設定
 - `GEMINI_MODEL`: 任意。未設定時はコード上のデフォルトモデルを使用
 - `MOBILE_AUTH_SECRET`: モバイルAPIのBearer Token署名用。32文字以上の値をサーバー側だけに設定
@@ -149,6 +151,18 @@ https://table-tennis-app-rho.vercel.app/api/auth/callback/google
 
 本番URLが変わる場合は、そのURLの `/api/auth/callback/google` を登録してください。`GOOGLE_CLIENT_SECRET` はWebサーバー側だけに設定し、モバイルアプリや `NEXT_PUBLIC_` / `EXPO_PUBLIC_` 変数には入れないでください。
 
+モバイル版のGoogleログインでは、アプリ側がGoogleから受け取った `id_token` を `POST /api/mobile/auth/google` に送り、Web API側でGoogle署名、`aud`、`iss`、`exp`、`email`、`email_verified`、`sub`、nonceがある場合はnonceを検証します。サーバー側には検証を許可するClient IDを設定します。
+
+```env
+GOOGLE_MOBILE_CLIENT_IDS=
+```
+
+`GOOGLE_MOBILE_CLIENT_IDS` は秘密情報ではありませんが、サーバー側の検証ポリシーとして扱います。複数のClient IDを使う場合はカンマ区切りにしてください。既存Web版のClient IDだけで検証する構成なら、`GOOGLE_CLIENT_ID` がフォールバックとして使われます。
+
+Expo Goで動作確認する場合は、Expo AuthSessionのredirect URIが開発環境によって変わることがあります。`apps/mobile` で `npx expo start -c` を起動し、表示される開発環境に合わせてGoogle Cloud Consoleの承認済みリダイレクトURIを調整してください。
+
+今回のアプリ scheme は `tabletennis` です。Expo Goでは環境やSDKの制約によりOAuthリダイレクトが通らない場合があります。その場合はEAS開発ビルドで確認してください。将来EAS Buildやストア配布を行う場合は、Androidパッケージ名/SHA-1に紐づくAndroid OAuth Client ID、iOS Bundle IDに紐づくiOS OAuth Client IDをGoogle Cloud Consoleで作成し、下記のモバイル公開環境変数に設定します。
+
 ### Prisma CLI
 
 `packages/db/.env` に設定します。
@@ -165,9 +179,13 @@ DATABASE_URL=
 
 ```env
 EXPO_PUBLIC_API_URL=
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=
+EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=
+EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=
+EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID=
 ```
 
-`MOBILE_AUTH_SECRET` はモバイルアプリ側には入れないでください。モバイル側に置くのは公開される前提の `EXPO_PUBLIC_` 系の値のみです。
+`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` はExpo GoやWeb向け、`EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` は将来のAndroid/iOSビルド向けに使います。構成上不要なものは空のままで構いません。`MOBILE_AUTH_SECRET`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL` はモバイルアプリ側には入れないでください。モバイル側に置くのは公開される前提の `EXPO_PUBLIC_` 系の値のみです。
 
 ## ローカル起動
 
@@ -279,6 +297,7 @@ NEXTAUTH_SECRET
 NEXTAUTH_URL
 GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET
+GOOGLE_MOBILE_CLIENT_IDS
 GEMINI_API_KEY
 GEMINI_MODEL
 MOBILE_AUTH_SECRET
@@ -293,6 +312,7 @@ MOBILE_AUTH_SECRET
 ```txt
 POST   /api/mobile/auth/login
 POST   /api/mobile/auth/register
+POST   /api/mobile/auth/google
 GET    /api/mobile/me
 GET    /api/mobile/profile
 PUT    /api/mobile/profile
@@ -317,7 +337,7 @@ DELETE /api/mobile/practice-menus/[id]
 
 - `.env`、`.env.local`、`packages/db/.env`、`apps/mobile/.env` などの秘密情報はGitに含めないでください。
 - `DATABASE_URL`、`AUTH_SECRET`、`NEXTAUTH_SECRET`、`MOBILE_AUTH_SECRET`、`GEMINI_API_KEY` などはクライアント側へ露出させないでください。
-- `MOBILE_AUTH_SECRET` や `DATABASE_URL` は絶対にモバイルアプリ側へ入れないでください。
+- `MOBILE_AUTH_SECRET`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL` は絶対にモバイルアプリ側へ入れないでください。
 - Expoの `EXPO_PUBLIC_` 変数は公開される前提で扱ってください。
 - Gemini APIキーはサーバー側の環境変数として設定し、`NEXT_PUBLIC_` や `EXPO_PUBLIC_` には設定しないでください。
 - 本番DBに対するmigrationは、接続先と実行コマンドを確認してから行ってください。

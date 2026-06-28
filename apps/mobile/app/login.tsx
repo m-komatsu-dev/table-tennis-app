@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchMe, login } from "@/api/auth";
 import { ApiError, apiStatus } from "@/api/client";
+import { useGoogleLogin } from "@/auth/google";
 import { Button, Card, ErrorMessage, Screen, TextField, colors, styles } from "@/components/ui";
 import { getAccessToken, saveAccessToken } from "@/storage/token";
 
@@ -30,6 +31,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const googleLogin = useGoogleLogin();
 
   useEffect(() => {
     let mounted = true;
@@ -102,9 +104,21 @@ export default function LoginScreen() {
           secureTextEntry
           value={password}
         />
-        <ErrorMessage message={error} />
-        <Button loading={loading} onPress={handleLogin}>
+        <ErrorMessage message={error ?? googleLogin.error} />
+        <Button disabled={googleLogin.loading} loading={loading} onPress={handleLogin}>
           ログイン
+        </Button>
+        <View style={{ alignItems: "center", paddingVertical: 2 }}>
+          <Text style={{ color: colors.faint, fontSize: 13, fontWeight: "700" }}>または</Text>
+        </View>
+        <Button
+          disabled={loading}
+          loading={googleLogin.loading}
+          loadingLabel="Googleへ移動中..."
+          onPress={googleLogin.startGoogleLogin}
+          variant="secondary"
+        >
+          Googleでログイン
         </Button>
       </Card>
 

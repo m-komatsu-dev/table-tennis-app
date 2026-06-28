@@ -24,6 +24,14 @@ export async function register(input: RegisterInput) {
   });
 }
 
+export async function loginWithGoogle(idToken: string, nonce?: string) {
+  return apiRequest<{ accessToken: string; user: User }>("/api/mobile/auth/google", {
+    auth: false,
+    method: "POST",
+    body: JSON.stringify({ idToken, nonce })
+  });
+}
+
 export async function fetchMe() {
   return apiRequest<{ user: User }>("/api/mobile/me");
 }
