@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import type { Href } from "expo-router";
 import { fetchPracticeMenu, updatePracticeMenu } from "@/api/practice-menus";
@@ -14,34 +14,35 @@ export default function PracticeMenuEditScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function load() {
-      if (!menuId) {
-        setError("練習メニューが見つかりません");
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const result = await fetchPracticeMenu(menuId);
-        setItem(result.practiceMenu);
-      } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "練習メニューを取得できませんでした");
-      } finally {
-        setLoading(false);
-      }
+  const load = useCallback(async () => {
+    if (!menuId) {
+      setError("練習メニューが見つかりません");
+      setLoading(false);
+      return;
     }
 
-    load();
+    setLoading(true);
+    setError(null);
+
+    try {
+      setItem(null);
+      const result = await fetchPracticeMenu(menuId);
+      setItem(result.practiceMenu);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "練習メニューを取得できませんでした");
+    } finally {
+      setLoading(false);
+    }
   }, [menuId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <FormScreen>
       <Header backLabel="詳細へ戻る" onBack={() => router.back()} title="練習メニューを編集" />
-      <ErrorMessage message={error} />
+      <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
       {!loading && item && menuId ? (
         <PracticeMenuForm

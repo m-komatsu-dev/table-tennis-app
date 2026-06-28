@@ -32,11 +32,12 @@ export function Screen({ children, keyboardAware = false }: { children: ReactNod
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : keyboardAware ? "height" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
         style={styles.keyboardAvoiding}
       >
         <ScrollView
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios" && keyboardAware}
           contentContainerStyle={[styles.screen, keyboardAware && styles.keyboardAwareScreen]}
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
@@ -143,9 +144,12 @@ export function TextField({
       <Text style={styles.label}>{label}</Text>
       <TextInput
         {...props}
+        accessibilityLabel={props.accessibilityLabel ?? label}
         multiline={multiline}
         placeholderTextColor={colors.faint}
+        scrollEnabled={props.scrollEnabled ?? Boolean(multiline)}
         style={[styles.input, multiline && styles.textArea, props.style]}
+        textAlignVertical={multiline ? "top" : props.textAlignVertical}
       />
     </View>
   );
@@ -165,7 +169,12 @@ export function InlineField({
     <View style={[styles.field, containerStyle]}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.inlineInputRow}>
-        <TextInput {...props} placeholderTextColor={colors.faint} style={[styles.input, styles.inlineInput, props.style]} />
+        <TextInput
+          {...props}
+          accessibilityLabel={props.accessibilityLabel ?? label}
+          placeholderTextColor={colors.faint}
+          style={[styles.input, styles.inlineInput, props.style]}
+        />
         {suffix ? <Text style={styles.inputSuffix}>{suffix}</Text> : null}
       </View>
     </View>
@@ -425,7 +434,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 10
   },
   textArea: {
-    minHeight: 96,
+    minHeight: 124,
     textAlignVertical: "top"
   },
   inlineInputRow: {

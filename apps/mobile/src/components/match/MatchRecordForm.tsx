@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import { Text, TextInput, View } from "react-native";
 import type { MatchInput } from "@/api/match";
-import { useFormScreen } from "@/components/FormScreen";
 import { todayInputValue } from "@/components/format";
 import { Button, Card, ErrorMessage, SectionTitle, Segment, TextField, colors, styles } from "@/components/ui";
 import { getAccessToken } from "@/storage/token";
@@ -30,7 +29,6 @@ type MatchRecordFormProps = {
 };
 
 export function MatchRecordForm({ initialRecord, onSubmit, savingLabel, submitLabel }: MatchRecordFormProps) {
-  const { dismissKeyboard, scrollToEndOnFocus } = useFormScreen();
   const [playedAt, setPlayedAt] = useState(toInputDate(initialRecord?.playedAt) ?? todayInputValue());
   const [opponentName, setOpponentName] = useState(initialRecord?.opponentName ?? "");
   const [opponentTeam, setOpponentTeam] = useState(initialRecord?.opponentTeam ?? "");
@@ -183,7 +181,6 @@ export function MatchRecordForm({ initialRecord, onSubmit, savingLabel, submitLa
           label="メモ"
           multiline
           onChangeText={setMemo}
-          onFocus={scrollToEndOnFocus}
           placeholder="試合の反省、よかった点"
           value={memo}
         />

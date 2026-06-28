@@ -49,7 +49,7 @@ export default function PracticeListScreen() {
       {loading ? <LoadingState /> : null}
       {!loading && !error && items.length === 0 ? (
         <EmptyState actionLabel="練習記録を追加" onAction={goToNewPractice}>
-          まだ練習記録がありません。
+          まだ練習記録がありません。{"\n"}最初の練習を記録してみましょう。
         </EmptyState>
       ) : null}
       {!loading && items.map((item) => <PracticeLogCard key={item.id} item={item} />)}

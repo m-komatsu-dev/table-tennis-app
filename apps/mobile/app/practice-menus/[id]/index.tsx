@@ -26,6 +26,7 @@ export default function PracticeMenuDetailScreen() {
     setError(null);
 
     try {
+      setItem(null);
       const result = await fetchPracticeMenu(menuId);
       setItem(result.practiceMenu);
     } catch (caught) {
@@ -46,7 +47,7 @@ export default function PracticeMenuDetailScreen() {
       return;
     }
 
-    Alert.alert("練習メニューを削除しますか？", "紐づいている練習記録は削除されません。", [
+    Alert.alert("この練習メニューを削除しますか？", "この操作は取り消せません。紐づいている練習記録は削除されません。", [
       { text: "キャンセル", style: "cancel" },
       {
         text: "削除",
@@ -57,7 +58,7 @@ export default function PracticeMenuDetailScreen() {
 
           try {
             await deletePracticeMenu(menuId);
-            router.replace("/practice-menus");
+            router.replace("/(tabs)/practice-menus" as Href);
           } catch (caught) {
             setError(caught instanceof Error ? caught.message : "練習メニューを削除できませんでした");
             setDeleting(false);
@@ -69,7 +70,7 @@ export default function PracticeMenuDetailScreen() {
 
   return (
     <Screen>
-      <Header backLabel="一覧へ戻る" onBack={() => router.replace("/practice-menus")} title="練習メニュー詳細" />
+      <Header backLabel="一覧へ戻る" onBack={() => router.replace("/(tabs)/practice-menus" as Href)} title="練習メニュー詳細" />
       <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
       {!loading && item ? (

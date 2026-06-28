@@ -52,7 +52,7 @@ export default function RegisterScreen() {
   }
 
   return (
-    <Screen>
+    <Screen keyboardAware>
       <Header title="新規登録" backLabel="← ホームへ戻る" onBack={() => router.push("/")} />
 
       <Card>

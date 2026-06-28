@@ -25,6 +25,7 @@ export default function MatchDetailScreen() {
     setError(null);
 
     try {
+      setItem(null);
       const result = await fetchMatchRecord(matchId);
       setItem(result.matchRecord);
     } catch (caught) {
@@ -45,7 +46,7 @@ export default function MatchDetailScreen() {
       return;
     }
 
-    Alert.alert("試合記録を削除しますか？", "削除すると元に戻せません。", [
+    Alert.alert("この試合記録を削除しますか？", "この操作は取り消せません。", [
       { text: "キャンセル", style: "cancel" },
       {
         text: "削除",
@@ -56,7 +57,7 @@ export default function MatchDetailScreen() {
 
           try {
             await deleteMatchRecord(matchId);
-            router.replace("/match");
+            router.replace("/(tabs)/match");
           } catch (caught) {
             setError(caught instanceof Error ? caught.message : "試合記録を削除できませんでした");
             setDeleting(false);
@@ -70,7 +71,7 @@ export default function MatchDetailScreen() {
 
   return (
     <Screen>
-      <Header backLabel="一覧へ戻る" onBack={() => router.replace("/match")} title="試合記録詳細" />
+      <Header backLabel="一覧へ戻る" onBack={() => router.replace("/(tabs)/match")} title="試合記録詳細" />
       <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
       {!loading && item ? (

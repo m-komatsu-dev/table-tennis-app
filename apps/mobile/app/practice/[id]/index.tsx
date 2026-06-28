@@ -25,6 +25,7 @@ export default function PracticeDetailScreen() {
     setError(null);
 
     try {
+      setItem(null);
       const result = await fetchPracticeLog(practiceId);
       setItem(result.practiceLog);
     } catch (caught) {
@@ -45,7 +46,7 @@ export default function PracticeDetailScreen() {
       return;
     }
 
-    Alert.alert("練習記録を削除しますか？", "削除すると元に戻せません。", [
+    Alert.alert("この練習記録を削除しますか？", "この操作は取り消せません。", [
       { text: "キャンセル", style: "cancel" },
       {
         text: "削除",
@@ -56,7 +57,7 @@ export default function PracticeDetailScreen() {
 
           try {
             await deletePracticeLog(practiceId);
-            router.replace("/practice");
+            router.replace("/(tabs)/practice");
           } catch (caught) {
             setError(caught instanceof Error ? caught.message : "練習記録を削除できませんでした");
             setDeleting(false);
@@ -68,7 +69,7 @@ export default function PracticeDetailScreen() {
 
   return (
     <Screen>
-      <Header backLabel="一覧へ戻る" onBack={() => router.replace("/practice")} title="練習記録詳細" />
+      <Header backLabel="一覧へ戻る" onBack={() => router.replace("/(tabs)/practice")} title="練習記録詳細" />
       <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
       {!loading && item ? (

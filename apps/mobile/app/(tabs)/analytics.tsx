@@ -42,7 +42,7 @@ export default function AnalyticsScreen() {
       <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
       {!loading && !error && !hasRecords ? (
-        <EmptyState actionLabel="再読み込み" onAction={load}>
+        <EmptyState actionLabel="練習記録を追加" onAction={() => router.push("/practice/new")}>
           まだ分析できる記録がありません。{"\n"}練習や試合を記録すると、ここに集計が表示されます。
         </EmptyState>
       ) : null}

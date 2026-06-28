@@ -72,7 +72,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen>
+    <Screen keyboardAware>
       <Pressable onPress={() => router.push("/")} style={{ alignSelf: "flex-start", paddingVertical: 4 }}>
         <Text style={{ color: colors.primary, fontSize: 14, fontWeight: "800" }}>← ホームへ戻る</Text>
       </Pressable>

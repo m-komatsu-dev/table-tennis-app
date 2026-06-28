@@ -39,7 +39,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
 
   if (auth) {
     if (!token) {
-      logApiError(requestUrl, 401, "missing access token");
+      logApiError(requestUrl, 401);
       throw new ApiError("ログインし直してください", 401, "missing access token");
     }
 
@@ -54,7 +54,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
       headers
     });
   } catch (error) {
-    logApiError(requestUrl, apiStatus.network, error instanceof Error ? error.message : "network error");
+    logApiError(requestUrl, apiStatus.network);
     throw new ApiError("サーバーに接続できません", apiStatus.network);
   }
 
@@ -67,7 +67,7 @@ export async function apiRequest<T>(path: string, options: ApiRequestOptions = {
       await clearAccessToken();
     }
 
-    logApiError(requestUrl, response.status, apiMessage);
+    logApiError(requestUrl, response.status);
     throw new ApiError(apiErrorMessage(response.status), response.status, apiMessage);
   }
 
@@ -84,11 +84,11 @@ function apiErrorMessage(status: number) {
   }
 
   if (status === 405) {
-    return "練習メニュー登録APIが未対応です";
+    return "APIが未対応です";
   }
 
   if (status === 404) {
-    return "APIが見つかりません";
+    return "データが見つかりません";
   }
 
   if (status >= 500) {
@@ -110,14 +110,13 @@ function extractApiErrorMessage(body: unknown) {
   return undefined;
 }
 
-function logApiError(url: string, status: number, apiMessage?: string) {
+function logApiError(url: string, status: number) {
   if (process.env.NODE_ENV !== "development") {
     return;
   }
 
   console.error("API request failed", {
     url,
-    status,
-    message: apiMessage
+    status
   });
 }

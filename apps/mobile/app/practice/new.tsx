@@ -15,7 +15,7 @@ export default function NewPracticeScreen() {
         initialPracticeMenuId={selectedPracticeMenuId ?? null}
         onSubmit={async (input) => {
           await createPracticeLog(input);
-          router.replace("/practice");
+          router.replace("/(tabs)/practice");
         }}
         savingLabel="保存中..."
         submitLabel="保存する"

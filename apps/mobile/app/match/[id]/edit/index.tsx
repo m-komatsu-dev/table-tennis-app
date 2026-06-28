@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import { fetchMatchRecord, updateMatchRecord } from "@/api/match";
 import { FormScreen } from "@/components/FormScreen";
@@ -13,34 +13,35 @@ export default function MatchEditScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function load() {
-      if (!matchId) {
-        setError("試合記録が見つかりません");
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const result = await fetchMatchRecord(matchId);
-        setItem(result.matchRecord);
-      } catch (caught) {
-        setError(caught instanceof Error ? caught.message : "試合記録を取得できませんでした");
-      } finally {
-        setLoading(false);
-      }
+  const load = useCallback(async () => {
+    if (!matchId) {
+      setError("試合記録が見つかりません");
+      setLoading(false);
+      return;
     }
 
-    load();
+    setLoading(true);
+    setError(null);
+
+    try {
+      setItem(null);
+      const result = await fetchMatchRecord(matchId);
+      setItem(result.matchRecord);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "試合記録を取得できませんでした");
+    } finally {
+      setLoading(false);
+    }
   }, [matchId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <FormScreen>
       <Header backLabel="詳細へ戻る" onBack={() => router.back()} title="試合記録を編集" />
-      <ErrorMessage message={error} />
+      <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
       {!loading && item && matchId ? (
         <MatchRecordForm

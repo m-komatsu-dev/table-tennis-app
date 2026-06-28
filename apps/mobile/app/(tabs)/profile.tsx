@@ -13,6 +13,7 @@ export default function ProfileScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
     setError(null);
     try {
       const result = await fetchProfile();
@@ -38,7 +39,7 @@ export default function ProfileScreen() {
   return (
     <Screen>
       <Header subtitle="Web版と同じアカウント情報です。" title="プロフィール" />
-      <ErrorMessage message={error} />
+      <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
       {user ? (
         <Card>

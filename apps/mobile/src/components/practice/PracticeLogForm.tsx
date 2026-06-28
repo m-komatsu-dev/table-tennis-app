@@ -3,7 +3,6 @@ import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchPracticeMenus } from "@/api/practice-menus";
 import type { PracticeInput } from "@/api/practice";
-import { useFormScreen } from "@/components/FormScreen";
 import { todayInputValue } from "@/components/format";
 import { Button, Card, EmptyState, ErrorMessage, InlineField, LoadingState, SectionTitle, TextField, colors } from "@/components/ui";
 import { getAccessToken } from "@/storage/token";
@@ -18,7 +17,6 @@ type PracticeLogFormProps = {
 };
 
 export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, savingLabel, submitLabel }: PracticeLogFormProps) {
-  const { dismissKeyboard, scrollToEndOnFocus } = useFormScreen();
   const [practicedAt, setPracticedAt] = useState(toInputDate(initialLog?.practicedAt) ?? todayInputValue());
   const [durationMin, setDurationMin] = useState(initialLog ? String(initialLog.durationMin) : "");
   const [location, setLocation] = useState(initialLog?.location ?? "");
@@ -118,7 +116,9 @@ export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, s
               timeLabel="任意"
               title="指定なし"
             />
-            {menus.length === 0 ? <EmptyState>練習メニューはまだありません</EmptyState> : null}
+            {menus.length === 0 ? (
+              <EmptyState>練習メニューはまだありません。{"\n"}必要になったらメニュー画面から作成できます。</EmptyState>
+            ) : null}
             {menus.map((menu) => (
               <PracticeMenuOption
                 key={menu.id}
@@ -139,7 +139,6 @@ export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, s
           label="練習内容"
           multiline
           onChangeText={setContent}
-          onFocus={scrollToEndOnFocus}
           placeholder="サーブ練習、3球目攻撃、フットワークなど"
           value={content}
         />
@@ -147,7 +146,6 @@ export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, s
           label="メモ"
           multiline
           onChangeText={setMemo}
-          onFocus={scrollToEndOnFocus}
           placeholder="今日はバックハンドの安定感が課題だった"
           value={memo}
         />

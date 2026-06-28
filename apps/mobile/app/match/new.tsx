@@ -11,7 +11,7 @@ export default function NewMatchScreen() {
       <MatchRecordForm
         onSubmit={async (input) => {
           await createMatchRecord(input);
-          router.replace("/match");
+          router.replace("/(tabs)/match");
         }}
         savingLabel="保存中..."
         submitLabel="保存する"

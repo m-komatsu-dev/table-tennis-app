@@ -41,7 +41,7 @@ export default function CalendarScreen() {
       <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
       {!loading && !error && sections.length === 0 ? (
-        <EmptyState actionLabel="再読み込み" onAction={load}>
+        <EmptyState actionLabel="練習記録を追加" onAction={() => router.push("/practice/new")}>
           まだカレンダーに表示できる記録がありません。{"\n"}練習や試合を記録すると、日付ごとに表示されます。
         </EmptyState>
       ) : null}

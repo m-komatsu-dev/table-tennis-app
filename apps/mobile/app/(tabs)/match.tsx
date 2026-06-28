@@ -49,7 +49,7 @@ export default function MatchListScreen() {
       {loading ? <LoadingState /> : null}
       {!loading && !error && items.length === 0 ? (
         <EmptyState actionLabel="試合記録を追加" onAction={goToNewMatch}>
-          まだ試合記録がありません。
+          まだ試合記録がありません。{"\n"}最初の試合を記録してみましょう。
         </EmptyState>
       ) : null}
       {!loading && items.map((item) => <MatchRecordCard key={item.id} item={item} />)}

@@ -11,7 +11,7 @@ export default function NewPracticeMenuScreen() {
       <PracticeMenuForm
         onSubmit={async (input) => {
           await createPracticeMenu(input);
-          router.replace("/practice-menus");
+          router.replace("/(tabs)/practice-menus");
         }}
         savingLabel="保存中..."
         submitLabel="保存する"

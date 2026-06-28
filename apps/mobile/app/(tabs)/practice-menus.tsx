@@ -3,7 +3,7 @@ import { router, useFocusEffect } from "expo-router";
 import type { Href } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchPracticeMenus } from "@/api/practice-menus";
-import { Button, Card, EmptyState, ErrorMessage, Header, LoadingState, MetaPill, Row, Screen, colors } from "@/components/ui";
+import { Button, Card, EmptyState, ErrorMessage, Header, LoadingState, MetaPill, Row, Screen, colors, styles } from "@/components/ui";
 import type { PracticeMenu } from "@/types";
 
 export default function PracticeMenusScreen() {
@@ -24,6 +24,10 @@ export default function PracticeMenusScreen() {
     }
   }, []);
 
+  const goToNewMenu = useCallback(() => {
+    router.push("/practice-menus/new" as Href);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       load();
@@ -34,9 +38,9 @@ export default function PracticeMenusScreen() {
     <Screen>
       <Header
         action={
-          <Button onPress={() => router.push("/practice-menus/new" as Href)}>
-            作成
-          </Button>
+          <Pressable onPress={goToNewMenu} style={styles.listAddButton}>
+            <Text style={styles.buttonText}>作成</Text>
+          </Pressable>
         }
         subtitle={`${items.length}件`}
         title="練習メニュー"
@@ -44,8 +48,8 @@ export default function PracticeMenusScreen() {
       <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
       {loading ? <LoadingState /> : null}
       {!loading && !error && items.length === 0 ? (
-        <EmptyState actionLabel="練習メニューを作成" onAction={() => router.push("/practice-menus/new" as Href)}>
-          まだ練習メニューがありません。
+        <EmptyState actionLabel="練習メニューを作成" onAction={goToNewMenu}>
+          まだ練習メニューがありません。{"\n"}よく使う練習をメニュー化して、記録時に選べるようにしましょう。
         </EmptyState>
       ) : null}
       {!loading && items.map((item) => <PracticeMenuCard key={item.id} item={item} />)}
@@ -101,7 +105,7 @@ function PracticeMenuCard({ item }: { item: PracticeMenu }) {
             ) : null}
           </View>
         ) : (
-          <EmptyState>メニュー項目はまだありません。</EmptyState>
+          <EmptyState>このメニューには項目がありません。{"\n"}編集画面から項目を追加できます。</EmptyState>
         )}
       </Card>
     </Pressable>
