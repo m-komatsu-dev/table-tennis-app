@@ -1,8 +1,23 @@
+import type { ComponentProps } from "react";
 import { useEffect, useState } from "react";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Redirect, Tabs } from "expo-router";
 import { fetchMe } from "@/api/auth";
 import { LoadingState, Screen, colors } from "@/components/ui";
 import { getAccessToken } from "@/storage/token";
+
+type TabName = "home" | "practice" | "match" | "analytics" | "calendar" | "practice-menus" | "profile";
+type TabIconName = ComponentProps<typeof Ionicons>["name"];
+
+const tabIcons: Record<TabName, TabIconName> = {
+  home: "home-outline",
+  practice: "fitness-outline",
+  match: "trophy-outline",
+  analytics: "bar-chart-outline",
+  calendar: "calendar-outline",
+  "practice-menus": "clipboard-outline",
+  profile: "person-outline"
+};
 
 export default function TabsLayout() {
   const [checking, setChecking] = useState(true);
@@ -63,7 +78,11 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
+        tabBarItemStyle: {
+          minHeight: 54,
+          paddingVertical: 4
+        },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
@@ -73,13 +92,26 @@ export default function TabsLayout() {
         }
       }}
     >
-      <Tabs.Screen name="home" options={{ title: "ホーム" }} />
-      <Tabs.Screen name="practice" options={{ title: "練習" }} />
-      <Tabs.Screen name="match" options={{ title: "試合" }} />
-      <Tabs.Screen name="analytics" options={{ title: "分析" }} />
-      <Tabs.Screen name="calendar" options={{ title: "カレンダー" }} />
-      <Tabs.Screen name="practice-menus" options={{ title: "メニュー" }} />
-      <Tabs.Screen name="profile" options={{ title: "プロフィール" }} />
+      <Tabs.Screen name="home" options={tabOptions("home", "ホーム")} />
+      <Tabs.Screen name="practice" options={tabOptions("practice", "練習")} />
+      <Tabs.Screen name="match" options={tabOptions("match", "試合")} />
+      <Tabs.Screen name="analytics" options={tabOptions("analytics", "分析")} />
+      <Tabs.Screen name="calendar" options={tabOptions("calendar", "予定")} />
+      <Tabs.Screen name="practice-menus" options={tabOptions("practice-menus", "メニュー")} />
+      <Tabs.Screen name="profile" options={tabOptions("profile", "自分")} />
     </Tabs>
   );
+}
+
+function tabOptions(name: TabName, title: string) {
+  return {
+    tabBarIcon: ({ color, focused, size }: { color: string; focused: boolean; size: number }) => (
+      <TabIcon color={color} focused={focused} name={name} size={size} />
+    ),
+    title
+  };
+}
+
+function TabIcon({ color, focused, name, size }: { color: string; focused: boolean; name: TabName; size: number }) {
+  return <Ionicons color={color} name={tabIcons[name]} size={focused ? size + 1 : size} />;
 }

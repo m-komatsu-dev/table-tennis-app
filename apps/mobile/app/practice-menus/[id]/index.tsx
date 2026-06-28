@@ -1,10 +1,10 @@
 import { useCallback, useState } from "react";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import type { Href } from "expo-router";
-import { Alert, Text, View } from "react-native";
+import { Alert, View } from "react-native";
 import { deletePracticeMenu, fetchPracticeMenu } from "@/api/practice-menus";
 import { practiceMenuCategoryLabels } from "@/components/practice/PracticeMenuForm";
-import { Button, Card, ErrorMessage, Header, LoadingState, MetaPill, Row, Screen, SectionTitle, colors } from "@/components/ui";
+import { Button, Card, ErrorMessage, Header, LoadingState, MetaPill, Row, Screen, SectionTitle } from "@/components/ui";
 import type { PracticeMenu } from "@/types";
 
 export default function PracticeMenuDetailScreen() {
@@ -78,43 +78,9 @@ export default function PracticeMenuDetailScreen() {
           <Card>
             <SectionTitle title={item.title} />
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              <MetaPill label={item.totalMinutes ? `${item.totalMinutes}分` : "時間未設定"} tone="green" />
-              <MetaPill label={`${item.items.length}項目`} />
+              <MetaPill label={`カテゴリ: ${practiceMenuCategoryLabels[item.items[0]?.category ?? "OTHER"]}`} tone="green" />
             </View>
-            <Row label="目的" value={item.goal} />
-            <Row label="説明" value={item.description} />
-          </Card>
-
-          <Card>
-            <SectionTitle title="メニュー項目" />
-            <View style={{ gap: 10 }}>
-              {item.items.map((menuItem, index) => (
-                <View
-                  key={menuItem.id}
-                  style={{
-                    backgroundColor: "#f8fafc",
-                    borderColor: colors.border,
-                    borderRadius: 8,
-                    borderWidth: 1,
-                    gap: 6,
-                    padding: 12
-                  }}
-                >
-                  <View style={{ alignItems: "flex-start", flexDirection: "row", gap: 10, justifyContent: "space-between" }}>
-                    <Text style={{ color: colors.text, flex: 1, fontSize: 15, fontWeight: "900" }}>
-                      {index + 1}. {menuItem.title}
-                    </Text>
-                    <MetaPill label={practiceMenuCategoryLabels[menuItem.category]} tone="blue" />
-                  </View>
-                  <Text style={{ color: colors.primaryDark, fontSize: 13, fontWeight: "800" }}>
-                    {menuItem.durationMin ? `${menuItem.durationMin}分` : "時間未設定"}
-                  </Text>
-                  {menuItem.description ? (
-                    <Text style={{ color: colors.muted, fontSize: 13, lineHeight: 19 }}>{menuItem.description}</Text>
-                  ) : null}
-                </View>
-              ))}
-            </View>
+            <Row label="説明" value={item.description ?? item.goal ?? item.items[0]?.description} />
           </Card>
 
           <View style={{ gap: 10 }}>

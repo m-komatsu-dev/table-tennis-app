@@ -113,7 +113,6 @@ export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, s
               active={practiceMenuId === null}
               description="メニューを使わずに記録します"
               onPress={() => setPracticeMenuId(null)}
-              timeLabel="任意"
               title="指定なし"
             />
             {menus.length === 0 ? (
@@ -123,9 +122,8 @@ export function PracticeLogForm({ initialLog, initialPracticeMenuId, onSubmit, s
               <PracticeMenuOption
                 key={menu.id}
                 active={selectedMenu?.id === menu.id}
-                description={menu.goal ?? menu.description ?? "目的は未設定です"}
+                description={menu.description ?? menu.goal ?? menu.items[0]?.description ?? "説明は未設定です"}
                 onPress={() => setPracticeMenuId(menu.id)}
-                timeLabel={menu.totalMinutes ? `${menu.totalMinutes}分` : "時間未設定"}
                 title={menu.title}
               />
             ))}
@@ -162,21 +160,16 @@ function PracticeMenuOption({
   active,
   description,
   onPress,
-  timeLabel,
   title
 }: {
   active: boolean;
   description: string;
   onPress: () => void;
-  timeLabel: string;
   title: string;
 }) {
   return (
     <Pressable onPress={onPress} style={[menuOptionStyle, active && selectedMenuOptionStyle]}>
-      <View style={{ flexDirection: "row", gap: 10, justifyContent: "space-between" }}>
-        <Text style={[menuOptionTitleStyle, active && selectedMenuOptionTextStyle]}>{title}</Text>
-        <Text style={[menuOptionMetaStyle, active && selectedMenuOptionTextStyle]}>{timeLabel}</Text>
-      </View>
+      <Text style={[menuOptionTitleStyle, active && selectedMenuOptionTextStyle]}>{title}</Text>
       <Text style={[menuOptionDescriptionStyle, active && selectedMenuOptionTextStyle]}>{description}</Text>
     </Pressable>
   );
@@ -223,12 +216,6 @@ const menuOptionTitleStyle = {
   color: colors.text,
   flex: 1,
   fontSize: 15,
-  fontWeight: "800" as const
-};
-
-const menuOptionMetaStyle = {
-  color: colors.primaryDark,
-  fontSize: 13,
   fontWeight: "800" as const
 };
 

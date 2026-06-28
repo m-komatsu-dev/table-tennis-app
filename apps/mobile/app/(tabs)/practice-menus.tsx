@@ -4,6 +4,7 @@ import type { Href } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchPracticeMenus } from "@/api/practice-menus";
 import { Button, Card, EmptyState, ErrorMessage, Header, LoadingState, MetaPill, Row, Screen, colors, styles } from "@/components/ui";
+import { practiceMenuCategoryLabels } from "@/components/practice/PracticeMenuForm";
 import type { PracticeMenu } from "@/types";
 
 export default function PracticeMenusScreen() {
@@ -61,7 +62,8 @@ export default function PracticeMenusScreen() {
 }
 
 function PracticeMenuCard({ item }: { item: PracticeMenu }) {
-  const visibleItems = item.items.slice(0, 3);
+  const category = item.items[0]?.category ?? "OTHER";
+  const description = item.description ?? item.goal ?? item.items[0]?.description ?? null;
 
   return (
     <Pressable onPress={() => router.push(`/practice-menus/${item.id}` as Href)}>
@@ -71,42 +73,10 @@ function PracticeMenuCard({ item }: { item: PracticeMenu }) {
             {item.title}
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            <MetaPill label={item.totalMinutes ? `${item.totalMinutes}分` : "時間未設定"} tone="green" />
-            <MetaPill label={`${item.items.length}項目`} />
+            <MetaPill label={`カテゴリ: ${practiceMenuCategoryLabels[category]}`} tone="green" />
           </View>
         </View>
-        <Row label="目的" value={item.goal || item.description} />
-        {visibleItems.length > 0 ? (
-          <View style={{ gap: 8 }}>
-            <Text style={{ color: colors.muted, fontSize: 12, fontWeight: "800" }}>メニュー項目</Text>
-            <View style={{ gap: 6 }}>
-              {visibleItems.map((menuItem) => (
-                <View
-                  key={menuItem.id}
-                  style={{
-                    backgroundColor: "#f8fafc",
-                    borderColor: colors.border,
-                    borderRadius: 8,
-                    borderWidth: 1,
-                    padding: 10
-                  }}
-                >
-                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: "800" }}>{menuItem.title}</Text>
-                  <Text style={{ color: colors.muted, fontSize: 12, marginTop: 3 }}>
-                    {menuItem.durationMin ? `${menuItem.durationMin}分` : "時間未設定"}
-                  </Text>
-                </View>
-              ))}
-            </View>
-            {item.items.length > visibleItems.length ? (
-              <Text style={{ color: colors.muted, fontSize: 12, fontWeight: "700" }}>
-                ほか{item.items.length - visibleItems.length}項目
-              </Text>
-            ) : null}
-          </View>
-        ) : (
-          <EmptyState>このメニューには項目がありません。{"\n"}編集画面から項目を追加できます。</EmptyState>
-        )}
+        <Row label="説明" value={description} />
       </Card>
     </Pressable>
   );
