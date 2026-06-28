@@ -159,9 +159,9 @@ GOOGLE_MOBILE_CLIENT_IDS=
 
 `GOOGLE_MOBILE_CLIENT_IDS` は秘密情報ではありませんが、サーバー側の検証ポリシーとして扱います。複数のClient IDを使う場合はカンマ区切りにしてください。既存Web版のClient IDだけで検証する構成なら、`GOOGLE_CLIENT_ID` がフォールバックとして使われます。
 
-Expo Goで動作確認する場合は、Expo AuthSessionのredirect URIが開発環境によって変わることがあります。`apps/mobile` で `npx expo start -c` を起動し、表示される開発環境に合わせてGoogle Cloud Consoleの承認済みリダイレクトURIを調整してください。
+Expo Goではモバイル版Googleログインの確認は行いません。Expo GoでGoogleログインボタンを押してもOAuthは開始せず、メールアドレス・パスワードログインを案内します。GoogleログインはEAS Development Buildで確認してください。
 
-今回のアプリ scheme は `tabletennis` です。Expo Goでは環境やSDKの制約によりOAuthリダイレクトが通らない場合があります。その場合はEAS開発ビルドで確認してください。将来EAS Buildやストア配布を行う場合は、Androidパッケージ名/SHA-1に紐づくAndroid OAuth Client ID、iOS Bundle IDに紐づくiOS OAuth Client IDをGoogle Cloud Consoleで作成し、下記のモバイル公開環境変数に設定します。
+今回のアプリ scheme は `tabletennis` です。EAS Development Buildや将来のストア配布では、Androidパッケージ名/SHA-1に紐づくAndroid OAuth Client ID、iOS Bundle IDに紐づくiOS OAuth Client IDをGoogle Cloud Consoleで作成し、下記のモバイル公開環境変数に設定します。AuthSessionのredirect URIはビルド形態によって変わるため、開発ビルドで実際のURIを確認してGoogle Cloud Consoleへ登録してください。
 
 ### Prisma CLI
 
