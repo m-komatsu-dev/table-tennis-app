@@ -4,6 +4,7 @@ import { prisma } from "@table-tennis/db";
 import { Badge, Card, EmptyState, ErrorMessage, PageHeader, PrimaryLink, SuccessMessage, buttonStyles } from "@/components/ui";
 import { partnerPostInclude, partnerPostStatusLabels, partnerPostTypeLabels } from "@/lib/partner-posts";
 import { getRequiredUserId } from "@/lib/server-auth";
+import { blockedPartnerPostWhere } from "@/lib/safety";
 
 type PageProps = {
   searchParams: Promise<{ filter?: string | string[]; error?: string | string[]; success?: string | string[] }>;
@@ -21,7 +22,9 @@ export default async function PartnerPostsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const filter = parseFilter(params.filter);
   const posts = await prisma.partnerPost.findMany({
-    where: buildFilterWhere(filter),
+    where: {
+      AND: [buildFilterWhere(filter), blockedPartnerPostWhere(userId)]
+    },
     include: partnerPostInclude,
     orderBy: { createdAt: "desc" }
   });

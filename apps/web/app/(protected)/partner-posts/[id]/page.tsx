@@ -5,6 +5,8 @@ import { PublicProfileLink } from "@/components/partner-posts/public-profile-lin
 import { Badge, Button, Card, ErrorMessage, Field, PageHeader, SuccessMessage, buttonStyles, inputClass } from "@/components/ui";
 import { closePartnerPostAction, createPartnerRequestAction, deletePartnerPostAction } from "@/lib/partner-post-actions";
 import { partnerPostInclude, partnerPostStatusLabels, partnerPostTypeLabels, partnerRequestStatusLabels } from "@/lib/partner-posts";
+import { blockUserAction, createReportAction, unblockUserAction } from "@/lib/safety-actions";
+import { getBlockState, reportReasonOptions } from "@/lib/safety";
 import { getRequiredUserId } from "@/lib/server-auth";
 
 type PageProps = {
@@ -27,6 +29,8 @@ export default async function PartnerPostDetailPage({ params, searchParams }: Pa
 
   const isOwner = post.ownerId === userId;
   const ownRequest = post.requests.find((request) => request.requesterId === userId);
+  const blockState = await getBlockState(userId, post.ownerId);
+  const returnTo = `/partner-posts/${post.id}`;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -65,6 +69,9 @@ export default async function PartnerPostDetailPage({ params, searchParams }: Pa
             <dl className="mt-4 space-y-3 text-sm">
               <PartnerRow label="表示名" value={post.owner.name} />
             </dl>
+            {blockState.blockedByMe ? (
+              <p className="mt-3 rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700">このユーザーをブロックしています。</p>
+            ) : null}
             <div className="mt-4">
               <PublicProfileLink publicProfileEnabled={post.owner.publicProfileEnabled} username={post.owner.username} />
             </div>
@@ -73,7 +80,20 @@ export default async function PartnerPostDetailPage({ params, searchParams }: Pa
           {isOwner ? (
             <OwnerActions id={post.id} isClosed={post.status === "CLOSED"} />
           ) : (
-            <RequestPanel postId={post.id} postStatus={post.status} requestStatus={ownRequest?.status ?? null} />
+            <>
+              <RequestPanel
+                isInteractionBlocked={blockState.isBlocked}
+                postId={post.id}
+                postStatus={post.status}
+                requestStatus={ownRequest?.status ?? null}
+              />
+              <SafetyPanel
+                blockedByMe={blockState.blockedByMe}
+                ownerId={post.ownerId}
+                postId={post.id}
+                returnTo={returnTo}
+              />
+            </>
           )}
         </aside>
       </div>
@@ -109,10 +129,12 @@ function OwnerActions({ id, isClosed }: { id: string; isClosed: boolean }) {
 }
 
 function RequestPanel({
+  isInteractionBlocked,
   postId,
   postStatus,
   requestStatus
 }: {
+  isInteractionBlocked: boolean;
   postId: string;
   postStatus: string;
   requestStatus: string | null;
@@ -138,6 +160,15 @@ function RequestPanel({
     );
   }
 
+  if (isInteractionBlocked) {
+    return (
+      <Card>
+        <h2 className="text-base font-bold text-slate-950">参加希望</h2>
+        <p className="mt-3 text-sm leading-6 text-slate-600">このユーザーとは現在やり取りできません。</p>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <h2 className="text-base font-bold text-slate-950">参加希望を送る</h2>
@@ -157,6 +188,82 @@ function RequestPanel({
         </Button>
       </form>
     </Card>
+  );
+}
+
+function SafetyPanel({
+  blockedByMe,
+  ownerId,
+  postId,
+  returnTo
+}: {
+  blockedByMe: boolean;
+  ownerId: string;
+  postId: string;
+  returnTo: string;
+}) {
+  return (
+    <Card className="space-y-5">
+      <h2 className="text-base font-bold text-slate-950">安全メニュー</h2>
+      <ReportForm label="この募集を通報" returnTo={returnTo} targetPostId={postId} targetType="PARTNER_POST" />
+      <ReportForm label="このユーザーを通報" returnTo={returnTo} targetType="USER" targetUserId={ownerId} />
+      {blockedByMe ? (
+        <form action={unblockUserAction}>
+          <input name="blockedUserId" type="hidden" value={ownerId} />
+          <input name="returnTo" type="hidden" value={returnTo} />
+          <Button className="w-full" type="submit" variant="secondary">
+            ブロック解除
+          </Button>
+        </form>
+      ) : (
+        <form action={blockUserAction}>
+          <input name="blockedUserId" type="hidden" value={ownerId} />
+          <input name="returnTo" type="hidden" value={returnTo} />
+          <Button className="w-full" type="submit" variant="danger">
+            このユーザーをブロック
+          </Button>
+        </form>
+      )}
+    </Card>
+  );
+}
+
+function ReportForm({
+  label,
+  returnTo,
+  targetPostId,
+  targetType,
+  targetUserId
+}: {
+  label: string;
+  returnTo: string;
+  targetPostId?: string;
+  targetType: "USER" | "PARTNER_POST";
+  targetUserId?: string;
+}) {
+  return (
+    <form action={createReportAction} className="space-y-3 border-t border-slate-100 pt-4 first:border-t-0 first:pt-0">
+      <input name="targetType" type="hidden" value={targetType} />
+      <input name="returnTo" type="hidden" value={returnTo} />
+      {targetUserId ? <input name="targetUserId" type="hidden" value={targetUserId} /> : null}
+      {targetPostId ? <input name="targetPostId" type="hidden" value={targetPostId} /> : null}
+      <p className="text-sm font-bold text-slate-800">{label}</p>
+      <Field label="理由">
+        <select className={inputClass} name="reason" defaultValue="INAPPROPRIATE">
+          {reportReasonOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field hint="緊急の場合は、アプリ外の適切な窓口にも相談してください。" label="詳細">
+        <textarea className={`${inputClass} min-h-24 resize-y`} maxLength={500} name="details" rows={3} />
+      </Field>
+      <Button className="w-full" type="submit" variant="secondary">
+        {label}
+      </Button>
+    </form>
   );
 }
 

@@ -1,6 +1,7 @@
 import { prisma } from "@table-tennis/db";
 import { mobileError, mobileJson, mobileValidationError, nullableMobileText, requireMobileAuth } from "@/lib/mobile-api";
 import { partnerPostInclude, serializePartnerPost } from "@/lib/partner-posts";
+import { getBlockState } from "@/lib/safety";
 import { partnerPostUpdateSchema } from "@/lib/validators";
 
 type RouteContext = {
@@ -24,7 +25,9 @@ export async function GET(request: Request, context: RouteContext) {
     return mobileError("募集が見つかりません", 404);
   }
 
-  return mobileJson({ partnerPost: serializePartnerPost(post, userId) });
+  const blockState = await getBlockState(userId, post.ownerId);
+
+  return mobileJson({ partnerPost: serializePartnerPost(post, userId, blockState) });
 }
 
 export async function PUT(request: Request, context: RouteContext) {

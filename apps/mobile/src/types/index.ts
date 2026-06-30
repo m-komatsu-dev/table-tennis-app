@@ -78,6 +78,8 @@ export type PracticeMenu = {
 export type PartnerPostType = "PRACTICE" | "MATCH";
 export type PartnerPostStatus = "OPEN" | "CLOSED";
 export type PartnerRequestStatus = "PENDING" | "ACCEPTED" | "DECLINED";
+export type ReportTargetType = "USER" | "PARTNER_POST" | "PARTNER_REQUEST";
+export type ReportReason = "SPAM" | "HARASSMENT" | "INAPPROPRIATE" | "PERSONAL_INFORMATION" | "FAKE_INFORMATION" | "OTHER";
 
 export type PartnerPublicUser = {
   name: string;
@@ -100,6 +102,9 @@ export type PartnerPost = {
   updatedAt: string;
   owner: PartnerPublicUser;
   isOwner: boolean;
+  isBlockedByMe: boolean;
+  blocksMe: boolean;
+  isInteractionBlocked: boolean;
   ownRequestStatus: PartnerRequestStatus | null;
   requestCount: number;
 };
@@ -107,9 +112,17 @@ export type PartnerPost = {
 export type PartnerRequest = {
   id: string;
   postId: string;
+  requesterId: string;
   message: string | null;
   status: PartnerRequestStatus;
   createdAt: string;
   updatedAt: string;
+  isRequesterBlocked: boolean;
   requester: PartnerPublicUser;
+};
+
+export type UserBlock = {
+  blockedUserId: string;
+  createdAt: string;
+  user: PartnerPublicUser;
 };

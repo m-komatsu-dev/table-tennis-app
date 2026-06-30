@@ -103,14 +103,15 @@ function PartnerRequestCard({
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           <MetaPill label={partnerRequestStatusLabels[item.status]} tone={statusTone(item.status)} />
           <MetaPill label={formatDate(item.createdAt)} />
+          {item.isRequesterBlocked ? <MetaPill label="ブロック済みユーザー" /> : null}
         </View>
       </View>
       <Row label="参加希望メッセージ" value={item.message} />
       <Row
         label="公開プロフィール"
-        value={item.requester.publicProfileEnabled && item.requester.username ? `@${item.requester.username}` : "非公開"}
+        value={!item.isRequesterBlocked && item.requester.publicProfileEnabled && item.requester.username ? `@${item.requester.username}` : "非公開"}
       />
-      <PublicProfileButton enabled={item.requester.publicProfileEnabled} username={item.requester.username} />
+      <PublicProfileButton enabled={!item.isRequesterBlocked && item.requester.publicProfileEnabled} username={item.requester.username} />
       <View style={{ flexDirection: "row", gap: 10 }}>
         <View style={{ flex: 1 }}>
           <Button

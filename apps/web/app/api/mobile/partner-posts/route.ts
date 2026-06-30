@@ -1,6 +1,7 @@
 import { prisma } from "@table-tennis/db";
 import { mobileError, mobileJson, mobileValidationError, nullableMobileText, requireMobileAuth } from "@/lib/mobile-api";
 import { partnerPostInclude, serializePartnerPost } from "@/lib/partner-posts";
+import { blockedPartnerPostWhere } from "@/lib/safety";
 import { partnerPostSchema } from "@/lib/validators";
 
 export async function GET(request: Request) {
@@ -17,9 +18,14 @@ export async function GET(request: Request) {
 
   const posts = await prisma.partnerPost.findMany({
     where: {
-      ...(type === "PRACTICE" || type === "MATCH" ? { type } : {}),
-      ...(status === "OPEN" || status === "CLOSED" ? { status } : {}),
-      ...(mine === "1" ? { ownerId: userId } : {})
+      AND: [
+        {
+          ...(type === "PRACTICE" || type === "MATCH" ? { type } : {}),
+          ...(status === "OPEN" || status === "CLOSED" ? { status } : {}),
+          ...(mine === "1" ? { ownerId: userId } : {})
+        },
+        ...(mine === "1" ? [] : [blockedPartnerPostWhere(userId)])
+      ]
     },
     include: partnerPostInclude,
     orderBy: { createdAt: "desc" }

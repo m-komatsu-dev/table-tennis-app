@@ -366,7 +366,18 @@ DELETE /api/mobile/partner-posts/[id]
 POST   /api/mobile/partner-posts/[id]/requests
 GET    /api/mobile/partner-posts/[id]/requests
 PUT    /api/mobile/partner-requests/[id]
+POST   /api/mobile/reports
+GET    /api/mobile/blocks
+POST   /api/mobile/blocks
+DELETE /api/mobile/blocks/[blockedUserId]
 ```
+
+## 通報・ブロックLite
+
+- 不適切な募集・ユーザーを通報可能
+- ユーザーをブロック可能
+- ブロック関係にあるユーザーの募集や参加希望を制限
+- チャット実装前の安全対策として導入
 
 ## 注意事項
 

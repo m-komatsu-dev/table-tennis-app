@@ -1,6 +1,7 @@
 import { prisma } from "@table-tennis/db";
 import { mobileError, mobileJson, mobileValidationError, nullableMobileText, requireMobileAuth } from "@/lib/mobile-api";
 import { partnerRequestInclude, serializePartnerRequest } from "@/lib/partner-posts";
+import { getBlockedUserIds, getBlockState } from "@/lib/safety";
 import { partnerRequestSchema } from "@/lib/validators";
 
 type RouteContext = {
@@ -30,8 +31,13 @@ export async function GET(request: Request, context: RouteContext) {
     include: partnerRequestInclude,
     orderBy: { createdAt: "desc" }
   });
+  const blockedUserIds = await getBlockedUserIds(userId);
 
-  return mobileJson({ partnerRequests: requests.map(serializePartnerRequest) });
+  return mobileJson({
+    partnerRequests: requests.map((requestRecord) =>
+      serializePartnerRequest(requestRecord, { isBlocked: blockedUserIds.includes(requestRecord.requesterId) })
+    )
+  });
 }
 
 export async function POST(request: Request, context: RouteContext) {
@@ -59,6 +65,12 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (post.status !== "OPEN") {
       return mobileError("締め切られた募集には参加希望を送れません", 400);
+    }
+
+    const blockState = await getBlockState(userId, post.ownerId);
+
+    if (blockState.isBlocked) {
+      return mobileError("このユーザーとは現在やり取りできません。", 403);
     }
 
     const existing = await prisma.partnerRequest.findUnique({

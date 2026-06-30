@@ -4,6 +4,7 @@ import { Prisma, prisma } from "@table-tennis/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getRequiredUserId } from "@/lib/server-auth";
+import { getBlockState } from "@/lib/safety";
 import { partnerPostSchema, partnerPostUpdateSchema, partnerRequestSchema, partnerRequestUpdateSchema } from "@/lib/validators";
 
 export async function createPartnerPostAction(formData: FormData) {
@@ -148,6 +149,12 @@ export async function createPartnerRequestAction(formData: FormData) {
 
   if (post.status !== "OPEN") {
     redirectWithError(`/partner-posts/${postId}`, "締め切られた募集には参加希望を送れません");
+  }
+
+  const blockState = await getBlockState(userId, post.ownerId);
+
+  if (blockState.isBlocked) {
+    redirectWithError(`/partner-posts/${postId}`, "このユーザーとは現在やり取りできません。");
   }
 
   try {

@@ -6,6 +6,7 @@ import { Badge, Button, Card, EmptyState, ErrorMessage, PageHeader, SuccessMessa
 import { updatePartnerRequestAction } from "@/lib/partner-post-actions";
 import { partnerRequestInclude, partnerRequestStatusLabels } from "@/lib/partner-posts";
 import { formatDate } from "@/lib/format";
+import { getBlockedUserIds } from "@/lib/safety";
 import { getRequiredUserId } from "@/lib/server-auth";
 
 type PageProps = {
@@ -31,6 +32,7 @@ export default async function PartnerRequestsPage({ params, searchParams }: Page
     include: partnerRequestInclude,
     orderBy: { createdAt: "desc" }
   });
+  const blockedUserIds = await getBlockedUserIds(userId);
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -59,13 +61,14 @@ export default async function PartnerRequestsPage({ params, searchParams }: Page
                     <Badge tone={request.status === "ACCEPTED" ? "emerald" : request.status === "DECLINED" ? "red" : "blue"}>
                       {partnerRequestStatusLabels[request.status]}
                     </Badge>
+                    {blockedUserIds.includes(request.requesterId) ? <Badge>ブロック済みユーザー</Badge> : null}
                   </div>
                   <p className="mt-1 text-sm text-slate-500">送信日時: {formatDate(request.createdAt.toISOString())}</p>
                   <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">{request.message || "メッセージはありません。"}</p>
                   <div className="mt-4">
                     <PublicProfileLink
-                      publicProfileEnabled={request.requester.publicProfileEnabled}
-                      username={request.requester.username}
+                      publicProfileEnabled={!blockedUserIds.includes(request.requesterId) && request.requester.publicProfileEnabled}
+                      username={blockedUserIds.includes(request.requesterId) ? null : request.requester.username}
                     />
                   </div>
                 </div>

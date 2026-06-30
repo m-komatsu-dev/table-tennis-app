@@ -30,6 +30,15 @@ export const practiceMenuCategorySchema = z.enum([
 export const partnerPostTypeSchema = z.enum(["PRACTICE", "MATCH"]);
 export const partnerPostStatusSchema = z.enum(["OPEN", "CLOSED"]);
 export const partnerRequestStatusSchema = z.enum(["PENDING", "ACCEPTED", "DECLINED"]);
+export const reportTargetTypeSchema = z.enum(["USER", "PARTNER_POST", "PARTNER_REQUEST"]);
+export const reportReasonSchema = z.enum([
+  "SPAM",
+  "HARASSMENT",
+  "INAPPROPRIATE",
+  "PERSONAL_INFORMATION",
+  "FAKE_INFORMATION",
+  "OTHER"
+]);
 
 const dateStringSchema = z
   .string({ required_error: "日付を入力してください" })
@@ -178,6 +187,19 @@ export const partnerRequestSchema = z.object({
 
 export const partnerRequestUpdateSchema = z.object({
   status: partnerRequestStatusSchema
+});
+
+export const reportSchema = z.object({
+  targetType: reportTargetTypeSchema,
+  targetUserId: z.string().trim().min(1).optional().nullable(),
+  targetPostId: z.string().trim().min(1).optional().nullable(),
+  targetRequestId: z.string().trim().min(1).optional().nullable(),
+  reason: reportReasonSchema,
+  details: z.string().trim().max(500, "詳細は500文字以内で入力してください").optional().nullable()
+});
+
+export const blockSchema = z.object({
+  blockedUserId: z.string().trim().min(1, "ブロックするユーザーを指定してください")
 });
 
 const scoreRowSchema = z.object({

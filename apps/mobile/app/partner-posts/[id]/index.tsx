@@ -1,11 +1,12 @@
 import { useCallback, useState } from "react";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import type { Href } from "expo-router";
-import { Alert, Linking, Text, View } from "react-native";
+import { Alert, Linking, Pressable, Text, View } from "react-native";
 import { createPartnerRequest, deletePartnerPost, fetchPartnerPost, updatePartnerPost } from "@/api/partner-posts";
+import { blockUser, createReport, unblockUser } from "@/api/safety";
 import { partnerPostStatusLabels, partnerPostTypeLabels, partnerRequestStatusLabels } from "@/components/format";
 import { Button, Card, ErrorMessage, Header, LoadingState, MetaPill, Row, Screen, SectionTitle, TextField, colors } from "@/components/ui";
-import type { PartnerPost } from "@/types";
+import type { PartnerPost, ReportReason, ReportTargetType } from "@/types";
 
 export default function PartnerPostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string | string[] }>();
@@ -16,8 +17,10 @@ export default function PartnerPostDetailScreen() {
   const [savingRequest, setSavingRequest] = useState(false);
   const [closing, setClosing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [blocking, setBlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requestNotice, setRequestNotice] = useState<string | null>(null);
+  const [safetyNotice, setSafetyNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!postId) {
@@ -68,6 +71,31 @@ export default function PartnerPostDetailScreen() {
       setError(caught instanceof Error ? caught.message : "参加希望を送信できませんでした");
     } finally {
       setSavingRequest(false);
+    }
+  }
+
+  async function handleBlock() {
+    if (!item || blocking) {
+      return;
+    }
+
+    setBlocking(true);
+    setError(null);
+    setSafetyNotice(null);
+
+    try {
+      if (item.isBlockedByMe) {
+        await unblockUser(item.ownerId);
+        setSafetyNotice("ブロックを解除しました。");
+      } else {
+        await blockUser(item.ownerId);
+        setSafetyNotice("このユーザーをブロックしました。");
+      }
+      await load();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "ブロックできませんでした。通信状況を確認して、もう一度お試しください。");
+    } finally {
+      setBlocking(false);
     }
   }
 
@@ -148,6 +176,7 @@ export default function PartnerPostDetailScreen() {
             <SectionTitle title="投稿者" />
             <Row label="表示名" value={item.owner.name} />
             <Row label="公開プロフィール" value={item.owner.publicProfileEnabled && item.owner.username ? `@${item.owner.username}` : "非公開"} />
+            {item.isBlockedByMe ? <MetaPill label="このユーザーをブロックしています。" /> : null}
             <PublicProfileButton enabled={item.owner.publicProfileEnabled} username={item.owner.username} />
           </Card>
 
@@ -162,6 +191,7 @@ export default function PartnerPostDetailScreen() {
           ) : (
             <RequestForm
               disabled={item.status !== "OPEN" || Boolean(item.ownRequestStatus)}
+              isInteractionBlocked={item.isInteractionBlocked}
               message={requestMessage}
               onChangeMessage={setRequestMessage}
               onSubmit={handleRequest}
@@ -169,6 +199,21 @@ export default function PartnerPostDetailScreen() {
               status={item.ownRequestStatus}
             />
           )}
+          {!item.isOwner ? (
+            <SafetyActions
+              blockedByMe={item.isBlockedByMe}
+              blocking={blocking}
+              onBlockToggle={handleBlock}
+              onNotice={setSafetyNotice}
+              ownerId={item.ownerId}
+              postId={item.id}
+            />
+          ) : null}
+          {safetyNotice ? (
+            <Card>
+              <Text style={{ color: colors.primaryDark, fontSize: 14, fontWeight: "800", lineHeight: 21 }}>{safetyNotice}</Text>
+            </Card>
+          ) : null}
         </>
       ) : null}
     </Screen>
@@ -206,6 +251,7 @@ function OwnerActions({
 
 function RequestForm({
   disabled,
+  isInteractionBlocked,
   message,
   onChangeMessage,
   onSubmit,
@@ -213,6 +259,7 @@ function RequestForm({
   status
 }: {
   disabled: boolean;
+  isInteractionBlocked: boolean;
   message: string;
   onChangeMessage: (value: string) => void;
   onSubmit: () => void;
@@ -225,6 +272,15 @@ function RequestForm({
         <SectionTitle title="参加希望" />
         <MetaPill label={`送信済み: ${partnerRequestStatusLabels[status]}`} tone="blue" />
         <Text style={{ color: colors.muted, fontSize: 14, lineHeight: 21 }}>投稿者が参加希望を確認できます。チャット機能はありません。</Text>
+      </Card>
+    );
+  }
+
+  if (isInteractionBlocked) {
+    return (
+      <Card>
+        <SectionTitle title="参加希望" />
+        <Text style={{ color: colors.muted, fontSize: 14, lineHeight: 21 }}>このユーザーとは現在やり取りできません。</Text>
       </Card>
     );
   }
@@ -245,6 +301,145 @@ function RequestForm({
         {disabled ? "参加希望できません" : "参加希望を送る"}
       </Button>
     </Card>
+  );
+}
+
+function SafetyActions({
+  blockedByMe,
+  blocking,
+  onBlockToggle,
+  onNotice,
+  ownerId,
+  postId
+}: {
+  blockedByMe: boolean;
+  blocking: boolean;
+  onBlockToggle: () => void;
+  onNotice: (message: string | null) => void;
+  ownerId: string;
+  postId: string;
+}) {
+  return (
+    <Card>
+      <SectionTitle title="安全メニュー" />
+      <ReportBox
+        label="この募集を通報"
+        onNotice={onNotice}
+        targetPostId={postId}
+        targetType="PARTNER_POST"
+      />
+      <ReportBox
+        label="このユーザーを通報"
+        onNotice={onNotice}
+        targetType="USER"
+        targetUserId={ownerId}
+      />
+      <Button loading={blocking} loadingLabel="処理中..." onPress={onBlockToggle} variant={blockedByMe ? "secondary" : "danger"}>
+        {blockedByMe ? "ブロック解除" : "このユーザーをブロック"}
+      </Button>
+    </Card>
+  );
+}
+
+function ReportBox({
+  label,
+  onNotice,
+  targetPostId,
+  targetType,
+  targetUserId
+}: {
+  label: string;
+  onNotice: (message: string | null) => void;
+  targetPostId?: string;
+  targetType: ReportTargetType;
+  targetUserId?: string;
+}) {
+  const [reason, setReason] = useState<ReportReason>("INAPPROPRIATE");
+  const [details, setDetails] = useState("");
+  const [sending, setSending] = useState(false);
+
+  async function submit() {
+    if (details.trim().length > 500) {
+      Alert.alert("詳細は500文字以内で入力してください");
+      return;
+    }
+
+    setSending(true);
+    onNotice(null);
+
+    try {
+      const result = await createReport({
+        targetType,
+        targetUserId,
+        targetPostId,
+        reason,
+        details: details.trim()
+      });
+      setDetails("");
+      onNotice(result.message);
+    } catch {
+      Alert.alert("通報を送信できませんでした。", "通信状況を確認して、もう一度お試しください。");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <View style={{ borderTopColor: colors.border, borderTopWidth: 1, gap: 10, paddingTop: 12 }}>
+      <Text style={{ color: colors.text, fontSize: 14, fontWeight: "800" }}>{label}</Text>
+      <ReasonSelect value={reason} onChange={setReason} />
+      <TextField
+        label="詳細"
+        maxLength={500}
+        multiline
+        onChangeText={setDetails}
+        placeholder="任意で入力してください"
+        value={details}
+      />
+      <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18 }}>緊急の場合は、アプリ外の適切な窓口にも相談してください。</Text>
+      <Button loading={sending} loadingLabel="送信中..." onPress={submit} variant="secondary">
+        {label}
+      </Button>
+    </View>
+  );
+}
+
+const reportReasonLabels: Record<ReportReason, string> = {
+  SPAM: "スパム",
+  HARASSMENT: "迷惑行為",
+  INAPPROPRIATE: "不適切な内容",
+  PERSONAL_INFORMATION: "個人情報が含まれている",
+  FAKE_INFORMATION: "虚偽の情報",
+  OTHER: "その他"
+};
+
+const reportReasons = Object.entries(reportReasonLabels) as [ReportReason, string][];
+
+function ReasonSelect({ value, onChange }: { value: ReportReason; onChange: (value: ReportReason) => void }) {
+  return (
+    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+      {reportReasons.map(([reason, label]) => {
+        const selected = reason === value;
+        return (
+          <Pressable
+            key={reason}
+            onPress={() => onChange(reason)}
+            style={{
+              backgroundColor: selected ? "#ecfdf5" : "#ffffff",
+              borderColor: selected ? "#a7f3d0" : colors.border,
+              borderRadius: 8,
+              borderWidth: 1,
+              minHeight: 36,
+              justifyContent: "center",
+              paddingHorizontal: 10,
+              paddingVertical: 8
+            }}
+          >
+            <Text style={{ color: selected ? colors.primaryDark : colors.muted, fontSize: 12, fontWeight: "800" }}>{label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 

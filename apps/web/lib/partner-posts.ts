@@ -50,7 +50,11 @@ export function serializePartnerUser(user: PublicUser) {
   };
 }
 
-export function serializePartnerPost(post: PartnerPostWithOwner, currentUserId: string) {
+export function serializePartnerPost(
+  post: PartnerPostWithOwner,
+  currentUserId: string,
+  blockState: { blockedByMe?: boolean; blocksMe?: boolean; isBlocked?: boolean } = {}
+) {
   const ownRequest = post.requests?.find((request) => request.requesterId === currentUserId) ?? null;
 
   return {
@@ -68,19 +72,27 @@ export function serializePartnerPost(post: PartnerPostWithOwner, currentUserId: 
     updatedAt: post.updatedAt.toISOString(),
     owner: serializePartnerUser(post.owner),
     isOwner: post.ownerId === currentUserId,
+    isBlockedByMe: Boolean(blockState.blockedByMe),
+    blocksMe: Boolean(blockState.blocksMe),
+    isInteractionBlocked: Boolean(blockState.isBlocked),
     ownRequestStatus: ownRequest?.status ?? null,
     requestCount: post.requests?.length ?? 0
   };
 }
 
-export function serializePartnerRequest(request: PartnerRequestWithRequester) {
+export function serializePartnerRequest(
+  request: PartnerRequestWithRequester,
+  blockState: { isBlocked?: boolean } = {}
+) {
   return {
     id: request.id,
     postId: request.postId,
+    requesterId: request.requesterId,
     message: request.message,
     status: request.status,
     createdAt: request.createdAt.toISOString(),
     updatedAt: request.updatedAt.toISOString(),
+    isRequesterBlocked: Boolean(blockState.isBlocked),
     requester: serializePartnerUser(request.requester)
   };
 }

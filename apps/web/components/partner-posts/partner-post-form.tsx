@@ -53,7 +53,7 @@ export function PartnerPostForm({
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field hint="具体的すぎる住所は書かないでください。" label="エリア">
-          <input className={inputClass} defaultValue={post?.area ?? ""} maxLength={100} name="area" placeholder="例：いわき市周辺" />
+          <input className={inputClass} defaultValue={post?.area ?? ""} maxLength={100} name="area" placeholder="例：東京都" />
         </Field>
         <Field label="希望日時">
           <input className={inputClass} defaultValue={post?.preferredTime ?? ""} maxLength={100} name="preferredTime" placeholder="例：土曜午後" />
