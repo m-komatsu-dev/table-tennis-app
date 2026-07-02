@@ -27,6 +27,8 @@ const protectedRoutes = routeFiles(appApiDir).filter((file) => {
   return !publicRoutes.has(routePath) && !routePath.startsWith("mobile/");
 });
 
+const adminRoutes = protectedRoutes.filter((file) => relative(appApiDir, file).startsWith("admin/"));
+
 const mobileRoutes = routeFiles(join(appApiDir, "mobile")).filter((file) => {
   const routePath = relative(join(appApiDir, "mobile"), file);
   return (
@@ -75,10 +77,21 @@ test("debug auth route only exposes auth state booleans", () => {
   expect(route).not.toMatch(/passwordHash|token|cookie|secret|email/i);
 });
 
+test("admin API routes require admin authorization", () => {
+  expect(adminRoutes.length).toBeGreaterThan(0);
+
+  for (const file of adminRoutes) {
+    const content = readFileSync(file, "utf8");
+
+    expect(content, relative(appApiDir, file)).toMatch(/isAdminUserId\(userId\)/);
+    expect(content, relative(appApiDir, file)).toMatch(/errorResponse\("このページを表示する権限がありません。", 403\)/);
+  }
+});
+
 test("user-owned data API routes include userId in database queries", () => {
   const userOwnedRoutes = protectedRoutes.filter((file) => {
     const routePath = relative(appApiDir, file);
-    return !routePath.startsWith("profile/") && !routePath.startsWith("ai/");
+    return !routePath.startsWith("profile/") && !routePath.startsWith("ai/") && !routePath.startsWith("admin/");
   });
 
   for (const file of userOwnedRoutes) {

@@ -31,6 +31,7 @@ export const partnerPostTypeSchema = z.enum(["PRACTICE", "MATCH"]);
 export const partnerPostStatusSchema = z.enum(["OPEN", "CLOSED"]);
 export const partnerRequestStatusSchema = z.enum(["PENDING", "ACCEPTED", "DECLINED"]);
 export const reportTargetTypeSchema = z.enum(["USER", "PARTNER_POST", "PARTNER_REQUEST"]);
+export const reportStatusSchema = z.enum(["OPEN", "REVIEWED", "DISMISSED"]);
 export const reportReasonSchema = z.enum([
   "SPAM",
   "HARASSMENT",

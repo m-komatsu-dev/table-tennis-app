@@ -4,6 +4,7 @@ import { DashboardCharts } from "@/components/dashboard-charts";
 import { RecordCalendar } from "@/components/record-calendar";
 import { RecordSummary } from "@/components/record-summary";
 import { Badge, Card, EmptyState, PageHeader, PrimaryLink } from "@/components/ui";
+import { isAdminUserId } from "@/lib/admin";
 import { formatDate, percentage } from "@/lib/format";
 import { matchResultLabels } from "@/lib/match-record";
 import { serializeMatchList, serializePracticeList } from "@/lib/serialize";
@@ -41,7 +42,8 @@ export default async function DashboardPage() {
     recentMatches,
     calendarPractice,
     calendarMatches,
-    monthlyStats
+    monthlyStats,
+    isAdmin
   ] = await Promise.all([
     prisma.practiceLog.count({ where: { userId } }),
     prisma.practiceLog.aggregate({ where: { userId }, _sum: { durationMin: true } }),
@@ -68,7 +70,8 @@ export default async function DashboardPage() {
       where: { userId },
       select: { id: true, playedAt: true, opponentName: true }
     }),
-    getMonthlyStats(userId)
+    getMonthlyStats(userId),
+    isAdminUserId(userId)
   ]);
 
   const totalPracticeMinutes = practiceDuration._sum.durationMin ?? 0;
@@ -150,6 +153,19 @@ export default async function DashboardPage() {
       <div className="mt-6">
         <DashboardCharts data={monthlyStats} />
       </div>
+      {isAdmin ? (
+        <section className="mt-8">
+          <h2 className="mb-3 text-lg font-bold text-slate-950">管理メニュー</h2>
+          <Link className="group flex min-h-24 items-center gap-4 rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm shadow-slate-900/4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md" href="/admin/reports">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-xl text-emerald-700" aria-hidden="true">!</span>
+            <span className="min-w-0">
+              <span className="block text-sm font-bold text-slate-950">通報管理</span>
+              <span className="mt-1 block text-xs text-slate-500">通報一覧・詳細と対応状況を確認</span>
+            </span>
+            <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
+          </Link>
+        </section>
+      ) : null}
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section>
           <div className="mb-3 flex items-center justify-between">

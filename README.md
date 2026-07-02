@@ -147,6 +147,7 @@ GOOGLE_MOBILE_CLIENT_IDS=
 GEMINI_API_KEY=
 GEMINI_MODEL=
 MOBILE_AUTH_SECRET=
+ADMIN_EMAILS=
 ```
 
 - `DATABASE_URL`: PostgreSQL / Supabaseの接続文字列
@@ -157,6 +158,7 @@ MOBILE_AUTH_SECRET=
 - `GEMINI_API_KEY`: AIコーチを使う場合に設定
 - `GEMINI_MODEL`: 任意。未設定時はコード上のデフォルトモデルを使用
 - `MOBILE_AUTH_SECRET`: モバイルAPIのBearer Token署名用。32文字以上の値をサーバー側だけに設定
+- `ADMIN_EMAILS`: 通報管理Liteを使える管理者メールアドレス。複数指定する場合はカンマ区切り
 
 `MOBILE_AUTH_SECRET` は未設定時に `AUTH_SECRET` / `NEXTAUTH_SECRET` へフォールバックしますが、運用では専用の値を設定することを推奨します。
 
@@ -328,6 +330,7 @@ GOOGLE_MOBILE_CLIENT_IDS
 GEMINI_API_KEY
 GEMINI_MODEL
 MOBILE_AUTH_SECRET
+ADMIN_EMAILS
 ```
 
 ## モバイルAPI概要
@@ -378,6 +381,18 @@ DELETE /api/mobile/blocks/[blockedUserId]
 - ユーザーをブロック可能
 - ブロック関係にあるユーザーの募集や参加希望を制限
 - チャット実装前の安全対策として導入
+
+## 通報管理Lite
+
+- 管理者のみ通報一覧・詳細を確認可能
+- 通報ステータスを OPEN / REVIEWED / DISMISSED で管理
+- 管理者判定は既存ロール、または ADMIN_EMAILS 環境変数で実施
+
+### 通報管理Liteのステータス
+
+- 未対応: まだ管理者が確認していない通報
+- 問題あり: 通報が妥当で、対象に問題があると判断した状態
+- 問題なし・却下: 通報は対応不要、または対象に問題がないと判断した状態
 
 ## 注意事項
 

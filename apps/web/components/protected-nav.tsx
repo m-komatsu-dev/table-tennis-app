@@ -15,12 +15,17 @@ const navItems = [
   { href: "/profile", label: "プロフィール" }
 ];
 
-export function ProtectedNav() {
+const adminNavItems = [
+  { href: "/admin/reports", label: "通報管理" }
+];
+
+export function ProtectedNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const visibleNavItems = isAdmin ? [...navItems, ...adminNavItems] : navItems;
 
   return (
     <nav aria-label="メインナビゲーション" className="flex flex-wrap items-center gap-1 lg:justify-center">
-      {navItems.map((item) => {
+      {visibleNavItems.map((item) => {
         const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
         return (

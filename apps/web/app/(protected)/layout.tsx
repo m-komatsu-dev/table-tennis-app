@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@table-tennis/db";
 import { auth, signOut } from "@/auth";
 import { ProtectedNav } from "@/components/protected-nav";
+import { isAdminEmail } from "@/lib/admin-emails";
 import { resolveSessionUserId } from "@/lib/session-user";
 
 export default async function ProtectedLayout({
@@ -19,9 +20,10 @@ export default async function ProtectedLayout({
 
   const headerUser = await prisma.user.findUnique({
     where: { id: userId },
-    select: { name: true, avatarUrl: true }
+    select: { name: true, avatarUrl: true, email: true }
   });
   const userName = headerUser?.name ?? session?.user?.name ?? "ユーザー";
+  const isAdmin = isAdminEmail(headerUser?.email ?? session?.user?.email);
 
   return (
     <div className="min-h-screen">
@@ -36,7 +38,7 @@ export default async function ProtectedLayout({
           </Link>
 
           <div className="order-3 w-full lg:order-0 lg:w-auto lg:flex-1">
-            <ProtectedNav />
+            <ProtectedNav isAdmin={isAdmin} />
           </div>
 
           <div className="flex shrink-0 items-center gap-2 overflow-visible">
