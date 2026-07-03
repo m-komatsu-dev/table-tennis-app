@@ -1,4 +1,5 @@
 import { prisma } from "@table-tennis/db";
+import { ensureChatRoomForPartnerRequest } from "@/lib/chat";
 import { mobileError, mobileJson, mobileValidationError, requireMobileAuth } from "@/lib/mobile-api";
 import { partnerRequestInclude, serializePartnerRequest } from "@/lib/partner-posts";
 import { partnerRequestUpdateSchema } from "@/lib/validators";
@@ -35,8 +36,9 @@ export async function PUT(request: Request, context: RouteContext) {
       data: { status: body.status },
       include: partnerRequestInclude
     });
+    const chatRoom = requestRecord.status === "ACCEPTED" ? await ensureChatRoomForPartnerRequest(requestRecord.id) : null;
 
-    return mobileJson({ partnerRequest: serializePartnerRequest(requestRecord) });
+    return mobileJson({ partnerRequest: serializePartnerRequest(requestRecord), chatRoomId: chatRoom?.id ?? null });
   } catch (error) {
     return mobileValidationError(error);
   }

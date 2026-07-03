@@ -30,7 +30,7 @@ export const practiceMenuCategorySchema = z.enum([
 export const partnerPostTypeSchema = z.enum(["PRACTICE", "MATCH"]);
 export const partnerPostStatusSchema = z.enum(["OPEN", "CLOSED"]);
 export const partnerRequestStatusSchema = z.enum(["PENDING", "ACCEPTED", "DECLINED"]);
-export const reportTargetTypeSchema = z.enum(["USER", "PARTNER_POST", "PARTNER_REQUEST"]);
+export const reportTargetTypeSchema = z.enum(["USER", "PARTNER_POST", "PARTNER_REQUEST", "CHAT_MESSAGE"]);
 export const reportStatusSchema = z.enum(["OPEN", "REVIEWED", "DISMISSED"]);
 export const reportReasonSchema = z.enum([
   "SPAM",
@@ -190,11 +190,16 @@ export const partnerRequestUpdateSchema = z.object({
   status: partnerRequestStatusSchema
 });
 
+export const chatMessageSchema = z.object({
+  body: z.string().trim().min(1, "メッセージを入力してください").max(1000, "メッセージは1000文字以内で入力してください")
+});
+
 export const reportSchema = z.object({
   targetType: reportTargetTypeSchema,
   targetUserId: z.string().trim().min(1).optional().nullable(),
   targetPostId: z.string().trim().min(1).optional().nullable(),
   targetRequestId: z.string().trim().min(1).optional().nullable(),
+  targetMessageId: z.string().trim().min(1).optional().nullable(),
   reason: reportReasonSchema,
   details: z.string().trim().max(500, "詳細は500文字以内で入力してください").optional().nullable()
 });

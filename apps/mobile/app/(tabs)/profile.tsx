@@ -98,6 +98,9 @@ export default function ProfileScreen() {
           <Button variant="secondary" onPress={() => router.push("/partner-posts/new" as Href)}>
             募集を作成する
           </Button>
+          <Button variant="secondary" onPress={() => router.push("/chat" as Href)}>
+            チャット
+          </Button>
         </Card>
       ) : null}
       {user ? (

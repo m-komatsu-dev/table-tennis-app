@@ -8,11 +8,12 @@ export const partnerUserSelect = {
 
 export const partnerPostInclude = {
   owner: { select: partnerUserSelect },
-  requests: { select: { requesterId: true, status: true } }
+  requests: { select: { id: true, requesterId: true, status: true, chatRoom: { select: { id: true } } } }
 } satisfies Prisma.PartnerPostInclude;
 
 export const partnerRequestInclude = {
-  requester: { select: partnerUserSelect }
+  requester: { select: partnerUserSelect },
+  chatRoom: { select: { id: true } }
 } satisfies Prisma.PartnerRequestInclude;
 
 export const partnerPostTypeLabels = {
@@ -35,11 +36,12 @@ type PublicUser = Pick<User, "name" | "username" | "publicProfileEnabled">;
 
 type PartnerPostWithOwner = PartnerPost & {
   owner: PublicUser;
-  requests?: { requesterId: string; status: string }[];
+  requests?: { requesterId: string; status: string; chatRoom?: { id: string } | null }[];
 };
 
 type PartnerRequestWithRequester = PartnerRequest & {
   requester: PublicUser;
+  chatRoom?: { id: string } | null;
 };
 
 export function serializePartnerUser(user: PublicUser) {
@@ -76,6 +78,7 @@ export function serializePartnerPost(
     blocksMe: Boolean(blockState.blocksMe),
     isInteractionBlocked: Boolean(blockState.isBlocked),
     ownRequestStatus: ownRequest?.status ?? null,
+    ownChatRoomId: ownRequest?.chatRoom?.id ?? null,
     requestCount: post.requests?.length ?? 0
   };
 }
@@ -90,6 +93,7 @@ export function serializePartnerRequest(
     requesterId: request.requesterId,
     message: request.message,
     status: request.status,
+    chatRoomId: request.chatRoom?.id ?? null,
     createdAt: request.createdAt.toISOString(),
     updatedAt: request.updatedAt.toISOString(),
     isRequesterBlocked: Boolean(blockState.isBlocked),

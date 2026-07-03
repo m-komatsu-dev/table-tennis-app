@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import type { Href } from "expo-router";
-import { Linking, Text, View } from "react-native";
+import { Alert, Linking, Text, View } from "react-native";
 import { fetchPartnerPost, fetchPartnerRequests, updatePartnerRequest } from "@/api/partner-posts";
 import { formatDate, partnerRequestStatusLabels } from "@/components/format";
 import { Button, Card, EmptyState, ErrorMessage, Header, LoadingState, MetaPill, Row, Screen, SectionTitle, colors } from "@/components/ui";
@@ -52,7 +52,20 @@ export default function PartnerRequestsScreen() {
 
     try {
       const result = await updatePartnerRequest(requestId, status);
-      setItems((current) => current.map((item) => (item.id === requestId ? result.partnerRequest : item)));
+      setItems((current) =>
+        current.map((item) =>
+          item.id === requestId ? { ...result.partnerRequest, chatRoomId: result.chatRoomId ?? result.partnerRequest.chatRoomId } : item
+        )
+      );
+      if (status === "ACCEPTED" && result.chatRoomId) {
+        Alert.alert("参加希望を承認しました", "チャットで日程などを相談できます。", [
+          { text: "閉じる", style: "cancel" },
+          {
+            text: "チャットを開く",
+            onPress: () => router.push(`/chat/${result.chatRoomId}` as Href)
+          }
+        ]);
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "参加希望の状態を更新できませんでした");
     } finally {
@@ -136,6 +149,11 @@ function PartnerRequestCard({
           </Button>
         </View>
       </View>
+      {item.status === "ACCEPTED" && item.chatRoomId ? (
+        <Button onPress={() => router.push(`/chat/${item.chatRoomId}` as Href)}>
+          チャットを開く
+        </Button>
+      ) : null}
     </Card>
   );
 }

@@ -4,6 +4,7 @@ import { Prisma, prisma } from "@table-tennis/db";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getRequiredUserId } from "@/lib/server-auth";
+import { ensureChatRoomForPartnerRequest } from "@/lib/chat";
 import { getBlockState } from "@/lib/safety";
 import { partnerPostSchema, partnerPostUpdateSchema, partnerRequestSchema, partnerRequestUpdateSchema } from "@/lib/validators";
 
@@ -206,13 +207,24 @@ export async function updatePartnerRequestAction(formData: FormData) {
     redirectWithError(`/partner-posts/${postId}`, "この操作を行う権限がありません");
   }
 
-  await prisma.partnerRequest.update({
+  const requestRecord = await prisma.partnerRequest.update({
     where: { id },
-    data: { status: body.data.status }
+    data: { status: body.data.status },
+    select: { id: true, status: true }
   });
+  const chatRoom = requestRecord.status === "ACCEPTED" ? await ensureChatRoomForPartnerRequest(requestRecord.id) : null;
 
   revalidatePath(`/partner-posts/${postId}/requests`);
   revalidatePath(`/partner-posts/${postId}`);
+  revalidatePath("/chat");
+
+  if (chatRoom) {
+    revalidatePath(`/chat/${chatRoom.id}`);
+    redirect(
+      `/partner-posts/${postId}/requests?success=${encodeURIComponent("参加希望を承認しました。チャットで日程などを相談できます。")}&chatRoomId=${encodeURIComponent(chatRoom.id)}`
+    );
+  }
+
   redirect(`/partner-posts/${postId}/requests?success=${encodeURIComponent("参加希望の状態を更新しました")}`);
 }
 

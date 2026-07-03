@@ -78,7 +78,7 @@ export type PracticeMenu = {
 export type PartnerPostType = "PRACTICE" | "MATCH";
 export type PartnerPostStatus = "OPEN" | "CLOSED";
 export type PartnerRequestStatus = "PENDING" | "ACCEPTED" | "DECLINED";
-export type ReportTargetType = "USER" | "PARTNER_POST" | "PARTNER_REQUEST";
+export type ReportTargetType = "USER" | "PARTNER_POST" | "PARTNER_REQUEST" | "CHAT_MESSAGE";
 export type ReportReason = "SPAM" | "HARASSMENT" | "INAPPROPRIATE" | "PERSONAL_INFORMATION" | "FAKE_INFORMATION" | "OTHER";
 
 export type PartnerPublicUser = {
@@ -106,6 +106,7 @@ export type PartnerPost = {
   blocksMe: boolean;
   isInteractionBlocked: boolean;
   ownRequestStatus: PartnerRequestStatus | null;
+  ownChatRoomId: string | null;
   requestCount: number;
 };
 
@@ -115,6 +116,7 @@ export type PartnerRequest = {
   requesterId: string;
   message: string | null;
   status: PartnerRequestStatus;
+  chatRoomId: string | null;
   createdAt: string;
   updatedAt: string;
   isRequesterBlocked: boolean;
@@ -125,4 +127,30 @@ export type UserBlock = {
   blockedUserId: string;
   createdAt: string;
   user: PartnerPublicUser;
+};
+
+export type ChatMessage = {
+  id: string;
+  roomId: string;
+  senderId: string;
+  body: string;
+  createdAt: string;
+  isMine: boolean;
+  sender: PartnerPublicUser;
+};
+
+export type ChatRoom = {
+  id: string;
+  partnerRequestId: string;
+  partnerPostId: string;
+  partnerPostTitle: string;
+  otherUserId: string;
+  otherUser: PartnerPublicUser;
+  latestMessage: ChatMessage | null;
+  messages?: ChatMessage[];
+  isInteractionBlocked?: boolean;
+  blockedByMe?: boolean;
+  blocksMe?: boolean;
+  createdAt: string;
+  updatedAt: string;
 };

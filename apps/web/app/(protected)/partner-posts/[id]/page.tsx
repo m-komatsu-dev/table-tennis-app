@@ -82,6 +82,7 @@ export default async function PartnerPostDetailPage({ params, searchParams }: Pa
           ) : (
             <>
               <RequestPanel
+                chatRoomId={ownRequest?.chatRoom?.id ?? null}
                 isInteractionBlocked={blockState.isBlocked}
                 postId={post.id}
                 postStatus={post.status}
@@ -129,11 +130,13 @@ function OwnerActions({ id, isClosed }: { id: string; isClosed: boolean }) {
 }
 
 function RequestPanel({
+  chatRoomId,
   isInteractionBlocked,
   postId,
   postStatus,
   requestStatus
 }: {
+  chatRoomId: string | null;
   isInteractionBlocked: boolean;
   postId: string;
   postStatus: string;
@@ -146,7 +149,13 @@ function RequestPanel({
         <div className="mt-3">
           <Badge tone="blue">送信済み: {partnerRequestStatusLabels[requestStatus as keyof typeof partnerRequestStatusLabels]}</Badge>
         </div>
-        <p className="mt-3 text-sm leading-6 text-slate-600">投稿者が参加希望を確認できます。チャット機能はありません。</p>
+        {requestStatus === "ACCEPTED" && chatRoomId ? (
+          <Link className={buttonStyles({ className: "mt-4 w-full" })} href={`/chat/${chatRoomId}`}>
+            チャットを開く
+          </Link>
+        ) : (
+          <p className="mt-3 text-sm leading-6 text-slate-600">投稿者が参加希望を確認できます。承認されるとチャットを使えます。</p>
+        )}
       </Card>
     );
   }

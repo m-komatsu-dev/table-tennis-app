@@ -136,6 +136,24 @@ export default async function AdminReportDetailPage({ params, searchParams }: Pa
                 <p className="mt-3 text-sm text-slate-600">対象参加希望情報はありません。</p>
               )}
             </Card>
+
+            <Card>
+              <h2 className="text-base font-bold text-slate-950">対象チャットメッセージ情報</h2>
+              {report.targetMessage ? (
+                <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <DetailRow label="送信者" value={report.targetMessage.sender.name} />
+                  <DetailRow label="送信日時" value={formatDateTime(report.targetMessage.createdAt)} />
+                  <div className="sm:col-span-2">
+                    <dt className="text-xs font-semibold text-slate-500">メッセージ本文</dt>
+                    <dd className="mt-1 whitespace-pre-wrap break-words text-sm font-medium leading-6 text-slate-800">
+                      {report.targetMessage.body}
+                    </dd>
+                  </div>
+                </dl>
+              ) : (
+                <p className="mt-3 text-sm text-slate-600">対象チャットメッセージ情報はありません。</p>
+              )}
+            </Card>
           </div>
 
         <aside>

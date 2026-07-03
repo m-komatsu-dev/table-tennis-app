@@ -190,6 +190,7 @@ export default function PartnerPostDetailScreen() {
             <OwnerActions item={item} closing={closing} deleting={deleting} onClose={confirmClose} onDelete={confirmDelete} />
           ) : (
             <RequestForm
+              chatRoomId={item.ownChatRoomId}
               disabled={item.status !== "OPEN" || Boolean(item.ownRequestStatus)}
               isInteractionBlocked={item.isInteractionBlocked}
               message={requestMessage}
@@ -250,6 +251,7 @@ function OwnerActions({
 }
 
 function RequestForm({
+  chatRoomId,
   disabled,
   isInteractionBlocked,
   message,
@@ -258,6 +260,7 @@ function RequestForm({
   saving,
   status
 }: {
+  chatRoomId: string | null;
   disabled: boolean;
   isInteractionBlocked: boolean;
   message: string;
@@ -271,7 +274,13 @@ function RequestForm({
       <Card>
         <SectionTitle title="参加希望" />
         <MetaPill label={`送信済み: ${partnerRequestStatusLabels[status]}`} tone="blue" />
-        <Text style={{ color: colors.muted, fontSize: 14, lineHeight: 21 }}>投稿者が参加希望を確認できます。チャット機能はありません。</Text>
+        {status === "ACCEPTED" && chatRoomId ? (
+          <Button onPress={() => router.push(`/chat/${chatRoomId}` as Href)}>
+            チャットを開く
+          </Button>
+        ) : (
+          <Text style={{ color: colors.muted, fontSize: 14, lineHeight: 21 }}>投稿者が参加希望を確認できます。承認されるとチャットを使えます。</Text>
+        )}
       </Card>
     );
   }

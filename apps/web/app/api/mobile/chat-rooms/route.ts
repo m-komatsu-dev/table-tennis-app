@@ -1,0 +1,32 @@
+import { prisma } from "@table-tennis/db";
+import { ChatError, chatRoomListInclude, serializeChatRoom } from "@/lib/chat";
+import { mobileError, mobileJson, requireMobileAuth } from "@/lib/mobile-api";
+
+export async function GET(request: Request) {
+  const userId = requireMobileAuth(request);
+
+  if (!userId) {
+    return mobileError("認証が必要です", 401);
+  }
+
+  try {
+    const rooms = await prisma.chatRoom.findMany({
+      where: {
+        partnerRequest: {
+          status: "ACCEPTED",
+          OR: [{ requesterId: userId }, { post: { ownerId: userId } }]
+        }
+      },
+      include: chatRoomListInclude,
+      orderBy: { updatedAt: "desc" }
+    });
+    const chatRooms = rooms.map((room) => serializeChatRoom(room, userId));
+    return mobileJson({ chatRooms });
+  } catch (error) {
+    if (error instanceof ChatError) {
+      return mobileError(error.message, error.status);
+    }
+
+    return mobileError("チャットを読み込めませんでした。", 500);
+  }
+}

@@ -68,6 +68,7 @@ enum ReportTargetType {
   USER
   PARTNER_POST
   PARTNER_REQUEST
+  CHAT_MESSAGE
 }
 
 enum ReportReason {
@@ -107,6 +108,7 @@ model User {
   equipment       Equipment[]
   partnerPosts    PartnerPost[]
   partnerRequests PartnerRequest[]
+  chatMessages    ChatMessage[]
   reportsSubmitted Report[]
   blocksCreated    UserBlock[] @relation("UserBlocksCreated")
   blocksReceived   UserBlock[] @relation("UserBlocksReceived")
@@ -225,9 +227,34 @@ model PartnerRequest {
 
   post      PartnerPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   requester User        @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  chatRoom  ChatRoom?
 
   @@unique([postId, requesterId])
   @@index([requesterId, createdAt])
+}
+
+model ChatRoom {
+  id               String   @id @default(uuid())
+  partnerRequestId String   @unique
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  partnerRequest PartnerRequest @relation(fields: [partnerRequestId], references: [id], onDelete: Cascade)
+  messages       ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  roomId    String
+  senderId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+  @@index([senderId])
 }
 
 model Report {
@@ -237,6 +264,7 @@ model Report {
   targetUserId    String?
   targetPostId    String?
   targetRequestId String?
+  targetMessageId String?
   reason          ReportReason
   details         String?
   status          ReportStatus     @default(OPEN)
@@ -248,6 +276,7 @@ model Report {
   @@index([reporterId])
   @@index([targetUserId])
   @@index([targetPostId])
+  @@index([targetMessageId])
   @@index([status])
 }
 

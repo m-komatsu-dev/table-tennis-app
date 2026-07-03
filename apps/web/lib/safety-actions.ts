@@ -15,6 +15,7 @@ export async function createReportAction(formData: FormData) {
       targetUserId: textValue(formData.get("targetUserId")),
       targetPostId: textValue(formData.get("targetPostId")),
       targetRequestId: textValue(formData.get("targetRequestId")),
+      targetMessageId: textValue(formData.get("targetMessageId")),
       reason: String(formData.get("reason") ?? ""),
       details: textValue(formData.get("details"))
     });

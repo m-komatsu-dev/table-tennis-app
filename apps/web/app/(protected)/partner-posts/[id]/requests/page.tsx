@@ -11,7 +11,7 @@ import { getRequiredUserId } from "@/lib/server-auth";
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string | string[]; success?: string | string[] }>;
+  searchParams: Promise<{ chatRoomId?: string | string[]; error?: string | string[]; success?: string | string[] }>;
 };
 
 export default async function PartnerRequestsPage({ params, searchParams }: PageProps) {
@@ -44,6 +44,11 @@ export default async function PartnerRequestsPage({ params, searchParams }: Page
       <div className="mb-5 space-y-3">
         <ErrorMessage message={singleParam(query.error)} />
         <SuccessMessage message={singleParam(query.success)} />
+        {singleParam(query.chatRoomId) ? (
+          <Link className={buttonStyles({ className: "w-full sm:w-auto" })} href={`/chat/${singleParam(query.chatRoomId)}`}>
+            チャットを開く
+          </Link>
+        ) : null}
       </div>
       {requests.length === 0 ? (
         <EmptyState>
@@ -89,6 +94,11 @@ export default async function PartnerRequestsPage({ params, searchParams }: Page
                       見送り
                     </Button>
                   </form>
+                  {request.status === "ACCEPTED" && request.chatRoom?.id ? (
+                    <Link className={buttonStyles({ className: "w-full sm:min-w-28" })} href={`/chat/${request.chatRoom.id}`}>
+                      チャット
+                    </Link>
+                  ) : null}
                 </div>
               </div>
             </Card>

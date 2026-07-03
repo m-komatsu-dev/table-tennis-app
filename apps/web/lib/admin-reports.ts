@@ -10,7 +10,8 @@ export const reportStatusLabels: Record<ReportStatus, string> = {
 export const reportTargetTypeLabels: Record<ReportTargetType, string> = {
   USER: "ユーザー",
   PARTNER_POST: "募集",
-  PARTNER_REQUEST: "参加希望"
+  PARTNER_REQUEST: "参加希望",
+  CHAT_MESSAGE: "チャットメッセージ"
 };
 
 export type ReportFilters = {
@@ -31,6 +32,7 @@ export const adminReportSelect = {
   targetUserId: true,
   targetPostId: true,
   targetRequestId: true,
+  targetMessageId: true,
   reason: true,
   details: true,
   status: true,
@@ -63,8 +65,9 @@ export async function getAdminReportList(filters: ReportFilters) {
   const targetUserIds = compact(reports.map((report) => report.targetUserId));
   const targetPostIds = compact(reports.map((report) => report.targetPostId));
   const targetRequestIds = compact(reports.map((report) => report.targetRequestId));
+  const targetMessageIds = compact(reports.map((report) => report.targetMessageId));
 
-  const [targetUsers, targetPosts, targetRequests] = await Promise.all([
+  const [targetUsers, targetPosts, targetRequests, targetMessages] = await Promise.all([
     targetUserIds.length > 0
       ? prisma.user.findMany({
           where: { id: { in: unique(targetUserIds) } },
@@ -82,23 +85,36 @@ export async function getAdminReportList(filters: ReportFilters) {
           where: { id: { in: unique(targetRequestIds) } },
           select: { id: true, post: { select: { id: true, title: true } } }
         })
+      : [],
+    targetMessageIds.length > 0
+      ? prisma.chatMessage.findMany({
+          where: { id: { in: unique(targetMessageIds) } },
+          select: {
+            id: true,
+            body: true,
+            room: { select: { partnerRequest: { select: { post: { select: { id: true, title: true } } } } } }
+          }
+        })
       : []
   ]);
 
   const userMap = new Map(targetUsers.map((user) => [user.id, user]));
   const postMap = new Map(targetPosts.map((post) => [post.id, post]));
   const requestMap = new Map(targetRequests.map((request) => [request.id, request]));
+  const messageMap = new Map(targetMessages.map((message) => [message.id, message]));
 
   return {
     totalCount,
     reports: reports.map((report) => {
       const request = report.targetRequestId ? requestMap.get(report.targetRequestId) : null;
-      const post = report.targetPostId ? postMap.get(report.targetPostId) : request?.post ?? null;
+      const message = report.targetMessageId ? messageMap.get(report.targetMessageId) : null;
+      const post = report.targetPostId ? postMap.get(report.targetPostId) : request?.post ?? message?.room.partnerRequest.post ?? null;
 
       return {
         ...report,
         targetUser: report.targetUserId ? userMap.get(report.targetUserId) ?? null : null,
-        targetPost: post
+        targetPost: post,
+        targetMessage: message
       };
     })
   };
@@ -114,7 +130,7 @@ export async function getAdminReportDetail(id: string) {
     return null;
   }
 
-  const [targetUser, targetPost, targetRequest] = await Promise.all([
+  const [targetUser, targetPost, targetRequest, targetMessage] = await Promise.all([
     report.targetUserId
       ? prisma.user.findUnique({
           where: { id: report.targetUserId },
@@ -138,14 +154,35 @@ export async function getAdminReportDetail(id: string) {
             post: { select: { id: true, title: true, message: true, createdAt: true } }
           }
         })
+      : null,
+    report.targetMessageId
+      ? prisma.chatMessage.findUnique({
+          where: { id: report.targetMessageId },
+          select: {
+            id: true,
+            body: true,
+            createdAt: true,
+            sender: { select: publicUserSelect },
+            room: {
+              select: {
+                partnerRequest: {
+                  select: {
+                    post: { select: { id: true, title: true, message: true, createdAt: true } }
+                  }
+                }
+              }
+            }
+          }
+        })
       : null
   ]);
 
   return {
     ...report,
     targetUser,
-    targetPost: targetPost ?? targetRequest?.post ?? null,
-    targetRequest
+    targetPost: targetPost ?? targetRequest?.post ?? targetMessage?.room.partnerRequest.post ?? null,
+    targetRequest,
+    targetMessage
   };
 }
 

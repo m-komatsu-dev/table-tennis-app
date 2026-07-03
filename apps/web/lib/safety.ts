@@ -22,6 +22,7 @@ export type ReportInput = {
   targetUserId?: string | null;
   targetPostId?: string | null;
   targetRequestId?: string | null;
+  targetMessageId?: string | null;
   reason: ReportReason;
   details?: string | null;
 };
@@ -37,6 +38,7 @@ export async function createReport(reporterId: string, input: unknown) {
       targetUserId: target.targetUserId,
       targetPostId: target.targetPostId,
       targetRequestId: target.targetRequestId,
+      targetMessageId: target.targetMessageId,
       reason: body.reason,
       details: nullableText(body.details)
     },
@@ -158,7 +160,7 @@ async function resolveReportTarget(reporterId: string, body: ReportInput) {
       throw new SafetyError("ユーザーが見つかりません", 404);
     }
 
-    return { targetUserId, targetPostId: null, targetRequestId: null };
+    return { targetUserId, targetPostId: null, targetRequestId: null, targetMessageId: null };
   }
 
   if (body.targetType === "PARTNER_POST") {
@@ -181,27 +183,70 @@ async function resolveReportTarget(reporterId: string, body: ReportInput) {
       throw new SafetyError("自分の募集は通報できません", 400);
     }
 
-    return { targetUserId: post.ownerId, targetPostId: post.id, targetRequestId: null };
+    return { targetUserId: post.ownerId, targetPostId: post.id, targetRequestId: null, targetMessageId: null };
   }
 
-  const targetRequestId = body.targetRequestId;
+  if (body.targetType === "PARTNER_REQUEST") {
+    const targetRequestId = body.targetRequestId;
 
-  if (!targetRequestId) {
-    throw new SafetyError("通報する参加希望を指定してください", 400);
+    if (!targetRequestId) {
+      throw new SafetyError("通報する参加希望を指定してください", 400);
+    }
+
+    const request = await prisma.partnerRequest.findUnique({
+      where: { id: targetRequestId },
+      select: { id: true, requesterId: true }
+    });
+
+    if (!request) {
+      throw new SafetyError("参加希望が見つかりません", 404);
+    }
+
+    if (request.requesterId === reporterId) {
+      throw new SafetyError("自分自身は通報できません", 400);
+    }
+
+    return { targetUserId: request.requesterId, targetPostId: null, targetRequestId: request.id, targetMessageId: null };
   }
 
-  const request = await prisma.partnerRequest.findUnique({
-    where: { id: targetRequestId },
-    select: { id: true, requesterId: true }
+  const targetMessageId = body.targetMessageId;
+
+  if (!targetMessageId) {
+    throw new SafetyError("通報するメッセージを指定してください", 400);
+  }
+
+  const message = await prisma.chatMessage.findUnique({
+    where: { id: targetMessageId },
+    select: {
+      id: true,
+      senderId: true,
+      room: {
+        select: {
+          partnerRequest: {
+            select: {
+              requesterId: true,
+              status: true,
+              post: { select: { ownerId: true } }
+            }
+          }
+        }
+      }
+    }
   });
 
-  if (!request) {
-    throw new SafetyError("参加希望が見つかりません", 404);
+  if (!message) {
+    throw new SafetyError("メッセージが見つかりません", 404);
   }
 
-  if (request.requesterId === reporterId) {
+  if (message.senderId === reporterId) {
     throw new SafetyError("自分自身は通報できません", 400);
   }
 
-  return { targetUserId: request.requesterId, targetPostId: null, targetRequestId: request.id };
+  const request = message.room.partnerRequest;
+
+  if (request.status !== "ACCEPTED" || (request.requesterId !== reporterId && request.post.ownerId !== reporterId)) {
+    throw new SafetyError("このチャットを表示する権限がありません。", 403);
+  }
+
+  return { targetUserId: message.senderId, targetPostId: null, targetRequestId: null, targetMessageId: message.id };
 }

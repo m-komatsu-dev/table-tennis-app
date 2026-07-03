@@ -6,6 +6,7 @@ export type ReportInput = {
   targetUserId?: string;
   targetPostId?: string;
   targetRequestId?: string;
+  targetMessageId?: string;
   reason: ReportReason;
   details?: string;
 };

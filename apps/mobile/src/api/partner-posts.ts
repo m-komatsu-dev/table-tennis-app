@@ -74,7 +74,7 @@ export async function fetchPartnerRequests(postId: string) {
 }
 
 export async function updatePartnerRequest(id: string, status: PartnerRequestStatus) {
-  return apiRequest<{ partnerRequest: PartnerRequest }>(`/api/mobile/partner-requests/${id}`, {
+  return apiRequest<{ partnerRequest: PartnerRequest; chatRoomId: string | null }>(`/api/mobile/partner-requests/${id}`, {
     method: "PUT",
     body: JSON.stringify({ status })
   });
