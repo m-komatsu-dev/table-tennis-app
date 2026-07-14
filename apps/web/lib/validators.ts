@@ -47,17 +47,19 @@ const dateStringSchema = z
   .min(1, "日付を入力してください")
   .refine((value) => !Number.isNaN(Date.parse(value)), "日付形式が正しくありません");
 
+export const passwordSchema = z.string().min(8, "パスワードは8文字以上で入力してください").max(128, "パスワードは128文字以内で入力してください");
+
 export const registerSchema = z.object({
   name: z.string().trim().min(1, "名前を入力してください").max(80, "名前は80文字以内で入力してください"),
   email: z.string().trim().email("メールアドレスの形式が正しくありません"),
-  password: z.string().min(8, "パスワードは8文字以上で入力してください").max(128, "パスワードは128文字以内で入力してください")
+  password: passwordSchema
 });
 
 export const mobileRegisterSchema = z
   .object({
     name: z.string().trim().min(1, "名前を入力してください").max(50, "名前は50文字以内で入力してください"),
     email: z.string().trim().email("メールアドレスの形式が正しくありません"),
-    password: z.string().min(8, "パスワードは8文字以上で入力してください").max(128, "パスワードは128文字以内で入力してください"),
+    password: passwordSchema,
     confirmPassword: z.string().min(1, "確認用パスワードを入力してください")
   })
   .refine((value) => value.password === value.confirmPassword, {
@@ -69,6 +71,21 @@ export const loginSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(1)
 });
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email("メールアドレスの形式が正しくありません")
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().trim().min(1, "再設定リンクが無効です").max(512, "再設定リンクが無効です"),
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, "パスワード確認を入力してください")
+  })
+  .refine((value) => value.password === value.confirmPassword, {
+    message: "パスワード確認が一致しません",
+    path: ["confirmPassword"]
+  });
 
 export const profileSchema = z.object({
   name: z.string().trim().min(1, "名前を入力してください").max(80, "名前は80文字以内で入力してください"),

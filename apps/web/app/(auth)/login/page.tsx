@@ -65,6 +65,11 @@ function LoginContent() {
           <Field label="パスワード">
             <input autoComplete="current-password" className={inputClass} name="password" type="password" required />
           </Field>
+          <div className="text-right text-sm">
+            <Link className="font-semibold text-emerald-700" href="/forgot-password">
+              パスワードを忘れた方
+            </Link>
+          </div>
           <Button
             className="w-full"
             disabled={isSubmitting}

@@ -47,6 +47,7 @@ rootのnpm workspaceには `apps/web` と `packages/*` が含まれます。`app
 
 - 公開トップページ
 - ユーザー登録、メールアドレス + パスワードログイン、Googleログイン、ログアウト
+- パスワード再設定Lite
 - 認証必須エリアの保護
 - ダッシュボード
   - 統計カード
@@ -148,6 +149,7 @@ npm install
 DATABASE_URL=
 AUTH_SECRET=
 NEXTAUTH_SECRET=
+AUTH_URL=
 NEXTAUTH_URL=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -156,17 +158,23 @@ GEMINI_API_KEY=
 GEMINI_MODEL=
 MOBILE_AUTH_SECRET=
 ADMIN_EMAILS=
+EMAIL_FROM=
+PASSWORD_RESET_BASE_URL=
+RESEND_API_KEY=
 ```
 
 - `DATABASE_URL`: PostgreSQL / Supabaseの接続文字列
 - `AUTH_SECRET` または `NEXTAUTH_SECRET`: Auth.js / NextAuthの署名用シークレット
-- `NEXTAUTH_URL`: ローカルまたは本番のWeb URL
+- `AUTH_URL` または `NEXTAUTH_URL`: ローカルまたは本番のWeb URL
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: Web版のGoogleログインを使う場合に設定
 - `GOOGLE_MOBILE_CLIENT_IDS`: モバイル版Googleログインで許可するClient ID。複数ある場合はカンマ区切り。未設定時は `GOOGLE_CLIENT_ID` などの公開Client IDも検証対象に使います
 - `GEMINI_API_KEY`: AIコーチを使う場合に設定
 - `GEMINI_MODEL`: 任意。未設定時はコード上のデフォルトモデルを使用
 - `MOBILE_AUTH_SECRET`: モバイルAPIのBearer Token署名用。32文字以上の値をサーバー側だけに設定
 - `ADMIN_EMAILS`: 通報管理Liteを使える管理者メールアドレス。複数指定する場合はカンマ区切り
+- `EMAIL_FROM`: パスワード再設定メールの送信元
+- `PASSWORD_RESET_BASE_URL`: パスワード再設定リンクのベースURL。未設定時は `AUTH_URL` / `NEXTAUTH_URL` / リクエスト元URLを使います
+- `RESEND_API_KEY`: パスワード再設定メール送信用のResend APIキー
 
 `MOBILE_AUTH_SECRET` は未設定時に `AUTH_SECRET` / `NEXTAUTH_SECRET` へフォールバックしますが、運用では専用の値を設定することを推奨します。
 
@@ -410,10 +418,19 @@ DELETE /api/mobile/blocks/[blockedUserId]
 - チャット詳細を開いた時点で既読扱い
 - Push通知やリアルタイム通知は未対応
 
+## パスワード再設定Lite
+
+- メール・パスワード利用者向けのWeb版機能です。
+- 再設定リンクは30分間有効です。
+- 再設定トークンは平文では保存せず、ハッシュ化して保存します。
+- 再設定リンクは1回利用後に無効になります。
+- 新しい再設定申請を行うと、過去の未使用トークンは無効になります。
+- Googleログイン処理には影響しません。
+
 ## 注意事項
 
 - `.env`、`.env.local`、`packages/db/.env`、`apps/mobile/.env` などの秘密情報はGitに含めないでください。
-- `DATABASE_URL`、`AUTH_SECRET`、`NEXTAUTH_SECRET`、`MOBILE_AUTH_SECRET`、`GEMINI_API_KEY` などはクライアント側へ露出させないでください。
+- `DATABASE_URL`、`AUTH_SECRET`、`NEXTAUTH_SECRET`、`MOBILE_AUTH_SECRET`、`GEMINI_API_KEY`、`RESEND_API_KEY` などはクライアント側へ露出させないでください。
 - `MOBILE_AUTH_SECRET`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL` は絶対にモバイルアプリ側へ入れないでください。
 - Expoの `EXPO_PUBLIC_` 変数は公開される前提で扱ってください。
 - Gemini APIキーはサーバー側の環境変数として設定し、`NEXT_PUBLIC_` や `EXPO_PUBLIC_` には設定しないでください。

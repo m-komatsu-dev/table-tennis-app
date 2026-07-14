@@ -5,7 +5,9 @@ import { expect, test } from "vitest";
 
 const appApiDir = join(dirname(fileURLToPath(import.meta.url)), "../app/api");
 const publicRoutes = new Set([
+  "auth/forgot-password/route.ts",
   "auth/register/route.ts",
+  "auth/reset-password/route.ts",
   "auth/[...nextauth]/route.ts",
   "debug-auth/route.ts"
 ]);
