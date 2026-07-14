@@ -36,7 +36,9 @@ export default async function ChatPage({ searchParams }: PageProps) {
           <div className="space-y-3">
             {chatRooms.map((room) => (
               <Link
-                className="block rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-900/4 transition hover:border-emerald-200 hover:shadow-md"
+                className={`block rounded-2xl border p-5 shadow-sm shadow-slate-900/4 transition hover:border-emerald-200 hover:shadow-md ${
+                  room.unreadCount > 0 ? "border-emerald-200 bg-emerald-50/70" : "border-slate-200/80 bg-white"
+                }`}
                 href={`/chat/${room.id}`}
                 key={room.id}
               >
@@ -45,15 +47,20 @@ export default async function ChatPage({ searchParams }: PageProps) {
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="truncate text-lg font-bold text-slate-950">{room.otherUser.name}</h2>
                       <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-                        {room.partnerPostTitle}
+                        募集: {room.partnerPostTitle}
                       </span>
+                      {room.unreadCount > 0 ? (
+                        <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-bold text-white">
+                          未読 {room.unreadCount}
+                        </span>
+                      ) : null}
                     </div>
-                    <p className="mt-3 line-clamp-2 break-words text-sm leading-6 text-slate-600">
-                      {room.latestMessage ? room.latestMessage.body : "まだメッセージはありません。"}
+                    <p className={`mt-3 line-clamp-2 break-words text-sm leading-6 ${room.unreadCount > 0 ? "font-semibold text-slate-900" : "text-slate-600"}`}>
+                      {room.lastMessage ? room.lastMessage.body : "まだメッセージはありません。"}
                     </p>
                   </div>
                   <p className="shrink-0 text-xs font-semibold text-slate-500">
-                    {room.latestMessage ? formatDateTime(room.latestMessage.createdAt) : formatDateTime(room.createdAt)}
+                    {room.lastMessage ? formatDateTime(room.lastMessage.createdAt) : formatDateTime(room.updatedAt)}
                   </p>
                 </div>
               </Link>

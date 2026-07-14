@@ -10,6 +10,7 @@ export class ChatError extends Error {
 }
 
 const chatUserSelect = {
+  id: true,
   name: true,
   username: true,
   publicProfileEnabled: true
@@ -42,7 +43,7 @@ export const chatRoomDetailInclude = {
   }
 } satisfies Prisma.ChatRoomInclude;
 
-type ChatUser = Pick<User, "name" | "username" | "publicProfileEnabled">;
+type ChatUser = Pick<User, "id" | "name" | "username" | "publicProfileEnabled">;
 
 type ChatPost = Pick<PartnerPost, "id" | "title" | "ownerId"> & {
   owner: ChatUser;
@@ -92,7 +93,15 @@ export async function getChatRoomsForUser(userId: string) {
     orderBy: { updatedAt: "desc" }
   });
 
-  return rooms.map((room) => serializeChatRoom(room, userId));
+  return serializeChatRoomsForUser(rooms, userId);
+}
+
+export async function serializeChatRoomsForUser(rooms: ChatRoomWithRequest[], userId: string) {
+  const unreadCounts = await getUnreadCountsForRooms(rooms.map((room) => room.id), userId);
+
+  return [...rooms]
+    .sort((a, b) => getRoomSortDate(b).getTime() - getRoomSortDate(a).getTime())
+    .map((room) => serializeChatRoom(room, userId, unreadCounts.get(room.id) ?? 0));
 }
 
 export async function getChatRoomForUser(roomId: string, userId: string) {
@@ -109,9 +118,10 @@ export async function getChatRoomForUser(roomId: string, userId: string) {
 
   const otherUserId = getOtherUserId(room.partnerRequest, userId);
   const blockState = await getBlockState(userId, otherUserId);
+  await markChatRoomRead(room.id, userId);
 
   return {
-    ...serializeChatRoom(room, userId),
+    ...serializeChatRoom(room, userId, 0),
     messages: room.messages.map((message) => serializeChatMessage(message, userId)),
     isInteractionBlocked: blockState.isBlocked,
     blockedByMe: blockState.blockedByMe,
@@ -168,9 +178,54 @@ export async function createChatMessage(roomId: string, userId: string, input: u
   return serializeChatMessage(message, userId);
 }
 
-export function serializeChatRoom(room: ChatRoomWithRequest, currentUserId: string) {
+export async function markChatRoomRead(roomId: string, userId: string) {
+  const room = await prisma.chatRoom.findUnique({
+    where: { id: roomId },
+    select: {
+      id: true,
+      partnerRequest: {
+        select: {
+          requesterId: true,
+          status: true,
+          post: { select: { ownerId: true } }
+        }
+      }
+    }
+  });
+
+  if (!room) {
+    throw new ChatError("チャットを読み込めませんでした。", 404);
+  }
+
+  assertAcceptedParticipant(room.partnerRequest, userId);
+
+  await prisma.chatReadState.upsert({
+    where: {
+      roomId_userId: {
+        roomId,
+        userId
+      }
+    },
+    update: { lastReadAt: new Date() },
+    create: {
+      roomId,
+      userId
+    }
+  });
+}
+
+export async function getUnreadChatSummary(userId: string) {
+  const chatRooms = await getChatRoomsForUser(userId);
+  const unreadRoomCount = chatRooms.filter((room) => room.unreadCount > 0).length;
+  const unreadMessageCount = chatRooms.reduce((total, room) => total + room.unreadCount, 0);
+
+  return { unreadRoomCount, unreadMessageCount };
+}
+
+export function serializeChatRoom(room: ChatRoomWithRequest, currentUserId: string, unreadCount = 0) {
   const otherUser = getOtherUser(room.partnerRequest, currentUserId);
-  const latestMessage = room.messages[0] ?? null;
+  const latestMessage = getLatestMessage(room.messages);
+  const lastMessage = latestMessage ? serializeLastMessage(latestMessage) : null;
 
   return {
     id: room.id,
@@ -179,7 +234,9 @@ export function serializeChatRoom(room: ChatRoomWithRequest, currentUserId: stri
     partnerPostTitle: room.partnerRequest.post.title,
     otherUserId: getOtherUserId(room.partnerRequest, currentUserId),
     otherUser: serializeChatUser(otherUser),
+    lastMessage,
     latestMessage: latestMessage ? serializeChatMessage(latestMessage, currentUserId) : null,
+    unreadCount,
     createdAt: room.createdAt.toISOString(),
     updatedAt: room.updatedAt.toISOString()
   };
@@ -217,8 +274,65 @@ function getOtherUser(request: ChatRequest, currentUserId: string) {
 
 function serializeChatUser(user: ChatUser) {
   return {
+    id: user.id,
     name: user.name,
     username: user.publicProfileEnabled ? user.username : null,
     publicProfileEnabled: user.publicProfileEnabled
   };
+}
+
+function serializeLastMessage(message: ChatMessageWithSender) {
+  return {
+    body: message.body,
+    createdAt: message.createdAt.toISOString(),
+    senderId: message.senderId
+  };
+}
+
+async function getUnreadCountsForRooms(roomIds: string[], userId: string) {
+  if (roomIds.length === 0) {
+    return new Map<string, number>();
+  }
+
+  const readStates = await prisma.chatReadState.findMany({
+    where: {
+      roomId: { in: roomIds },
+      userId
+    },
+    select: {
+      roomId: true,
+      lastReadAt: true
+    }
+  });
+  const readStateMap = new Map(readStates.map((state) => [state.roomId, state.lastReadAt]));
+
+  const unreadGroups = await prisma.chatMessage.groupBy({
+    by: ["roomId"],
+    where: {
+      roomId: { in: roomIds },
+      senderId: { not: userId },
+      OR: roomIds.map((roomId) => {
+        const lastReadAt = readStateMap.get(roomId);
+
+        return lastReadAt ? { roomId, createdAt: { gt: lastReadAt } } : { roomId };
+      })
+    },
+    _count: { _all: true }
+  });
+
+  return new Map(unreadGroups.map((group) => [group.roomId, group._count._all]));
+}
+
+function getRoomSortDate(room: ChatRoomWithRequest) {
+  return getLatestMessage(room.messages)?.createdAt ?? room.updatedAt ?? room.createdAt;
+}
+
+function getLatestMessage(messages: ChatMessageWithSender[]) {
+  return messages.reduce<ChatMessageWithSender | null>((latest, message) => {
+    if (!latest || message.createdAt.getTime() > latest.createdAt.getTime()) {
+      return message;
+    }
+
+    return latest;
+  }, null);
 }

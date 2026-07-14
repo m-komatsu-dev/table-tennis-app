@@ -1,5 +1,5 @@
 import { prisma } from "@table-tennis/db";
-import { ChatError, chatRoomListInclude, serializeChatRoom } from "@/lib/chat";
+import { ChatError, chatRoomListInclude, serializeChatRoomsForUser } from "@/lib/chat";
 import { mobileError, mobileJson, requireMobileAuth } from "@/lib/mobile-api";
 
 export async function GET(request: Request) {
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
       include: chatRoomListInclude,
       orderBy: { updatedAt: "desc" }
     });
-    const chatRooms = rooms.map((room) => serializeChatRoom(room, userId));
+    const chatRooms = await serializeChatRoomsForUser(rooms, userId);
     return mobileJson({ chatRooms });
   } catch (error) {
     if (error instanceof ChatError) {

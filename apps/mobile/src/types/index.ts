@@ -87,6 +87,10 @@ export type PartnerPublicUser = {
   publicProfileEnabled: boolean;
 };
 
+export type ChatPublicUser = PartnerPublicUser & {
+  id: string;
+};
+
 export type PartnerPost = {
   id: string;
   ownerId: string;
@@ -136,7 +140,13 @@ export type ChatMessage = {
   body: string;
   createdAt: string;
   isMine: boolean;
-  sender: PartnerPublicUser;
+  sender: ChatPublicUser;
+};
+
+export type ChatLastMessage = {
+  body: string;
+  createdAt: string;
+  senderId: string;
 };
 
 export type ChatRoom = {
@@ -145,8 +155,10 @@ export type ChatRoom = {
   partnerPostId: string;
   partnerPostTitle: string;
   otherUserId: string;
-  otherUser: PartnerPublicUser;
+  otherUser: ChatPublicUser;
+  lastMessage: ChatLastMessage | null;
   latestMessage: ChatMessage | null;
+  unreadCount: number;
   messages?: ChatMessage[];
   isInteractionBlocked?: boolean;
   blockedByMe?: boolean;

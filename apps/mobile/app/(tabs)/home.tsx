@@ -3,6 +3,7 @@ import { Link, router, useFocusEffect } from "expo-router";
 import type { Href } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchMe } from "@/api/auth";
+import { fetchChatRooms } from "@/api/chat";
 import { fetchMatchRecords } from "@/api/match";
 import { fetchPracticeLogs } from "@/api/practice";
 import { fetchPracticeMenus } from "@/api/practice-menus";
@@ -20,6 +21,7 @@ export default function AppHomeScreen() {
   const [notificationState, setNotificationState] = useState<NotificationState>({ readIds: [], hiddenIds: [] });
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(defaultNotificationSettings);
   const [notificationPreviewReady, setNotificationPreviewReady] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,6 +53,13 @@ export default function AppHomeScreen() {
         setNotificationState({ readIds: [], hiddenIds: [] });
         setNotificationSettings(defaultNotificationSettings);
         setNotificationPreviewReady(false);
+      }
+
+      try {
+        const chatResult = await fetchChatRooms();
+        setUnreadChatCount(chatResult.chatRooms.filter((room) => room.unreadCount > 0).length);
+      } catch {
+        setUnreadChatCount(0);
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "ホーム情報を取得できませんでした");
@@ -96,6 +105,15 @@ export default function AppHomeScreen() {
         subtitle="今日の記録を積み重ねて、成長を見える化しましょう。"
       />
       <ErrorMessage actionLabel="再読み込み" message={error} onAction={load} />
+
+      {unreadChatCount > 0 ? (
+        <Card>
+          <SectionTitle title={`未読チャットが${unreadChatCount}件あります`} subtitle="チャット一覧で新しいメッセージを確認できます。" />
+          <Button variant="secondary" onPress={() => router.push("/chat" as Href)}>
+            チャットを見る
+          </Button>
+        </Card>
+      ) : null}
 
       {unreadNotificationCount > 0 ? (
         <Card>

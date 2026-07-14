@@ -109,6 +109,7 @@ model User {
   partnerPosts    PartnerPost[]
   partnerRequests PartnerRequest[]
   chatMessages    ChatMessage[]
+  chatReadStates  ChatReadState[]
   reportsSubmitted Report[]
   blocksCreated    UserBlock[] @relation("UserBlocksCreated")
   blocksReceived   UserBlock[] @relation("UserBlocksReceived")
@@ -241,6 +242,7 @@ model ChatRoom {
 
   partnerRequest PartnerRequest @relation(fields: [partnerRequestId], references: [id], onDelete: Cascade)
   messages       ChatMessage[]
+  readStates     ChatReadState[]
 }
 
 model ChatMessage {
@@ -255,6 +257,22 @@ model ChatMessage {
 
   @@index([roomId, createdAt])
   @@index([senderId])
+}
+
+model ChatReadState {
+  id         String   @id @default(uuid())
+  roomId     String
+  userId     String
+  lastReadAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([userId])
+  @@index([roomId])
 }
 
 model Report {

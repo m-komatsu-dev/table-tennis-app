@@ -5,6 +5,7 @@ import { RecordCalendar } from "@/components/record-calendar";
 import { RecordSummary } from "@/components/record-summary";
 import { Badge, Card, EmptyState, PageHeader, PrimaryLink } from "@/components/ui";
 import { isAdminUserId } from "@/lib/admin";
+import { getUnreadChatSummary } from "@/lib/chat";
 import { formatDate, percentage } from "@/lib/format";
 import { matchResultLabels } from "@/lib/match-record";
 import { serializeMatchList, serializePracticeList } from "@/lib/serialize";
@@ -43,7 +44,8 @@ export default async function DashboardPage() {
     calendarPractice,
     calendarMatches,
     monthlyStats,
-    isAdmin
+    isAdmin,
+    unreadChatSummary
   ] = await Promise.all([
     prisma.practiceLog.count({ where: { userId } }),
     prisma.practiceLog.aggregate({ where: { userId }, _sum: { durationMin: true } }),
@@ -71,7 +73,8 @@ export default async function DashboardPage() {
       select: { id: true, playedAt: true, opponentName: true }
     }),
     getMonthlyStats(userId),
-    isAdminUserId(userId)
+    isAdminUserId(userId),
+    getUnreadChatSummary(userId)
   ]);
 
   const totalPracticeMinutes = practiceDuration._sum.durationMin ?? 0;
@@ -85,6 +88,18 @@ export default async function DashboardPage() {
         title="ダッシュボード"
         description="練習量と試合結果を振り返り、次の一歩を記録しましょう。"
       />
+      {unreadChatSummary.unreadRoomCount > 0 ? (
+        <Link
+          className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-emerald-950 shadow-sm shadow-emerald-900/5 transition hover:border-emerald-300 hover:bg-emerald-100/70"
+          href="/chat"
+        >
+          <span className="min-w-0">
+            <span className="block text-sm font-bold">未読チャットが{unreadChatSummary.unreadRoomCount}件あります</span>
+            <span className="mt-1 block text-xs font-semibold text-emerald-800">チャット一覧で内容を確認できます。</span>
+          </span>
+          <Badge tone="emerald">{unreadChatSummary.unreadMessageCount}通</Badge>
+        </Link>
+      ) : null}
       <div className="grid gap-4 lg:grid-cols-2">
         <RecordSummary
           items={[

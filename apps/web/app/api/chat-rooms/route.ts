@@ -1,5 +1,5 @@
 import { prisma } from "@table-tennis/db";
-import { ChatError, chatRoomListInclude, serializeChatRoom } from "@/lib/chat";
+import { ChatError, chatRoomListInclude, serializeChatRoomsForUser } from "@/lib/chat";
 import { errorResponse, requireUserId } from "@/lib/api";
 
 export async function GET() {
@@ -20,7 +20,7 @@ export async function GET() {
       include: chatRoomListInclude,
       orderBy: { updatedAt: "desc" }
     });
-    const chatRooms = rooms.map((room) => serializeChatRoom(room, userId));
+    const chatRooms = await serializeChatRoomsForUser(rooms, userId);
     return Response.json({ chatRooms });
   } catch (error) {
     if (error instanceof ChatError) {

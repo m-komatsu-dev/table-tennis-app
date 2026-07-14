@@ -25,6 +25,7 @@ export async function createChatMessageAction(formData: FormData) {
 
   revalidatePath("/chat");
   revalidatePath(`/chat/${roomId}`);
+  revalidatePath("/dashboard");
   redirect(`/chat/${roomId}?success=${encodeURIComponent("メッセージを送信しました。")}`);
 }
 
