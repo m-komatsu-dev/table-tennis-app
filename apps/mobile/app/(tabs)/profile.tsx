@@ -106,6 +106,20 @@ export default function ProfileScreen() {
       {user ? (
         <Card>
           <SectionTitle
+            title="ご意見・不具合報告"
+            subtitle="β版へのフィードバックを送信し、自分の送信履歴を確認できます。"
+          />
+          <Button variant="secondary" onPress={() => router.push("/feedback" as Href)}>
+            フィードバックを送る
+          </Button>
+          <Button variant="secondary" onPress={() => router.push("/feedback/history" as Href)}>
+            送信履歴を見る
+          </Button>
+        </Card>
+      ) : null}
+      {user ? (
+        <Card>
+          <SectionTitle
             title="安全設定"
             subtitle="ブロック中のユーザーは募集や参加希望が制限されます。"
           />

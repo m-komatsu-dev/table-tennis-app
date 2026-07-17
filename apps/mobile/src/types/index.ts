@@ -80,6 +80,20 @@ export type PartnerPostStatus = "OPEN" | "CLOSED";
 export type PartnerRequestStatus = "PENDING" | "ACCEPTED" | "DECLINED";
 export type ReportTargetType = "USER" | "PARTNER_POST" | "PARTNER_REQUEST" | "CHAT_MESSAGE";
 export type ReportReason = "SPAM" | "HARASSMENT" | "INAPPROPRIATE" | "PERSONAL_INFORMATION" | "FAKE_INFORMATION" | "OTHER";
+export type FeedbackCategory = "BUG" | "USABILITY" | "FEATURE_REQUEST" | "SAFETY" | "OTHER";
+export type FeedbackStatus = "OPEN" | "REVIEWING" | "RESOLVED" | "CLOSED";
+export type FeedbackPlatform = "WEB" | "MOBILE";
+
+export type FeedbackListItem = {
+  id: string;
+  category: FeedbackCategory;
+  subject: string;
+  platform: FeedbackPlatform;
+  sourcePath: string | null;
+  status: FeedbackStatus;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type PartnerPublicUser = {
   name: string;

@@ -152,6 +152,14 @@ export default async function DashboardPage() {
           </span>
           <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
         </Link>
+        <Link className="group flex min-h-28 items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm shadow-slate-900/4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md" href="/feedback">
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-slate-100 text-xl text-slate-700" aria-hidden="true">?</span>
+          <span className="min-w-0">
+            <span className="block text-sm font-bold text-slate-950">ご意見・不具合報告</span>
+            <span className="mt-1 block text-xs text-slate-500">β版へのフィードバックを送信</span>
+          </span>
+          <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
+        </Link>
       </div>
       <div className="mt-6">
         <RecordCalendar
@@ -176,6 +184,14 @@ export default async function DashboardPage() {
             <span className="min-w-0">
               <span className="block text-sm font-bold text-slate-950">通報管理</span>
               <span className="mt-1 block text-xs text-slate-500">通報一覧・詳細と対応状況を確認</span>
+            </span>
+            <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
+          </Link>
+          <Link className="group mt-3 flex min-h-24 items-center gap-4 rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm shadow-slate-900/4 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md" href="/admin/feedback">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-xl text-emerald-700" aria-hidden="true">?</span>
+            <span className="min-w-0">
+              <span className="block text-sm font-bold text-slate-950">フィードバック管理</span>
+              <span className="mt-1 block text-xs text-slate-500">一覧・詳細、対応状況、管理者メモを確認</span>
             </span>
             <span className="ml-auto text-slate-400 transition group-hover:translate-x-1" aria-hidden="true">→</span>
           </Link>

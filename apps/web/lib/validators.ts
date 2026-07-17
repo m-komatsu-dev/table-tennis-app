@@ -41,6 +41,12 @@ export const reportReasonSchema = z.enum([
   "FAKE_INFORMATION",
   "OTHER"
 ]);
+export const feedbackCategorySchema = z.enum(["BUG", "USABILITY", "FEATURE_REQUEST", "SAFETY", "OTHER"], {
+  required_error: "カテゴリを選択してください。",
+  invalid_type_error: "カテゴリを選択してください。"
+});
+export const feedbackStatusSchema = z.enum(["OPEN", "REVIEWING", "RESOLVED", "CLOSED"]);
+export const feedbackPlatformSchema = z.enum(["WEB", "MOBILE"]);
 
 const dateStringSchema = z
   .string({ required_error: "日付を入力してください" })
@@ -240,6 +246,28 @@ export const reportSchema = z.object({
   targetMessageId: z.string().trim().min(1).optional().nullable(),
   reason: reportReasonSchema,
   details: z.string().trim().max(500, "詳細は500文字以内で入力してください").optional().nullable()
+});
+
+export const feedbackSchema = z.object({
+  category: feedbackCategorySchema,
+  subject: z
+    .string({ required_error: "件名を入力してください。" })
+    .trim()
+    .min(1, "件名を入力してください。")
+    .min(2, "件名は2文字以上で入力してください。")
+    .max(100, "件名は100文字以内で入力してください。"),
+  body: z
+    .string({ required_error: "内容を入力してください。" })
+    .trim()
+    .min(1, "内容を入力してください。")
+    .min(10, "内容は10文字以上で入力してください。")
+    .max(3000, "内容は3000文字以内で入力してください。"),
+  sourcePath: z.string().trim().max(300).optional().nullable()
+});
+
+export const adminFeedbackUpdateSchema = z.object({
+  status: feedbackStatusSchema,
+  adminNote: z.string().trim().max(2000, "管理者メモは2000文字以内で入力してください。").optional().nullable()
 });
 
 export const blockSchema = z.object({

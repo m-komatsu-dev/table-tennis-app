@@ -85,6 +85,9 @@ export default async function ProfilePage({ searchParams }: PageProps) {
             <p className="mt-1 text-sm leading-6 text-slate-600">利用規約とプライバシーポリシーを確認できます。</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
+            <Link className={buttonStyles()} href="/feedback">
+              ご意見・不具合報告
+            </Link>
             <Link className={buttonStyles({ variant: "secondary" })} href="/terms">
               利用規約
             </Link>

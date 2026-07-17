@@ -207,6 +207,9 @@ export default function AppHomeScreen() {
         <Button variant="secondary" onPress={() => router.push("/chat" as Href)}>
           チャット
         </Button>
+        <Button variant="secondary" onPress={() => router.push("/feedback" as Href)}>
+          フィードバック
+        </Button>
         <Button variant="secondary" onPress={() => router.push("/profile")}>
           プロフィールを確認
         </Button>

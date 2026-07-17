@@ -13,11 +13,13 @@ const navItems = [
   { href: "/analytics", label: "分析" },
   { href: "/practice-menus", label: "練習メニュー" },
   { href: "/ai-coach", label: "AIコーチ" },
+  { href: "/feedback", label: "フィードバック" },
   { href: "/profile", label: "プロフィール" }
 ];
 
 const adminNavItems = [
-  { href: "/admin/reports", label: "通報管理" }
+  { href: "/admin/reports", label: "通報管理" },
+  { href: "/admin/feedback", label: "FB管理" }
 ];
 
 export function ProtectedNav({ isAdmin = false }: { isAdmin?: boolean }) {
