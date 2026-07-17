@@ -87,6 +87,17 @@ export const resetPasswordSchema = z
     path: ["confirmPassword"]
   });
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "現在のパスワードを入力してください"),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, "新しいパスワード確認を入力してください")
+  })
+  .refine((value) => value.newPassword === value.confirmPassword, {
+    message: "パスワード確認が一致しません",
+    path: ["confirmPassword"]
+  });
+
 export const profileSchema = z.object({
   name: z.string().trim().min(1, "名前を入力してください").max(80, "名前は80文字以内で入力してください"),
   username: z

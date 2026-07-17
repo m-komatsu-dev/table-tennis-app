@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { FormEvent, Suspense, useState } from "react";
-import { Button, ErrorMessage, Field, inputClass } from "@/components/ui";
+import { Button, ErrorMessage, Field, SuccessMessage, inputClass } from "@/components/ui";
 
 const authErrorMessages: Record<string, string> = {
   OAuthAccountNotLinked: "このメールアドレスは別のログイン方法で登録されています。メールアドレスとパスワードでログインしてください。",
@@ -21,6 +21,10 @@ function LoginContent() {
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
   const authError = searchParams.get("error");
   const authErrorMessage = authError ? authErrorMessages[authError] ?? authErrorMessages.GoogleLoginFailed : null;
+  const successMessage =
+    searchParams.get("passwordChanged") === "1"
+      ? "パスワードを変更しました。新しいパスワードでログインしてください。"
+      : null;
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
@@ -59,17 +63,13 @@ function LoginContent() {
         <p className="mt-2 text-sm text-slate-600">おかえりなさい。記録を続けましょう。</p>
         <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
           <ErrorMessage message={error ?? authErrorMessage} />
+          <SuccessMessage message={successMessage} />
           <Field label="メールアドレス">
             <input autoComplete="email" className={inputClass} name="email" placeholder="you@example.com" type="email" required />
           </Field>
           <Field label="パスワード">
             <input autoComplete="current-password" className={inputClass} name="password" type="password" required />
           </Field>
-          <div className="text-right text-sm">
-            <Link className="font-semibold text-emerald-700" href="/forgot-password">
-              パスワードを忘れた方
-            </Link>
-          </div>
           <Button
             className="w-full"
             disabled={isSubmitting}

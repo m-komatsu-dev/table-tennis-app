@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@table-tennis/db";
 import { Button, Card, EmptyState, ErrorMessage, PageHeader, SuccessMessage, buttonStyles } from "@/components/ui";
 import { EquipmentManager } from "@/components/equipment-manager";
+import { PasswordChangeLite } from "@/components/password-change-lite";
 import { ProfileForm } from "@/components/profile-form";
 import { serializeEquipmentList } from "@/lib/serialize";
 import { unblockUserAction } from "@/lib/safety-actions";
@@ -27,7 +28,8 @@ export default async function ProfilePage({ searchParams }: PageProps) {
         gender: true,
         playStyle: true,
         avatarUrl: true,
-        publicProfileEnabled: true
+        publicProfileEnabled: true,
+        passwordHash: true
       }
     }),
     prisma.equipment.findMany({
@@ -49,6 +51,18 @@ export default async function ProfilePage({ searchParams }: PageProps) {
       }
     })
   ]);
+  const profileView: ProfileView = {
+    email: profile.email,
+    username: profile.username,
+    name: profile.name,
+    club: profile.club,
+    level: profile.level,
+    gender: profile.gender,
+    playStyle: profile.playStyle,
+    avatarUrl: profile.avatarUrl,
+    publicProfileEnabled: profile.publicProfileEnabled
+  };
+  const canChangePassword = Boolean(profile.passwordHash);
 
   return (
     <>
@@ -58,7 +72,10 @@ export default async function ProfilePage({ searchParams }: PageProps) {
         <SuccessMessage message={singleParam(params.success)} />
       </div>
       <Card className="p-5 sm:p-7">
-        <ProfileForm profile={profile satisfies ProfileView} />
+        <ProfileForm profile={profileView} />
+      </Card>
+      <Card className="mt-8 p-5 sm:p-7">
+        <PasswordChangeLite canChangePassword={canChangePassword} />
       </Card>
       <section className="mt-8">
         <Card className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

@@ -3,6 +3,7 @@ import {
   PASSWORD_RESET_REQUEST_MESSAGE,
   requestPasswordReset
 } from "@/lib/password-reset";
+import { passwordResetEmailEnabled } from "@/lib/password-reset-config";
 import { forgotPasswordSchema } from "@/lib/validators";
 
 function getRequestKey(request: Request) {
@@ -27,6 +28,10 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return validationErrorResponse(parsed.error);
+  }
+
+  if (!passwordResetEmailEnabled) {
+    return successResponse();
   }
 
   try {

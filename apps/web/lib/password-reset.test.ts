@@ -119,7 +119,7 @@ describe("password reset request", () => {
     expect(mockPrisma.passwordResetToken.create).not.toHaveBeenCalled();
   });
 
-  test("登録済みメールへの申請でも同じ成功レスポンスを返す", async () => {
+  test("一時停止中は登録済みメールへの申請でもメール用tokenを作成しない", async () => {
     mockPrisma.user.findUnique.mockResolvedValue({
       id: "user-1",
       email: "user@example.com",
@@ -133,6 +133,7 @@ describe("password reset request", () => {
 
     expect(response.status).toBe(200);
     expect(body.data?.message).toBe(PASSWORD_RESET_REQUEST_MESSAGE);
+    expect(mockPrisma.passwordResetToken.create).not.toHaveBeenCalled();
   });
 });
 

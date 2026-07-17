@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { Button, ErrorMessage, Field, SuccessMessage, inputClass } from "@/components/ui";
+import { passwordResetEmailEnabled } from "@/lib/password-reset-config";
 import type { ApiResponse } from "@/types/app";
 
 type ForgotPasswordResponse = {
@@ -48,19 +49,27 @@ export default function ForgotPasswordPage() {
           <span className="font-bold text-slate-950">Table Tennis Log</span>
         </Link>
         <h1 className="text-2xl font-bold tracking-tight text-slate-950">パスワード再設定</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          登録したメールアドレスを入力してください。
-        </p>
-        <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
-          <ErrorMessage message={error} />
-          <SuccessMessage message={message} />
-          <Field label="メールアドレス">
-            <input autoComplete="email" className={inputClass} name="email" placeholder="you@example.com" type="email" required />
-          </Field>
-          <Button className="w-full" disabled={isSubmitting} type="submit">
-            {isSubmitting ? "送信中..." : "再設定メールを送信"}
-          </Button>
-        </form>
+        {passwordResetEmailEnabled ? (
+          <>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              登録したメールアドレスを入力してください。
+            </p>
+            <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
+              <ErrorMessage message={error} />
+              <SuccessMessage message={message} />
+              <Field label="メールアドレス">
+                <input autoComplete="email" className={inputClass} name="email" placeholder="you@example.com" type="email" required />
+              </Field>
+              <Button className="w-full" disabled={isSubmitting} type="submit">
+                {isSubmitting ? "送信中..." : "再設定メールを送信"}
+              </Button>
+            </form>
+          </>
+        ) : (
+          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+            メールによるパスワード再設定は現在ご利用いただけません。ログイン済みの場合はプロフィール画面からパスワード変更Liteをご利用ください。
+          </div>
+        )}
         <p className="mt-5 text-center text-sm text-slate-600">
           <Link className="font-semibold text-emerald-700" href="/login">
             ログイン画面へ戻る
