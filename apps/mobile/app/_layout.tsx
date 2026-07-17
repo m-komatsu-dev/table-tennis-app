@@ -27,6 +27,7 @@ export default function RootLayout() {
         <Stack.Screen name="share/match/[id]" options={{ title: "試合記録を共有", headerShown: false }} />
         <Stack.Screen name="share/summary" options={{ title: "今週のまとめを共有", headerShown: false }} />
         <Stack.Screen name="profile/edit" options={{ title: "プロフィール編集", headerShown: false }} />
+        <Stack.Screen name="account/delete" options={{ title: "アカウント削除", headerShown: false }} />
         <Stack.Screen name="partner-posts/index" options={{ title: "募集", headerShown: false }} />
         <Stack.Screen name="partner-posts/new" options={{ title: "募集を作成", headerShown: false }} />
         <Stack.Screen name="partner-posts/[id]/index" options={{ title: "募集詳細", headerShown: false }} />

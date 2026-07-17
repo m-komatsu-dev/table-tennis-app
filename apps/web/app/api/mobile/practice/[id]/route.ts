@@ -21,7 +21,7 @@ type RouteContext = {
 };
 
 export async function GET(request: Request, context: RouteContext) {
-  const userId = requireMobileAuth(request);
+  const userId = await requireMobileAuth(request);
 
   if (!userId) {
     return mobileError("認証が必要です", 401);
@@ -41,7 +41,7 @@ export async function GET(request: Request, context: RouteContext) {
 }
 
 export async function PUT(request: Request, context: RouteContext) {
-  const userId = requireMobileAuth(request);
+  const userId = await requireMobileAuth(request);
 
   if (!userId) {
     return mobileError("認証が必要です", 401);
@@ -84,7 +84,7 @@ export async function PUT(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(request: Request, context: RouteContext) {
-  const userId = requireMobileAuth(request);
+  const userId = await requireMobileAuth(request);
 
   if (!userId) {
     return mobileError("認証が必要です", 401);

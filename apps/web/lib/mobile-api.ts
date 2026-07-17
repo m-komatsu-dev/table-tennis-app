@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { prisma } from "@table-tennis/db";
 import type { Equipment, PracticeLog, PracticeMenu } from "@table-tennis/db";
-import { requireMobileUserId } from "@/lib/mobile-auth";
+import { getBearerToken, verifyMobileAccessToken } from "@/lib/mobile-auth";
 import { serializePractice } from "@/lib/serialize";
 
 type PracticeWithEquipment = PracticeLog & {
@@ -38,8 +38,33 @@ export function nullableMobileText(value: string | null | undefined) {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-export function requireMobileAuth(request: Request) {
-  const userId = requireMobileUserId(request);
+export async function getMobileAuthContext(request: Request) {
+  const token = getBearerToken(request);
+
+  if (!token) {
+    return null;
+  }
+
+  const payload = verifyMobileAccessToken(token);
+
+  if (!payload) {
+    return null;
+  }
+
+  const userExists = await prisma.user.count({
+    where: { id: payload.userId }
+  });
+
+  if (userExists !== 1) {
+    return null;
+  }
+
+  return payload;
+}
+
+export async function requireMobileAuth(request: Request) {
+  const context = await getMobileAuthContext(request);
+  const userId = context?.userId ?? null;
 
   if (!userId) {
     return null;

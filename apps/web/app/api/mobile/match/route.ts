@@ -4,7 +4,7 @@ import { serializeMatch, serializeMatchList } from "@/lib/serialize";
 import { matchSchema } from "@/lib/validators";
 
 export async function GET(request: Request) {
-  const userId = requireMobileAuth(request);
+  const userId = await requireMobileAuth(request);
 
   if (!userId) {
     return mobileError("認証が必要です", 401);
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const userId = requireMobileAuth(request);
+  const userId = await requireMobileAuth(request);
 
   if (!userId) {
     return mobileError("認証が必要です", 401);

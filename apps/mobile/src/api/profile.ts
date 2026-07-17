@@ -19,3 +19,25 @@ export async function updateProfile(input: UpdateProfileInput) {
     body: JSON.stringify(input)
   });
 }
+
+export type AccountDeletionStatus = {
+  authMethod: "password" | "google" | "unsupported";
+  isGoogleReauthenticated: boolean;
+};
+
+export type DeleteAccountInput = {
+  currentPassword?: string;
+  confirmationText: string;
+  confirmedIrreversible: boolean;
+};
+
+export async function fetchAccountDeletionStatus() {
+  return apiRequest<AccountDeletionStatus>("/api/mobile/account");
+}
+
+export async function deleteAccount(input: DeleteAccountInput) {
+  return apiRequest<{ success: true }>("/api/mobile/account", {
+    method: "DELETE",
+    body: JSON.stringify(input)
+  });
+}

@@ -5,7 +5,7 @@ import { serializeNotification } from "@/lib/notifications";
 const maxNotifications = 100;
 
 export async function GET(request: Request) {
-  const userId = requireMobileAuth(request);
+  const userId = await requireMobileAuth(request);
 
   if (!userId) {
     return mobileError("認証が必要です", 401);

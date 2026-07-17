@@ -145,6 +145,17 @@ export default function ProfileScreen() {
           )}
         </Card>
       ) : null}
+      {user ? (
+        <Card>
+          <SectionTitle
+            title="危険な操作"
+            subtitle="アカウントと関連データを削除します。この操作は原則として取り消せません。"
+          />
+          <Button variant="danger" onPress={() => router.push("/account/delete" as Href)}>
+            アカウントを削除する
+          </Button>
+        </Card>
+      ) : null}
       <Button variant="danger" onPress={handleLogout}>
         ログアウト
       </Button>

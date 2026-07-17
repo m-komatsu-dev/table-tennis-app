@@ -3,7 +3,7 @@ import { getMyFeedbacks, serializePublicFeedback } from "@/lib/feedback";
 import { mobileError, mobileJson, requireMobileAuth } from "@/lib/mobile-api";
 
 export async function GET(request: Request) {
-  const userId = requireMobileAuth(request);
+  const userId = await requireMobileAuth(request);
 
   if (!userId) {
     return mobileError("認証が必要です", 401);

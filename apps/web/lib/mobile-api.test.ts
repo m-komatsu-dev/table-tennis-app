@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const mockPrisma = vi.hoisted(() => ({
   user: {
+    count: vi.fn(async () => 1),
     findUnique: vi.fn(),
     create: vi.fn(),
     update: vi.fn()

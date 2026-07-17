@@ -86,7 +86,7 @@ ${JSON.stringify(input)}`;
 }
 
 export async function POST(request: Request) {
-  const userId = requireMobileAuth(request);
+  const userId = await requireMobileAuth(request);
 
   if (!userId) {
     return mobileError("認証が必要です", 401);

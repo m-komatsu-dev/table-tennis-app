@@ -98,6 +98,18 @@ export default async function ProfilePage({ searchParams }: PageProps) {
         </Card>
       </section>
       <section className="mt-8">
+        <Card className="flex flex-col gap-4 border-red-200 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="mb-2 h-1 w-10 rounded-full bg-red-500" />
+            <h2 className="text-xl font-bold tracking-tight text-red-950">危険な操作</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">アカウントと関連データを削除します。この操作は原則として取り消せません。</p>
+          </div>
+          <Link className={buttonStyles({ variant: "danger" })} href="/account/delete">
+            アカウントを削除する
+          </Link>
+        </Card>
+      </section>
+      <section className="mt-8">
         <Card className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="mb-2 h-1 w-10 rounded-full bg-emerald-500" />

@@ -156,6 +156,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const googleProfile = getSafeGoogleProfile(profile);
 
       if (account?.provider === "google" && googleProfile.email) {
+        token.googleReauthenticatedAt = Math.floor(Date.now() / 1000);
+
         const dbUser = await prisma.user.findUnique({
           where: { email: googleProfile.email.toLowerCase() },
           select: { id: true, name: true, avatarUrl: true }
@@ -173,6 +175,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     session({ session, token }) {
       if (session.user && typeof token.id === "string") {
         session.user.id = token.id;
+      }
+
+      if (session.user && typeof token.googleReauthenticatedAt === "number") {
+        session.user.googleReauthenticatedAt = token.googleReauthenticatedAt;
       }
 
       return session;
