@@ -81,6 +81,23 @@ export default async function ProfilePage({ searchParams }: PageProps) {
         <Card className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="mb-2 h-1 w-10 rounded-full bg-emerald-500" />
+            <h2 className="text-xl font-bold tracking-tight text-slate-950">法的情報</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">利用規約とプライバシーポリシーを確認できます。</p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Link className={buttonStyles({ variant: "secondary" })} href="/terms">
+              利用規約
+            </Link>
+            <Link className={buttonStyles({ variant: "secondary" })} href="/privacy">
+              プライバシーポリシー
+            </Link>
+          </div>
+        </Card>
+      </section>
+      <section className="mt-8">
+        <Card className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="mb-2 h-1 w-10 rounded-full bg-emerald-500" />
             <h2 className="text-xl font-bold tracking-tight text-slate-950">自分の募集</h2>
             <p className="mt-1 text-sm leading-6 text-slate-600">練習相手・試合相手の募集を作成し、届いた参加希望を確認できます。</p>
           </div>

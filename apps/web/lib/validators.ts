@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { legalConsentRequiredMessage } from "@/lib/legal-config";
 
 export const levelSchema = z.enum([
   "BEGINNER",
@@ -49,10 +50,18 @@ const dateStringSchema = z
 
 export const passwordSchema = z.string().min(8, "パスワードは8文字以上で入力してください").max(128, "パスワードは128文字以内で入力してください");
 
+export const legalConsentSchema = z
+  .boolean({
+    required_error: legalConsentRequiredMessage,
+    invalid_type_error: legalConsentRequiredMessage
+  })
+  .refine((value) => value === true, legalConsentRequiredMessage);
+
 export const registerSchema = z.object({
   name: z.string().trim().min(1, "名前を入力してください").max(80, "名前は80文字以内で入力してください"),
   email: z.string().trim().email("メールアドレスの形式が正しくありません"),
-  password: passwordSchema
+  password: passwordSchema,
+  legalConsent: legalConsentSchema
 });
 
 export const mobileRegisterSchema = z
@@ -60,7 +69,8 @@ export const mobileRegisterSchema = z
     name: z.string().trim().min(1, "名前を入力してください").max(50, "名前は50文字以内で入力してください"),
     email: z.string().trim().email("メールアドレスの形式が正しくありません"),
     password: passwordSchema,
-    confirmPassword: z.string().min(1, "確認用パスワードを入力してください")
+    confirmPassword: z.string().min(1, "確認用パスワードを入力してください"),
+    legalConsent: legalConsentSchema
   })
   .refine((value) => value.password === value.confirmPassword, {
     message: "パスワードが一致しません",

@@ -1,21 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import { Button, ErrorMessage, Field, inputClass } from "@/components/ui";
+import { legalConsentRequiredMessage } from "@/lib/legal-config";
 import type { ApiResponse } from "@/types/app";
 
-export default function RegisterPage() {
+const authErrorMessages: Record<string, string> = {
+  LegalConsentRequired: legalConsentRequiredMessage,
+  GoogleLoginFailed: "Googleログインに失敗しました。別のログイン方法を試すか、時間をおいて再度お試しください。"
+};
+
+function RegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const authError = searchParams.get("error");
+  const authErrorMessage = authError ? authErrorMessages[authError] ?? null : null;
   const [error, setError] = useState<string | null>(null);
+  const [legalConsent, setLegalConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    if (!legalConsent) {
+      setError(legalConsentRequiredMessage);
+      return;
+    }
+
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
@@ -27,7 +43,8 @@ export default function RegisterPage() {
       body: JSON.stringify({
         name: String(formData.get("name") ?? ""),
         email,
-        password
+        password,
+        legalConsent
       })
     });
     const payload = (await response.json()) as ApiResponse<unknown>;
@@ -55,6 +72,32 @@ export default function RegisterPage() {
     router.refresh();
   }
 
+  async function handleGoogleSignIn() {
+    setError(null);
+
+    if (!legalConsent) {
+      setError(legalConsentRequiredMessage);
+      return;
+    }
+
+    setIsGoogleSubmitting(true);
+
+    const response = await fetch("/api/auth/legal-consent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ legalConsent })
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as ApiResponse<unknown>;
+      setError(payload.error ?? legalConsentRequiredMessage);
+      setIsGoogleSubmitting(false);
+      return;
+    }
+
+    void signIn("google", { callbackUrl: "/dashboard" });
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-900/[0.07] sm:p-8">
@@ -65,7 +108,7 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-bold tracking-tight text-slate-950">新規登録</h1>
         <p className="mt-2 text-sm text-slate-600">無料でアカウントを作成し、記録を始めましょう。</p>
         <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
-          <ErrorMessage message={error} />
+          <ErrorMessage message={error ?? authErrorMessage} />
           <Field label="名前">
             <input autoComplete="name" className={inputClass} name="name" placeholder="卓球 太郎" required />
           </Field>
@@ -75,6 +118,28 @@ export default function RegisterPage() {
           <Field label="パスワード">
             <input autoComplete="new-password" className={inputClass} minLength={8} name="password" type="password" required />
           </Field>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <label className="flex items-start gap-3 text-sm leading-6 text-slate-700">
+              <input
+                checked={legalConsent}
+                className="mt-1 size-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                name="legalConsent"
+                onChange={(event) => setLegalConsent(event.currentTarget.checked)}
+                required
+                type="checkbox"
+              />
+              <span>
+                <Link className="font-semibold text-emerald-700 underline-offset-2 hover:underline" href="/terms" target="_blank">
+                  利用規約
+                </Link>
+                に同意し、{" "}
+                <Link className="font-semibold text-emerald-700 underline-offset-2 hover:underline" href="/privacy" target="_blank">
+                  プライバシーポリシー
+                </Link>
+                を確認しました
+              </span>
+            </label>
+          </div>
           <Button
             className="w-full"
             disabled={isSubmitting}
@@ -91,11 +156,7 @@ export default function RegisterPage() {
         <Button
           className="w-full"
           disabled={isGoogleSubmitting}
-          onClick={() => {
-            setError(null);
-            setIsGoogleSubmitting(true);
-            void signIn("google", { callbackUrl: "/dashboard" });
-          }}
+          onClick={() => void handleGoogleSignIn()}
           type="button"
           variant="secondary"
         >
@@ -107,7 +168,29 @@ export default function RegisterPage() {
             ログイン
           </Link>
         </p>
+        <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs font-semibold text-slate-500">
+          <Link className="hover:text-emerald-700" href="/terms">
+            利用規約
+          </Link>
+          <Link className="hover:text-emerald-700" href="/privacy">
+            プライバシーポリシー
+          </Link>
+        </div>
       </div>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center px-4 py-10">
+          <div className="text-sm text-slate-600">読み込み中...</div>
+        </main>
+      }
+    >
+      <RegisterContent />
+    </Suspense>
   );
 }

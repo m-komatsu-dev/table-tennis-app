@@ -38,6 +38,14 @@ export default function HomePage() {
             )
           )}
         </div>
+        <footer className="mt-12 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-slate-500">
+          <Link className="hover:text-emerald-700" href="/terms">
+            利用規約
+          </Link>
+          <Link className="hover:text-emerald-700" href="/privacy">
+            プライバシーポリシー
+          </Link>
+        </footer>
       </section>
     </main>
   );

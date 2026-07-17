@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { FormEvent, Suspense, useState } from "react";
 import { Button, ErrorMessage, Field, SuccessMessage, inputClass } from "@/components/ui";
+import { legalConsentRequiredMessage } from "@/lib/legal-config";
 
 const authErrorMessages: Record<string, string> = {
   OAuthAccountNotLinked: "このメールアドレスは別のログイン方法で登録されています。メールアドレスとパスワードでログインしてください。",
@@ -12,7 +13,8 @@ const authErrorMessages: Record<string, string> = {
   GoogleLoginFailed: "Googleログインに失敗しました。別のログイン方法を試すか、時間をおいて再度お試しください。",
   AccessDenied: "Googleログインに失敗しました。別のログイン方法を試すか、時間をおいて再度お試しください。",
   OAuthCallbackError: "Googleログインに失敗しました。別のログイン方法を試すか、時間をおいて再度お試しください。",
-  Configuration: "Googleログインの設定を確認してください。時間をおいて再度お試しください。"
+  Configuration: "Googleログインの設定を確認してください。時間をおいて再度お試しください。",
+  LegalConsentRequired: legalConsentRequiredMessage
 };
 
 function LoginContent() {
@@ -102,6 +104,14 @@ function LoginContent() {
             新規登録
           </Link>
         </p>
+        <div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs font-semibold text-slate-500">
+          <Link className="hover:text-emerald-700" href="/terms">
+            利用規約
+          </Link>
+          <Link className="hover:text-emerald-700" href="/privacy">
+            プライバシーポリシー
+          </Link>
+        </div>
       </div>
     </main>
   );

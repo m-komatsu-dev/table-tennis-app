@@ -47,6 +47,7 @@ rootのnpm workspaceには `apps/web` と `packages/*` が含まれます。`app
 
 - 公開トップページ
 - ユーザー登録、メールアドレス + パスワードログイン、Googleログイン、ログアウト
+- 利用規約・プライバシーポリシーLite
 - パスワード再設定Lite
 - 認証必須エリアの保護
 - ダッシュボード
@@ -73,6 +74,7 @@ rootのnpm workspaceには `apps/web` と `packages/*` が含まれます。`app
 
 - 公開ホーム画面
 - 新規登録、ログイン、ログアウト
+- 新規登録時の利用規約・プライバシーポリシー確認
 - Expo SecureStoreによるアクセストークン保存
 - プロフィール表示・編集
 - 練習記録の一覧・作成・詳細・編集・削除
@@ -431,10 +433,30 @@ DELETE /api/mobile/blocks/[blockedUserId]
 
 - `.env`、`.env.local`、`packages/db/.env`、`apps/mobile/.env` などの秘密情報はGitに含めないでください。
 - `DATABASE_URL`、`AUTH_SECRET`、`NEXTAUTH_SECRET`、`MOBILE_AUTH_SECRET`、`GEMINI_API_KEY`、`RESEND_API_KEY` などはクライアント側へ露出させないでください。
+
 - `MOBILE_AUTH_SECRET`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL` は絶対にモバイルアプリ側へ入れないでください。
 - Expoの `EXPO_PUBLIC_` 変数は公開される前提で扱ってください。
 - Gemini APIキーはサーバー側の環境変数として設定し、`NEXT_PUBLIC_` や `EXPO_PUBLIC_` には設定しないでください。
 - 本番DBに対するmigrationは、接続先と実行コマンドを確認してから行ってください。
+
+## 利用規約・プライバシーポリシーLite
+
+Web版では、β版向け初稿として以下の公開ページを提供します。
+
+- `/terms`: 利用規約
+- `/privacy`: プライバシーポリシー
+
+新規登録時は、利用規約への同意とプライバシーポリシーの確認が必須です。Web版とモバイル版のメールアドレス登録API、およびGoogleログインによる新規ユーザー作成時に同意値を検証し、同意なし登録を拒否します。
+
+同意ありで作成された新規ユーザーには、以下を保存します。
+
+- `legalConsentAt`: 同意日時
+- `termsVersion`: 利用規約バージョン
+- `privacyPolicyVersion`: プライバシーポリシーバージョン
+
+文書バージョンや施行日は `apps/web/lib/legal-config.ts` で管理します。クライアントから送られたバージョン値は保存に利用せず、サーバー側設定の値を保存します。
+
+プライバシーポリシーには、現在の実装に合わせて、外部サービス、Googleログイン、Supabase / PostgreSQL、Vercel、Expo、Google Geminiを利用したAIコーチでの情報利用を記載しています。これは正式な法的助言ではなく、正式公開前に実装内容、運営者情報、問い合わせ窓口、法的表現の確認が必要です。
 
 ## 今後の予定
 

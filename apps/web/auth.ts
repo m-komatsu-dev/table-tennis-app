@@ -2,7 +2,9 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 import { prisma } from "@table-tennis/db";
+import { legalConfig } from "@/lib/legal-config";
 import { loginSchema } from "@/lib/validators";
 
 type GoogleProfile = {
@@ -109,6 +111,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return "/login?error=OAuthAccountNotLinked";
       }
 
+      const isNewUser = !existingGoogleUser && !existingEmailUser;
+      const hasLegalConsentIntent =
+        (await cookies()).get(legalConfig.consentIntentCookieName)?.value === "true";
+
+      if (isNewUser && !hasLegalConsentIntent) {
+        return "/register?error=LegalConsentRequired";
+      }
+
       const name =
         typeof googleProfile.name === "string" && googleProfile.name.trim().length > 0
           ? googleProfile.name
@@ -124,7 +134,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email,
           name,
           googleId,
-          avatarUrl
+          avatarUrl,
+          legalConsentAt: new Date(),
+          termsVersion: legalConfig.termsVersion,
+          privacyPolicyVersion: legalConfig.privacyVersion
         },
         update: {
           googleId,

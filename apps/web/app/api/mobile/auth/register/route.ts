@@ -1,6 +1,6 @@
 import { createMobileAccessToken, MobileAuthConfigError } from "@/lib/mobile-auth";
 import { mobileError, mobileJson, mobileValidationError } from "@/lib/mobile-api";
-import { EmailAlreadyRegisteredError, registerUser } from "@/lib/register-user";
+import { EmailAlreadyRegisteredError, LegalConsentRequiredError, registerUser } from "@/lib/register-user";
 import { mobileRegisterSchema } from "@/lib/validators";
 
 export async function POST(request: Request) {
@@ -13,6 +13,10 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof EmailAlreadyRegisteredError) {
       return mobileError("このメールアドレスはすでに登録されています", 409);
+    }
+
+    if (error instanceof LegalConsentRequiredError) {
+      return mobileError(error.message, 400);
     }
 
     if (error instanceof MobileAuthConfigError) {

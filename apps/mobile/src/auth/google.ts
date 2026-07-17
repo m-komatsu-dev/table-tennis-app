@@ -16,6 +16,7 @@ const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ?? google
 const missingGoogleClientId = "missing-google-client-id.apps.googleusercontent.com";
 const expoGoGoogleLoginMessage =
   "Googleログインは開発ビルドで利用できます。現在はメールアドレス・パスワードでログインしてください。";
+const legalConsentRequiredMessage = "利用規約への同意とプライバシーポリシーの確認が必要です。";
 
 function isExpoGo() {
   return Constants.executionEnvironment === ExecutionEnvironment.StoreClient || Constants.appOwnership === "expo";
@@ -30,7 +31,7 @@ function getGoogleErrorMessage(caught: unknown) {
       return "サーバーに接続できません";
     }
     if (caught.status === 400) {
-      return "Googleログイン情報が不正です";
+      return caught.apiMessage ?? "Googleログイン情報が不正です";
     }
     if (caught.status === 401) {
       return "Googleログインに失敗しました";
@@ -46,7 +47,7 @@ function getGoogleErrorMessage(caught: unknown) {
   return "Googleログインに失敗しました。時間をおいて再度お試しください";
 }
 
-export function useGoogleLogin() {
+export function useGoogleLogin(options: { legalConsent?: boolean; requireLegalConsent?: boolean } = {}) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const handledResponseKey = useRef<string | null>(null);
@@ -103,7 +104,7 @@ export function useGoogleLogin() {
 
     async function finishGoogleLogin() {
       try {
-        const result = await loginWithGoogle(idToken, nonce);
+        const result = await loginWithGoogle(idToken, nonce, options.legalConsent);
         await saveAccessToken(result.accessToken);
         router.replace("/(tabs)/home");
       } catch (caught) {
@@ -114,10 +115,15 @@ export function useGoogleLogin() {
     }
 
     finishGoogleLogin();
-  }, [request?.nonce, response]);
+  }, [options.legalConsent, request?.nonce, response]);
 
   async function startGoogleLogin() {
     setError(null);
+
+    if (options.requireLegalConsent && !options.legalConsent) {
+      setError(legalConsentRequiredMessage);
+      return;
+    }
 
     if (isExpoGo()) {
       setError(expoGoGoogleLoginMessage);

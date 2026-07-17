@@ -6,6 +6,7 @@ export type RegisterInput = {
   email: string;
   password: string;
   confirmPassword: string;
+  legalConsent: boolean;
 };
 
 export async function login(email: string, password: string) {
@@ -24,11 +25,11 @@ export async function register(input: RegisterInput) {
   });
 }
 
-export async function loginWithGoogle(idToken: string, nonce?: string) {
+export async function loginWithGoogle(idToken: string, nonce?: string, legalConsent?: boolean) {
   return apiRequest<{ accessToken: string; user: User }>("/api/mobile/auth/google", {
     auth: false,
     method: "POST",
-    body: JSON.stringify({ idToken, nonce })
+    body: JSON.stringify({ idToken, nonce, legalConsent })
   });
 }
 

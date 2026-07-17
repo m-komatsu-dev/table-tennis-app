@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@table-tennis/db";
+import { legalConfig, legalConsentRequiredMessage } from "@/lib/legal-config";
 
 export class EmailAlreadyRegisteredError extends Error {
   constructor() {
@@ -7,13 +8,24 @@ export class EmailAlreadyRegisteredError extends Error {
   }
 }
 
+export class LegalConsentRequiredError extends Error {
+  constructor() {
+    super(legalConsentRequiredMessage);
+  }
+}
+
 export type RegisterUserInput = {
   name: string;
   email: string;
   password: string;
+  legalConsent: boolean;
 };
 
 export async function registerUser(input: RegisterUserInput) {
+  if (input.legalConsent !== true) {
+    throw new LegalConsentRequiredError();
+  }
+
   const email = input.email.toLowerCase();
   const existing = await prisma.user.findUnique({
     where: { email },
@@ -31,7 +43,10 @@ export async function registerUser(input: RegisterUserInput) {
       data: {
         email,
         name: input.name,
-        passwordHash
+        passwordHash,
+        legalConsentAt: new Date(),
+        termsVersion: legalConfig.termsVersion,
+        privacyPolicyVersion: legalConfig.privacyVersion
       },
       select: {
         id: true,

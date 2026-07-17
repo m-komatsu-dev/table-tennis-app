@@ -196,7 +196,8 @@ describe("mobile google login API", () => {
 
     const response = await googleLogin(jsonRequest("/api/mobile/auth/google", {
       idToken: "google-id-token",
-      nonce: "nonce-1"
+      nonce: "nonce-1",
+      legalConsent: true
     }));
     const body = await response.json();
 
@@ -211,9 +212,25 @@ describe("mobile google login API", () => {
     expect(mockPrisma.user.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         email: "google@example.com",
-        googleId: "google-sub-1"
+        googleId: "google-sub-1",
+        legalConsentAt: expect.any(Date),
+        termsVersion: "1.0",
+        privacyPolicyVersion: "1.0"
       })
     }));
+  });
+
+  test("新しいGoogleユーザーは同意なしで作成できない", async () => {
+    mockPrisma.user.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+
+    const response = await googleLogin(jsonRequest("/api/mobile/auth/google", {
+      idToken: "google-id-token"
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("利用規約への同意とプライバシーポリシーの確認が必要です。");
+    expect(mockPrisma.user.create).not.toHaveBeenCalled();
   });
 
   test("既存Googleユーザーを更新してaccessTokenを返す", async () => {
@@ -303,7 +320,10 @@ describe("mobile register API", () => {
       name: "中野",
       email: "USER@example.com",
       password: "password123",
-      confirmPassword: "password123"
+      confirmPassword: "password123",
+      legalConsent: true,
+      termsVersion: "9.9",
+      privacyPolicyVersion: "9.9"
     }));
     const body = await response.json();
 
@@ -317,6 +337,27 @@ describe("mobile register API", () => {
     expect(mockPrisma.user.findUnique).toHaveBeenCalledWith(expect.objectContaining({
       where: { email: "user@example.com" }
     }));
+    expect(mockPrisma.user.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        legalConsentAt: expect.any(Date),
+        termsVersion: "1.0",
+        privacyPolicyVersion: "1.0"
+      })
+    }));
+  });
+
+  test("同意なしでは400を返す", async () => {
+    const response = await register(jsonRequest("/api/mobile/auth/register", {
+      name: "中野",
+      email: "user@example.com",
+      password: "password123",
+      confirmPassword: "password123"
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toBe("利用規約への同意とプライバシーポリシーの確認が必要です。");
+    expect(mockPrisma.user.create).not.toHaveBeenCalled();
   });
 
   test("email形式不正で400を返す", async () => {
@@ -324,7 +365,8 @@ describe("mobile register API", () => {
       name: "中野",
       email: "invalid-email",
       password: "password123",
-      confirmPassword: "password123"
+      confirmPassword: "password123",
+      legalConsent: true
     }));
 
     expect(response.status).toBe(400);
@@ -336,7 +378,8 @@ describe("mobile register API", () => {
       name: "中野",
       email: "user@example.com",
       password: "short",
-      confirmPassword: "short"
+      confirmPassword: "short",
+      legalConsent: true
     }));
 
     expect(response.status).toBe(400);
@@ -348,7 +391,8 @@ describe("mobile register API", () => {
       name: "中野",
       email: "user@example.com",
       password: "password123",
-      confirmPassword: "password456"
+      confirmPassword: "password456",
+      legalConsent: true
     }));
 
     expect(response.status).toBe(400);
@@ -362,7 +406,8 @@ describe("mobile register API", () => {
       name: "中野",
       email: "user@example.com",
       password: "password123",
-      confirmPassword: "password123"
+      confirmPassword: "password123",
+      legalConsent: true
     }));
 
     expect(response.status).toBe(409);
@@ -383,16 +428,20 @@ describe("mobile register API", () => {
       name: "中野",
       email: "user@example.com",
       password: "password123",
-      confirmPassword: "password123"
+      confirmPassword: "password123",
+      legalConsent: true
     }));
 
     expect(mockBcrypt.hash).toHaveBeenCalledWith("password123", 12);
     expect(mockPrisma.user.create).toHaveBeenCalledWith(expect.objectContaining({
-      data: {
+      data: expect.objectContaining({
         email: "user@example.com",
         name: "中野",
-        passwordHash: "hashed-password"
-      }
+        passwordHash: "hashed-password",
+        legalConsentAt: expect.any(Date),
+        termsVersion: "1.0",
+        privacyPolicyVersion: "1.0"
+      })
     }));
     expect(mockPrisma.user.create.mock.calls[0]?.[0].data).not.toHaveProperty("password");
     expect(mockPrisma.user.create.mock.calls[0]?.[0].data.passwordHash).not.toBe("password123");

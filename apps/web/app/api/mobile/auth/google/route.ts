@@ -2,6 +2,7 @@ import { prisma } from "@table-tennis/db";
 import { z } from "zod";
 import { createMobileAccessToken, MobileAuthConfigError } from "@/lib/mobile-auth";
 import { mobileError, mobileJson, mobileValidationError } from "@/lib/mobile-api";
+import { legalConfig, legalConsentRequiredMessage } from "@/lib/legal-config";
 import {
   GoogleAuthConfigError,
   GoogleIdTokenVerificationError,
@@ -12,7 +13,8 @@ export const runtime = "nodejs";
 
 const mobileGoogleAuthSchema = z.object({
   idToken: z.string().trim().min(1, "Googleログイン情報が不正です"),
-  nonce: z.string().trim().min(1).optional()
+  nonce: z.string().trim().min(1).optional(),
+  legalConsent: z.boolean().optional()
 });
 
 function displayName(name: string | null, email: string) {
@@ -46,6 +48,10 @@ export async function POST(request: Request) {
       return mobileError("このメールアドレスは別の方法で登録されています", 409);
     }
 
+    if (!existingGoogleUser && !existingEmailUser && body.legalConsent !== true) {
+      return mobileError(legalConsentRequiredMessage, 400);
+    }
+
     const name = displayName(googleUser.name, googleUser.email);
     const user = existingEmailUser
       ? await prisma.user.update({
@@ -62,7 +68,10 @@ export async function POST(request: Request) {
             email: googleUser.email,
             name,
             googleId: googleUser.sub,
-            avatarUrl: googleUser.picture
+            avatarUrl: googleUser.picture,
+            legalConsentAt: new Date(),
+            termsVersion: legalConfig.termsVersion,
+            privacyPolicyVersion: legalConfig.privacyVersion
           },
           select: { id: true, name: true, email: true }
         });
