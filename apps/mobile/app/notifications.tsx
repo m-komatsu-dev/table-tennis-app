@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { router, useFocusEffect } from "expo-router";
+import type { Href } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { fetchMatchRecords } from "@/api/match";
+import { fetchNotifications, markAllNotificationsRead as markAllServerNotificationsRead, markNotificationRead as markServerNotificationRead } from "@/api/notifications";
 import { fetchPracticeLogs } from "@/api/practice";
 import { fetchPracticeMenus } from "@/api/practice-menus";
 import { NotificationCard } from "@/components/NotificationCard";
@@ -10,12 +12,12 @@ import {
   getNotificationSettings,
   getNotificationState,
   hideNotification,
-  markAllNotificationsAsRead,
-  markNotificationAsRead,
+  markAllNotificationsAsRead as markAllLocalNotificationsAsRead,
+  markNotificationAsRead as markLocalNotificationAsRead,
   saveNotificationSettings,
   type NotificationState
 } from "@/storage/notificationStorage";
-import type { MatchRecord, PracticeLog, PracticeMenu } from "@/types";
+import type { AppNotification, MatchRecord, PracticeLog, PracticeMenu } from "@/types";
 import {
   defaultNotificationSettings,
   generateInAppNotifications,
@@ -24,10 +26,23 @@ import {
   type NotificationSettings
 } from "@/utils/notifications";
 
+type DisplayNotification = {
+  key: string;
+  source: "local" | "server";
+  local?: InAppNotification;
+  server?: AppNotification;
+  title: string;
+  description: string;
+  meta: string;
+  actionLabel: string;
+  read: boolean;
+};
+
 export default function NotificationsScreen() {
   const [practices, setPractices] = useState<PracticeLog[]>([]);
   const [matches, setMatches] = useState<MatchRecord[]>([]);
   const [menus, setMenus] = useState<PracticeMenu[]>([]);
+  const [serverNotifications, setServerNotifications] = useState<AppNotification[]>([]);
   const [state, setState] = useState<NotificationState>({ readIds: [], hiddenIds: [] });
   const [settings, setSettings] = useState<NotificationSettings>(defaultNotificationSettings);
   const [loading, setLoading] = useState(true);
@@ -37,10 +52,11 @@ export default function NotificationsScreen() {
     setLoading(true);
     setError(null);
     try {
-      const [practiceResult, matchResult, menuResult, storedState, storedSettings] = await Promise.all([
+      const [practiceResult, matchResult, menuResult, serverNotificationResult, storedState, storedSettings] = await Promise.all([
         fetchPracticeLogs(),
         fetchMatchRecords(),
         fetchPracticeMenus(),
+        fetchNotifications(),
         getNotificationState(),
         getNotificationSettings()
       ]);
@@ -48,6 +64,7 @@ export default function NotificationsScreen() {
       setPractices(practiceResult.practiceLogs);
       setMatches(matchResult.matchRecords);
       setMenus(menuResult.practiceMenus);
+      setServerNotifications(serverNotificationResult.notifications);
       setState(storedState);
       setSettings(storedSettings);
     } catch {
@@ -67,43 +84,106 @@ export default function NotificationsScreen() {
     () => generateInAppNotifications({ practiceLogs: practices, matchRecords: matches, practiceMenus: menus, settings }),
     [matches, menus, practices, settings]
   );
-  const visibleNotifications = useMemo(
-    () => allNotifications.filter((notification) => !state.hiddenIds.includes(notification.id)),
-    [allNotifications, state.hiddenIds]
+  const visibleNotifications = useMemo<DisplayNotification[]>(
+    () => [
+      ...serverNotifications.map((notification) => ({
+        key: `server-${notification.id}`,
+        source: "server" as const,
+        server: notification,
+        title: notification.title,
+        description: notification.body,
+        meta: labelForServerNotification(notification.type),
+        actionLabel: notification.chatRoomId ? "チャットを開く" : "開く",
+        read: notification.isRead
+      })),
+      ...allNotifications
+        .filter((notification) => !state.hiddenIds.includes(notification.id))
+        .map((notification) => ({
+          key: `local-${notification.id}`,
+          source: "local" as const,
+          local: notification,
+          title: notification.title,
+          description: notification.description,
+          meta: notification.meta,
+          actionLabel: notification.actionLabel,
+          read: state.readIds.includes(notification.id)
+        }))
+    ],
+    [allNotifications, serverNotifications, state.hiddenIds, state.readIds]
   );
-  const unreadCount = getUnreadNotificationCount(allNotifications, state.readIds, state.hiddenIds);
+  const unreadCount =
+    getUnreadNotificationCount(allNotifications, state.readIds, state.hiddenIds) +
+    serverNotifications.filter((notification) => !notification.isRead).length;
 
-  const handleMarkRead = useCallback(async (notification: InAppNotification) => {
-    setState(await markNotificationAsRead(notification.id));
+  const handleMarkRead = useCallback(async (notification: DisplayNotification) => {
+    if (notification.source === "server" && notification.server) {
+      const result = await markServerNotificationRead(notification.server.id);
+      setServerNotifications((items) => items.map((item) => (item.id === result.notification.id ? result.notification : item)));
+      return;
+    }
+
+    if (notification.local) {
+      setState(await markLocalNotificationAsRead(notification.local.id));
+    }
   }, []);
 
-  const handleHide = useCallback(async (notification: InAppNotification) => {
-    setState(await hideNotification(notification.id));
+  const handleHide = useCallback(async (notification: DisplayNotification) => {
+    if (notification.local) {
+      setState(await hideNotification(notification.local.id));
+    }
   }, []);
 
   const handleMarkAllRead = useCallback(async () => {
-    setState(await markAllNotificationsAsRead(visibleNotifications.map((notification) => notification.id)));
+    const localIds = visibleNotifications
+      .filter((notification) => notification.source === "local" && notification.local)
+      .map((notification) => notification.local?.id)
+      .filter((id): id is InAppNotification["id"] => Boolean(id));
+
+    const [nextState] = await Promise.all([
+      markAllLocalNotificationsAsRead(localIds),
+      markAllServerNotificationsRead()
+    ]);
+
+    setState(nextState);
+    setServerNotifications((items) => items.map((item) => ({ ...item, isRead: true, readAt: item.readAt ?? new Date().toISOString() })));
   }, [visibleNotifications]);
 
-  const handleAction = useCallback(async (notification: InAppNotification) => {
-    setState(await markNotificationAsRead(notification.id));
+  const handleAction = useCallback(async (notification: DisplayNotification) => {
+    if (notification.source === "server" && notification.server) {
+      const result = await markServerNotificationRead(notification.server.id);
+      setServerNotifications((items) => items.map((item) => (item.id === result.notification.id ? result.notification : item)));
 
-    if (notification.actionTarget === "new-practice") {
+      if (notification.server.chatRoomId) {
+        router.push(`/chat/${notification.server.chatRoomId}` as Href);
+        return;
+      }
+
+      setError("この通知に関連するチャットは利用できません。");
+      return;
+    }
+
+    if (!notification.local) {
+      return;
+    }
+
+    setState(await markLocalNotificationAsRead(notification.local.id));
+
+    if (notification.local.actionTarget === "new-practice") {
       router.push("/practice/new");
       return;
     }
 
-    if (notification.actionTarget === "analytics") {
+    if (notification.local.actionTarget === "analytics") {
       router.push("/analytics");
       return;
     }
 
-    if (notification.actionTarget === "matches") {
+    if (notification.local.actionTarget === "matches") {
       router.push("/match");
       return;
     }
 
-    if (notification.actionTarget === "ai-coach") {
+    if (notification.local.actionTarget === "ai-coach") {
       router.push("/ai-coach");
       return;
     }
@@ -152,12 +232,12 @@ export default function NotificationsScreen() {
         <View style={{ gap: 12 }}>
           {visibleNotifications.map((notification) => (
             <NotificationCard
-              key={notification.id}
+              key={notification.key}
               item={notification}
               onAction={() => handleAction(notification)}
-              onHide={() => handleHide(notification)}
+              onHide={notification.source === "local" ? () => handleHide(notification) : undefined}
               onMarkRead={() => handleMarkRead(notification)}
-              read={state.readIds.includes(notification.id)}
+              read={notification.read}
             />
           ))}
         </View>
@@ -168,6 +248,18 @@ export default function NotificationsScreen() {
       </Button>
     </Screen>
   );
+}
+
+function labelForServerNotification(type: AppNotification["type"]) {
+  if (type === "CHAT_MESSAGE") {
+    return "チャット";
+  }
+
+  if (type === "PARTNER_REQUEST_ACCEPTED" || type === "PARTNER_REQUEST_RECEIVED") {
+    return "マッチング";
+  }
+
+  return "お知らせ";
 }
 
 function NotificationSettingsCard({

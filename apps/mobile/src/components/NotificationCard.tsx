@@ -1,6 +1,12 @@
 import { Pressable, Text, View } from "react-native";
 import { Card, MetaPill, colors, styles } from "@/components/ui";
-import type { InAppNotification } from "@/utils/notifications";
+
+export type NotificationCardItem = {
+  title: string;
+  description: string;
+  meta: string;
+  actionLabel: string;
+};
 
 export function NotificationCard({
   item,
@@ -9,11 +15,11 @@ export function NotificationCard({
   onMarkRead,
   onHide
 }: {
-  item: InAppNotification;
+  item: NotificationCardItem;
   read: boolean;
   onAction: () => void;
   onMarkRead: () => void;
-  onHide: () => void;
+  onHide?: () => void;
 }) {
   return (
     <Card>
@@ -38,9 +44,11 @@ export function NotificationCard({
         >
           <Text style={[styles.buttonText, styles.secondaryButtonText]}>{read ? "既読済み" : "既読にする"}</Text>
         </Pressable>
-        <Pressable onPress={onHide} style={[styles.button, styles.secondaryButton, { flex: 1, minHeight: 44 }]}>
-          <Text style={[styles.buttonText, styles.secondaryButtonText]}>非表示にする</Text>
-        </Pressable>
+        {onHide ? (
+          <Pressable onPress={onHide} style={[styles.button, styles.secondaryButton, { flex: 1, minHeight: 44 }]}>
+            <Text style={[styles.buttonText, styles.secondaryButtonText]}>非表示にする</Text>
+          </Pressable>
+        ) : null}
       </View>
     </Card>
   );

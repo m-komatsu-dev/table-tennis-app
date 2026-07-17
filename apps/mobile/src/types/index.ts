@@ -180,3 +180,19 @@ export type ChatRoom = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type AppNotificationType = "CHAT_MESSAGE" | "PARTNER_REQUEST_RECEIVED" | "PARTNER_REQUEST_ACCEPTED";
+
+export type AppNotification = {
+  id: string;
+  type: AppNotificationType;
+  title: string;
+  body: string;
+  chatRoomId: string | null;
+  chatMessageId: string | null;
+  partnerPostId: string | null;
+  isRead: boolean;
+  readAt: string | null;
+  createdAt: string;
+  actionPath: string | null;
+};

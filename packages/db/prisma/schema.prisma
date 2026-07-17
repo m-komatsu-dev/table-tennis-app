@@ -106,6 +106,12 @@ enum FeedbackPlatform {
   MOBILE
 }
 
+enum NotificationType {
+  CHAT_MESSAGE
+  PARTNER_REQUEST_RECEIVED
+  PARTNER_REQUEST_ACCEPTED
+}
+
 model User {
   id                   String   @id @default(uuid())
   email                String   @unique
@@ -135,6 +141,7 @@ model User {
   chatReadStates  ChatReadState[]
   reportsSubmitted Report[]
   feedbacks        Feedback[]
+  notifications    Notification[]
   blocksCreated    UserBlock[] @relation("UserBlocksCreated")
   blocksReceived   UserBlock[] @relation("UserBlocksReceived")
   passwordResetTokens PasswordResetToken[]
@@ -355,6 +362,28 @@ model Feedback {
   @@index([userId, createdAt])
   @@index([status, createdAt])
   @@index([category, createdAt])
+}
+
+model Notification {
+  id            String           @id @default(cuid())
+  userId        String
+  type          NotificationType
+  title         String
+  body          String
+  chatRoomId    String?
+  chatMessageId String?
+  partnerPostId String?
+  isRead        Boolean          @default(false)
+  readAt        DateTime?
+  createdAt     DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead, createdAt])
+  @@index([userId, createdAt])
+  @@index([chatRoomId])
+  @@index([chatMessageId])
+  @@unique([userId, type, chatMessageId])
 }
 
 model UserBlock {

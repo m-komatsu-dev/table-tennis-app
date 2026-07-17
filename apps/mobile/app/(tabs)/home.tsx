@@ -5,6 +5,7 @@ import { Pressable, Text, View } from "react-native";
 import { fetchMe } from "@/api/auth";
 import { fetchChatRooms } from "@/api/chat";
 import { fetchMatchRecords } from "@/api/match";
+import { fetchNotifications } from "@/api/notifications";
 import { fetchPracticeLogs } from "@/api/practice";
 import { fetchPracticeMenus } from "@/api/practice-menus";
 import { formatDate, formatScores, formatSetCount, resultLabels } from "@/components/format";
@@ -21,6 +22,7 @@ export default function AppHomeScreen() {
   const [notificationState, setNotificationState] = useState<NotificationState>({ readIds: [], hiddenIds: [] });
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(defaultNotificationSettings);
   const [notificationPreviewReady, setNotificationPreviewReady] = useState(false);
+  const [serverUnreadNotificationCount, setServerUnreadNotificationCount] = useState(0);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +58,13 @@ export default function AppHomeScreen() {
       }
 
       try {
+        const notificationResult = await fetchNotifications();
+        setServerUnreadNotificationCount(notificationResult.unreadCount);
+      } catch {
+        setServerUnreadNotificationCount(0);
+      }
+
+      try {
         const chatResult = await fetchChatRooms();
         setUnreadChatCount(chatResult.chatRooms.filter((room) => room.unreadCount > 0).length);
       } catch {
@@ -83,8 +92,8 @@ export default function AppHomeScreen() {
     [matches, menus, notificationSettings, practices]
   );
   const unreadNotificationCount = notificationPreviewReady
-    ? getUnreadNotificationCount(notifications, notificationState.readIds, notificationState.hiddenIds)
-    : 0;
+    ? getUnreadNotificationCount(notifications, notificationState.readIds, notificationState.hiddenIds) + serverUnreadNotificationCount
+    : serverUnreadNotificationCount;
   const latestPractice = practices[0];
   const latestMatch = matches[0];
   const wins = matches.filter((match) => match.result === "WIN").length;

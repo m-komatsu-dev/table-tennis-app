@@ -1,5 +1,6 @@
 import { prisma } from "@table-tennis/db";
 import type { ChatMessage, ChatRoom, PartnerPost, PartnerRequest, Prisma, User } from "@table-tennis/db";
+import { createChatMessageNotification, markChatRoomNotificationsRead } from "@/lib/notifications";
 import { getBlockState } from "@/lib/safety";
 import { chatMessageSchema } from "@/lib/validators";
 
@@ -140,7 +141,8 @@ export async function createChatMessage(roomId: string, userId: string, input: u
           id: true,
           requesterId: true,
           status: true,
-          post: { select: { ownerId: true } }
+          requester: { select: { name: true } },
+          post: { select: { id: true, title: true, ownerId: true, owner: { select: { name: true } } } }
         }
       }
     }
@@ -153,27 +155,44 @@ export async function createChatMessage(roomId: string, userId: string, input: u
   assertAcceptedParticipant(room.partnerRequest, userId);
 
   const otherUserId = getOtherUserId(room.partnerRequest, userId);
+  const senderName = room.partnerRequest.post.ownerId === userId ? room.partnerRequest.post.owner.name : room.partnerRequest.requester.name;
   const blockState = await getBlockState(userId, otherUserId);
 
   if (blockState.isBlocked) {
     throw new ChatError("このユーザーとは現在やり取りできません。", 403);
   }
 
-  const [message] = await prisma.$transaction([
-    prisma.chatMessage.create({
+  if (otherUserId === userId) {
+    throw new ChatError("自分自身にはメッセージを送信できません。", 400);
+  }
+
+  const message = await prisma.$transaction(async (tx) => {
+    const createdMessage = await tx.chatMessage.create({
       data: {
         roomId,
         senderId: userId,
         body: body.body
       },
       include: { sender: { select: chatUserSelect } }
-    }),
-    prisma.chatRoom.update({
+    });
+
+    await tx.chatRoom.update({
       where: { id: roomId },
       data: { updatedAt: new Date() },
       select: { id: true }
-    })
-  ]);
+    });
+
+    await createChatMessageNotification(tx, {
+      recipientId: otherUserId,
+      senderName,
+      chatRoomId: roomId,
+      chatMessageId: createdMessage.id,
+      partnerPostId: room.partnerRequest.post.id,
+      partnerPostTitle: room.partnerRequest.post.title
+    });
+
+    return createdMessage;
+  });
 
   return serializeChatMessage(message, userId);
 }
@@ -199,18 +218,22 @@ export async function markChatRoomRead(roomId: string, userId: string) {
 
   assertAcceptedParticipant(room.partnerRequest, userId);
 
-  await prisma.chatReadState.upsert({
-    where: {
-      roomId_userId: {
+  await prisma.$transaction(async (tx) => {
+    await tx.chatReadState.upsert({
+      where: {
+        roomId_userId: {
+          roomId,
+          userId
+        }
+      },
+      update: { lastReadAt: new Date() },
+      create: {
         roomId,
         userId
       }
-    },
-    update: { lastReadAt: new Date() },
-    create: {
-      roomId,
-      userId
-    }
+    });
+
+    await markChatRoomNotificationsRead(roomId, userId, tx);
   });
 }
 

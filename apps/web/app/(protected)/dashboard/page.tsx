@@ -8,6 +8,7 @@ import { isAdminUserId } from "@/lib/admin";
 import { getUnreadChatSummary } from "@/lib/chat";
 import { formatDate, percentage } from "@/lib/format";
 import { matchResultLabels } from "@/lib/match-record";
+import { getUnreadNotificationCount } from "@/lib/notifications";
 import { serializeMatchList, serializePracticeList } from "@/lib/serialize";
 import { getRequiredUserId } from "@/lib/server-auth";
 import { buildMonthlyStats, calculateWinRate, getMonthlyStatsRange, type MonthlyStats } from "@/lib/stats";
@@ -45,7 +46,8 @@ export default async function DashboardPage() {
     calendarMatches,
     monthlyStats,
     isAdmin,
-    unreadChatSummary
+    unreadChatSummary,
+    unreadNotificationCount
   ] = await Promise.all([
     prisma.practiceLog.count({ where: { userId } }),
     prisma.practiceLog.aggregate({ where: { userId }, _sum: { durationMin: true } }),
@@ -74,7 +76,8 @@ export default async function DashboardPage() {
     }),
     getMonthlyStats(userId),
     isAdminUserId(userId),
-    getUnreadChatSummary(userId)
+    getUnreadChatSummary(userId),
+    getUnreadNotificationCount(userId)
   ]);
 
   const totalPracticeMinutes = practiceDuration._sum.durationMin ?? 0;
@@ -98,6 +101,18 @@ export default async function DashboardPage() {
             <span className="mt-1 block text-xs font-semibold text-emerald-800">チャット一覧で内容を確認できます。</span>
           </span>
           <Badge tone="emerald">{unreadChatSummary.unreadMessageCount}通</Badge>
+        </Link>
+      ) : null}
+      {unreadNotificationCount > 0 ? (
+        <Link
+          className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-blue-950 shadow-sm shadow-blue-900/5 transition hover:border-blue-300 hover:bg-blue-100/70"
+          href="/notifications"
+        >
+          <span className="min-w-0">
+            <span className="block text-sm font-bold">未読のお知らせが{unreadNotificationCount}件あります</span>
+            <span className="mt-1 block text-xs font-semibold text-blue-800">通知一覧で確認できます。</span>
+          </span>
+          <Badge tone="blue">{unreadNotificationCount}件</Badge>
         </Link>
       ) : null}
       <div className="grid gap-4 lg:grid-cols-2">
