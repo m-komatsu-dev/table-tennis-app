@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Table Tennis Record",
+    "name": "Table Tennis Log",
     "slug": "table-tennis-record",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -14,7 +14,8 @@
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#f8fafc"
-      }
+      },
+      "package": "com.mkomatsu.tabletennislog"
     },
     "plugins": [
       "expo-router",
@@ -23,6 +24,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "727ff23e-2953-47ab-867a-e53c502d2c51"
+      }
     }
   }
 }
