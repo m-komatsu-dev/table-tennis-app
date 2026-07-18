@@ -37,7 +37,9 @@ const mobileRoutes = routeFiles(join(appApiDir, "mobile")).filter((file) => {
   return (
     routePath !== "auth/login/route.ts" &&
     routePath !== "auth/register/route.ts" &&
-    routePath !== "auth/google/route.ts"
+    routePath !== "auth/google/route.ts" &&
+    routePath !== "auth/google/start/route.ts" &&
+    routePath !== "auth/google/exchange/route.ts"
   );
 });
 

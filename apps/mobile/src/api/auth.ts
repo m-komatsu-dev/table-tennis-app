@@ -25,11 +25,27 @@ export async function register(input: RegisterInput) {
   });
 }
 
-export async function loginWithGoogle(idToken: string, nonce?: string, legalConsent?: boolean) {
-  return apiRequest<{ accessToken: string; user: User }>("/api/mobile/auth/google", {
+export async function startGoogleBrowserLogin(input: {
+  state: string;
+  codeChallenge: string;
+  legalConsent?: boolean;
+}) {
+  return apiRequest<{ authorizationUrl: string }>("/api/mobile/auth/google/start", {
     auth: false,
     method: "POST",
-    body: JSON.stringify({ idToken, nonce, legalConsent })
+    body: JSON.stringify(input)
+  });
+}
+
+export async function exchangeGoogleBrowserLogin(input: {
+  code: string;
+  state: string;
+  codeVerifier: string;
+}) {
+  return apiRequest<{ accessToken: string; user: User }>("/api/mobile/auth/google/exchange", {
+    auth: false,
+    method: "POST",
+    body: JSON.stringify(input)
   });
 }
 

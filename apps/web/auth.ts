@@ -5,6 +5,12 @@ import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { prisma } from "@table-tennis/db";
 import { legalConfig } from "@/lib/legal-config";
+import {
+  buildMobileOAuthErrorRedirectPath,
+  mobileOAuthIntentCookieName,
+  parseMobileOAuthIntent,
+  type MobileOAuthErrorCode
+} from "@/lib/mobile-oauth-flow";
 import { loginSchema } from "@/lib/validators";
 
 type GoogleProfile = {
@@ -77,16 +83,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return true;
       }
 
+      const cookieStore = await cookies();
+      const mobileOAuthIntent = parseMobileOAuthIntent(cookieStore.get(mobileOAuthIntentCookieName)?.value);
+      const mobileOAuthErrorRedirect = (error: MobileOAuthErrorCode) =>
+        mobileOAuthIntent ? buildMobileOAuthErrorRedirectPath(error, mobileOAuthIntent) : null;
       const googleProfile = getSafeGoogleProfile(profile);
       const email = googleProfile.email?.toLowerCase();
       const googleId = account.providerAccountId ?? googleProfile.sub;
 
       if (!email || !googleId) {
-        return "/login?error=GoogleLoginFailed";
+        return mobileOAuthErrorRedirect("oauth_failed") ?? "/login?error=GoogleLoginFailed";
       }
 
       if (!isVerifiedGoogleEmail(googleProfile)) {
-        return "/login?error=GoogleEmailNotVerified";
+        return mobileOAuthErrorRedirect("email_not_verified") ?? "/login?error=GoogleEmailNotVerified";
       }
 
       const existingGoogleUser = await prisma.user.findUnique({
@@ -95,28 +105,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       });
 
       if (existingGoogleUser && existingGoogleUser.email !== email) {
-        return "/login?error=GoogleLoginFailed";
+        return mobileOAuthErrorRedirect("oauth_failed") ?? "/login?error=GoogleLoginFailed";
       }
 
       const existingEmailUser = await prisma.user.findUnique({
         where: { email },
-        select: { id: true, passwordHash: true, googleId: true }
+        select: { id: true, googleId: true }
       });
 
       if (existingEmailUser?.googleId && existingEmailUser.googleId !== googleId) {
-        return "/login?error=GoogleLoginFailed";
+        return mobileOAuthErrorRedirect("oauth_failed") ?? "/login?error=GoogleLoginFailed";
       }
 
-      if (existingEmailUser?.passwordHash && !existingEmailUser.googleId) {
-        return "/login?error=OAuthAccountNotLinked";
+      if (existingEmailUser && !existingEmailUser.googleId) {
+        return mobileOAuthErrorRedirect("oauth_account_not_linked") ?? "/login?error=OAuthAccountNotLinked";
       }
 
       const isNewUser = !existingGoogleUser && !existingEmailUser;
-      const hasLegalConsentIntent =
-        (await cookies()).get(legalConfig.consentIntentCookieName)?.value === "true";
+      const hasLegalConsentIntent = cookieStore.get(legalConfig.consentIntentCookieName)?.value === "true";
 
       if (isNewUser && !hasLegalConsentIntent) {
-        return "/register?error=LegalConsentRequired";
+        return mobileOAuthErrorRedirect("legal_consent_required") ?? "/register?error=LegalConsentRequired";
       }
 
       const name =
@@ -128,23 +137,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           ? googleProfile.picture
           : undefined;
 
-      await prisma.user.upsert({
-        where: { email },
-        create: {
-          email,
-          name,
-          googleId,
-          avatarUrl,
-          legalConsentAt: new Date(),
-          termsVersion: legalConfig.termsVersion,
-          privacyPolicyVersion: legalConfig.privacyVersion
-        },
-        update: {
-          googleId,
-          name,
-          avatarUrl
-        }
-      });
+      const userIdToUpdate = existingGoogleUser?.id ?? existingEmailUser?.id;
+
+      if (userIdToUpdate) {
+        await prisma.user.update({
+          where: { id: userIdToUpdate },
+          data: {
+            googleId,
+            name,
+            avatarUrl
+          }
+        });
+      } else {
+        await prisma.user.create({
+          data: {
+            email,
+            name,
+            googleId,
+            avatarUrl,
+            legalConsentAt: new Date(),
+            termsVersion: legalConfig.termsVersion,
+            privacyPolicyVersion: legalConfig.privacyVersion
+          }
+        });
+      }
 
       return true;
     },

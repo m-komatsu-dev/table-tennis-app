@@ -74,6 +74,7 @@ rootのnpm workspaceには `apps/web` と `packages/*` が含まれます。`app
 
 - 公開ホーム画面
 - 新規登録、ログイン、ログアウト
+- Googleブラウザログイン連携Lite
 - 新規登録時の利用規約・プライバシーポリシー確認
 - Expo SecureStoreによるアクセストークン保存
 - プロフィール表示・編集
@@ -181,7 +182,6 @@ AUTH_URL=
 NEXTAUTH_URL=
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
-GOOGLE_MOBILE_CLIENT_IDS=
 GEMINI_API_KEY=
 GEMINI_MODEL=
 MOBILE_AUTH_SECRET=
@@ -195,7 +195,6 @@ RESEND_API_KEY=
 - `AUTH_SECRET` または `NEXTAUTH_SECRET`: Auth.js / NextAuthの署名用シークレット
 - `AUTH_URL` または `NEXTAUTH_URL`: ローカルまたは本番のWeb URL
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: Web版のGoogleログインを使う場合に設定
-- `GOOGLE_MOBILE_CLIENT_IDS`: モバイル版Googleログインで許可するClient ID。複数ある場合はカンマ区切り。未設定時は `GOOGLE_CLIENT_ID` などの公開Client IDも検証対象に使います
 - `GEMINI_API_KEY`: AIコーチを使う場合に設定
 - `GEMINI_MODEL`: 任意。未設定時はコード上のデフォルトモデルを使用
 - `MOBILE_AUTH_SECRET`: モバイルAPIのBearer Token署名用。32文字以上の値をサーバー側だけに設定
@@ -224,17 +223,23 @@ https://table-tennis-app-rho.vercel.app/api/auth/callback/google
 
 本番URLが変わる場合は、そのURLの `/api/auth/callback/google` を登録してください。`GOOGLE_CLIENT_SECRET` はWebサーバー側だけに設定し、モバイルアプリや `NEXT_PUBLIC_` / `EXPO_PUBLIC_` 変数には入れないでください。
 
-モバイル版のGoogleログインでは、アプリ側がGoogleから受け取った `id_token` を `POST /api/mobile/auth/google` に送り、Web API側でGoogle署名、`aud`、`iss`、`exp`、`email`、`email_verified`、`sub`、nonceがある場合はnonceを検証します。サーバー側には検証を許可するClient IDを設定します。
+### Googleブラウザログイン連携Lite
 
-```env
-GOOGLE_MOBILE_CLIENT_IDS=
-```
+モバイル版のGoogleログインは、ネイティブGoogle Sign-In SDKではなくシステムブラウザを使います。アプリはGoogleへ直接OAuthリクエストを送らず、既存Web版のAuth.js Googleログインを再利用します。
 
-`GOOGLE_MOBILE_CLIENT_IDS` は秘密情報ではありませんが、サーバー側の検証ポリシーとして扱います。複数のClient IDを使う場合はカンマ区切りにしてください。既存Web版のClient IDだけで検証する構成なら、`GOOGLE_CLIENT_ID` がフォールバックとして使われます。
+- アプリは `POST /api/mobile/auth/google/start` へ `state` と `codeChallenge` を送り、固定のWeb認証開始URLを受け取ります
+- Web側は `/mobile-auth/google` から既存Auth.js Googleログインを開始し、完了後 `/mobile-auth/google/complete` で一時的な1回限りcodeを発行します
+- アプリへは `tabletennis://auth/callback?code=...&state=...` で戻します
+- アプリは `POST /api/mobile/auth/google/exchange` へ `code`、`state`、端末内に保持した `codeVerifier` を送り、既存モバイルBearer tokenへ交換します
+- `state` とPKCE相当の `codeVerifier` / `codeChallenge` で保護し、authorization codeはDBに平文保存せずハッシュだけ保存します
+- URLにはBearer token、JWT、Google token、メールアドレス、userId、秘密情報を含めません
+- callback schemeは `tabletennis://auth/callback` です
+- Expo Goではなくpreview APKで確認してください
+- `@react-native-google-signin/google-signin` とGoogleネイティブSign-In SDKは未使用です
 
-Expo Goではモバイル版Googleログインの確認は行いません。Expo GoでGoogleログインボタンを押してもOAuthは開始せず、メールアドレス・パスワードログインを案内します。GoogleログインはEAS Development Buildで確認してください。
+Google Cloud Consoleの承認済みリダイレクトURIは、従来どおりWeb版Auth.jsの `/api/auth/callback/google` を維持します。Googleから直接 `tabletennis://` へ戻す設定は不要です。
 
-今回のアプリ scheme は `tabletennis` です。EAS Development Buildや将来のストア配布では、Androidパッケージ名/SHA-1に紐づくAndroid OAuth Client ID、iOS Bundle IDに紐づくiOS OAuth Client IDをGoogle Cloud Consoleで作成し、下記のモバイル公開環境変数に設定します。AuthSessionのredirect URIはビルド形態によって変わるため、開発ビルドで実際のURIを確認してGoogle Cloud Consoleへ登録してください。
+Expo Goではモバイル版Googleログインの確認は行いません。Expo GoでGoogleログインボタンを押してもOAuthは開始せず、メールアドレス・パスワードログインを案内します。GoogleログインはEAS preview APKで確認してください。
 
 ### Prisma CLI
 
@@ -252,13 +257,9 @@ DATABASE_URL=
 
 ```env
 EXPO_PUBLIC_API_URL=
-EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=
-EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=
-EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=
-EXPO_PUBLIC_GOOGLE_EXPO_CLIENT_ID=
 ```
 
-`EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` はExpo GoやWeb向け、`EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` は将来のAndroid/iOSビルド向けに使います。構成上不要なものは空のままで構いません。`MOBILE_AUTH_SECRET`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL` はモバイルアプリ側には入れないでください。モバイル側に置くのは公開される前提の `EXPO_PUBLIC_` 系の値のみです。
+モバイル版のGoogleブラウザログイン連携Liteに必要な公開環境変数は原則 `EXPO_PUBLIC_API_URL` だけです。`MOBILE_AUTH_SECRET`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL` はモバイルアプリ側には入れないでください。モバイル側に置くのは公開される前提の `EXPO_PUBLIC_` 系の値のみです。
 
 ## ローカル起動
 
@@ -370,7 +371,6 @@ NEXTAUTH_SECRET
 NEXTAUTH_URL
 GOOGLE_CLIENT_ID
 GOOGLE_CLIENT_SECRET
-GOOGLE_MOBILE_CLIENT_IDS
 GEMINI_API_KEY
 GEMINI_MODEL
 MOBILE_AUTH_SECRET
@@ -386,7 +386,8 @@ ADMIN_EMAILS
 ```txt
 POST   /api/mobile/auth/login
 POST   /api/mobile/auth/register
-POST   /api/mobile/auth/google
+POST   /api/mobile/auth/google/start
+POST   /api/mobile/auth/google/exchange
 GET    /api/mobile/me
 GET    /api/mobile/profile
 PUT    /api/mobile/profile

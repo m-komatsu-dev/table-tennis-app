@@ -112,9 +112,9 @@ export default function LoginScreen() {
           <Text style={{ color: colors.faint, fontSize: 13, fontWeight: "700" }}>または</Text>
         </View>
         <Button
-          disabled={loading}
+          disabled={loading || googleLogin.loading}
           loading={googleLogin.loading}
-          loadingLabel="Googleへ移動中..."
+          loadingLabel={googleLogin.loadingLabel}
           onPress={googleLogin.startGoogleLogin}
           variant="secondary"
         >
